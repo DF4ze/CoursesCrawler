@@ -94,8 +94,7 @@ public class GenyParser implements HtmlParser{
 	xPathTool = new XPathTool();
     }
 
-    @Override
-    public Long parse_numCourse(){
+    private Long parse_numCourse() {
 	Long longCourse = null;
 	// extraction de l'ID de la course
 	Pattern p = Pattern.compile(".*_c([0-9]+)$");
@@ -124,8 +123,7 @@ public class GenyParser implements HtmlParser{
 	return longCourse;
     }
 
-    @Override
-    public EntitiesList parse_course(){
+    private EntitiesList parse_course() {
 	logger.debug("=================================== Course infos");
 	logger.info(url);
 
@@ -316,8 +314,7 @@ public class GenyParser implements HtmlParser{
 	return bl;
     }
 
-    @Override
-    public EntitiesList parse_rapport(){
+    private EntitiesList parse_rapport() {
 	Long longCourse = parse_numCourse();
 
 	EntitiesList listeRapports = null;
@@ -605,8 +602,7 @@ public class GenyParser implements HtmlParser{
 	return listeRapports;
     }
 
-    @Override
-    public EntitiesList parse_arrivee(){
+    private EntitiesList parse_arrivee() {
 	Long longCourse = parse_numCourse();
 
 	EntitiesList listeArrivees = null;
@@ -680,8 +676,7 @@ public class GenyParser implements HtmlParser{
 
 
 
-    @Override
-    public EntitiesList parse_cote(){
+    private EntitiesList parse_cote() {
 	Long longCourse = parse_numCourse();
 
 	EntitiesList cotesCourse = null;
@@ -794,8 +789,7 @@ public class GenyParser implements HtmlParser{
 	return cotesCourse;
     }
 
-    @Override
-    public EntitiesList parse_partant(){
+    private EntitiesList parse_partant() {
 	Long longCourse = parse_numCourse();
 
 	//	    cote.setRapportProbableGeny(null); // TODO retrieve data
