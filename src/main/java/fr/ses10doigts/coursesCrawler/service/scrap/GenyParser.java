@@ -50,7 +50,7 @@ public class GenyParser implements HtmlParser{
     @Override
     public EntitiesList parse(String url, String body){
 	this.url = url;
-	this.body = body;
+	this.body = body == null ? "" : body;
 
 	EntitiesList beansList = new EntitiesList();
 	init();
