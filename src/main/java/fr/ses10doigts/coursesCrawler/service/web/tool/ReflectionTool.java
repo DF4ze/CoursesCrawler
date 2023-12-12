@@ -65,22 +65,23 @@ public class ReflectionTool {
      * @return
      */
     public static List<String> getDesirableCourseCompleteFields() {
-	// Retrieve all fields
-	List<Field> fields = getListAllFields(CourseComplete.class);
-	// Extract only names
-	List<String> fieldsName = new ArrayList<>();
-	for (Field field : fields) {
-	    fieldsName.add(field.getName());
-	}
+		// Retrieve all fields
+		List<Field> fields = getListAllFields(CourseComplete.class);
+		// Extract only names
+		List<String> fieldsName = new ArrayList<>();
+		for (Field field : fields) {
+			fieldsName.add(field.getName());
+		}
 
-	// remove unwanted fields
-	List<String> unwantedFields = new ArrayList<>();
-	unwantedFields.add("id");
-	unwantedFields.add("serialVersionUID");
-	unwantedFields.add("url");
-	fieldsName.removeAll(unwantedFields);
+		// remove unwanted fields
+		List<String> unwantedFields = new ArrayList<>();
+		unwantedFields.add("id");
+		unwantedFields.add("serialVersionUID");
+		unwantedFields.add("url");
+		unwantedFields.add("courseID");
+		fieldsName.removeAll(unwantedFields);
 
-	return fieldsName;
+		return fieldsName;
     }
 
     public static String getValueOfCourseCompleteField(CourseComplete cc, String fieldName) {

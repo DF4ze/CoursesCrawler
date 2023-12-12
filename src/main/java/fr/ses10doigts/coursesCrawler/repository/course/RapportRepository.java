@@ -8,5 +8,5 @@ import fr.ses10doigts.coursesCrawler.model.scrap.entity.Rapport;
 
 public interface RapportRepository extends JpaRepository<Rapport, Long> {
 
-    Set<Rapport> findByCourseID( Long courseID );
+	Set<Rapport> findAllByCourseID(Long courseID);
 }

@@ -24,58 +24,54 @@ import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
 @Service
 public class ProcessorChain implements Runnable {
 
-    @Autowired
-    private PageTool		pageTool;
-    @Autowired
-    private WebCrawlingProxy	webRepo;
-    @Autowired
-    private HtmlVisitor		htmlVisitor;
-    @Autowired
-    private CustomProperties	props;
+	@Autowired
+	private PageTool pageTool;
+	@Autowired
+	private WebCrawlingProxy webRepo;
+	@Autowired
+	private HtmlVisitor htmlVisitor;
+	@Autowired
+	private CustomProperties props;
 
+	private Set<String> seeds;
+	private int maxHop;
+	private Set<String> authorized;
+	private Agressivity agressivity;
+	private boolean running = true;
+	private Queue<Page> enQueued;
+	private CrawlReport report = CrawlReport.getInstance();
+	private Chrono chrono;
 
-    private Set<String>		seeds;
-    private int			maxHop;
-    private Set<String>		authorized;
-    private Agressivity		agressivity;
-    private boolean		running	= true;
-    private Queue<Page>		enQueued;
-    private CrawlReport		report	= CrawlReport.getInstance();
-    private Chrono		chrono;
+	private static final Logger logger = LoggerFactory.getLogger(ProcessorChain.class);
 
-    private static final Logger	logger = LoggerFactory.getLogger(ProcessorChain.class);
-
-
-
-
-    public ProcessorChain() {
-    }
-
-    public ProcessorChain(Set<String> seeds, int maxHop, Set<String> authorized, Agressivity agressivity) {
-	super();
-	this.seeds = seeds;
-	this.maxHop = maxHop;
-	this.authorized = authorized;
-	this.agressivity = agressivity;
-    }
-
-    @Override
-    public void run() {
-	chrono = new Chrono();
-	chrono.pick();
-	if (seeds.isEmpty()) {
-	    throw new RuntimeException("Seeds is empty!");
+	public ProcessorChain() {
 	}
 
-	// Initialisation
-	enQueued = new LinkedList<Page>(pageTool.url2Pages(seeds));
-	report.setSeeds(seeds);
-
-	// Informations
-	String auth = "";
-	for (String string : authorized) {
-	    auth += string + ", ";
+	public ProcessorChain(Set<String> seeds, int maxHop, Set<String> authorized, Agressivity agressivity) {
+		super();
+		this.seeds = seeds;
+		this.maxHop = maxHop;
+		this.authorized = authorized;
+		this.agressivity = agressivity;
 	}
+
+	@Override
+	public void run() {
+		chrono = new Chrono();
+		chrono.pick();
+		if (seeds.isEmpty()) {
+			throw new RuntimeException("Seeds is empty!");
+		}
+
+		// Initialisation
+		enQueued = new LinkedList<Page>(pageTool.url2Pages(seeds));
+		report.setSeeds(seeds);
+
+		// Informations
+		String auth = "";
+		for (String string : authorized) {
+			auth += string + ", ";
+		}
 	// @formatter:off
 	logger.info("Crawl Start with parameters :\n " +
 		"- " + enQueued.size() + " seed(s)\n" +
@@ -84,172 +80,166 @@ public class ProcessorChain implements Runnable {
 		+ "- agressivity : "+agressivity);
 	// @formatter:on
 
-	do {
-	    for (Page page = null; (page = enQueued.poll()) != null;) {
+		do {
+			for (Page page = null; (page = enQueued.poll()) != null;) {
 
+				// Retrieve inner-links
+				downloadAndSeek(page);
+			}
 
-		// Retrieve inner-links
-		downloadAndSeek(page);
-	    }
+		} while (enQueued.size() != 0);
 
-	} while (enQueued.size() != 0);
+		// Report
 
+		logger.info("Crawl ended");
+		logger.info(
+				"Crawled " + report.getSuccessCrawled() + "/" + report.size() + " pages in " + chrono.compareToHour());
+		report.setTime(chrono.compare());
 
-
-	// Report
-
-	logger.info("Crawl ended");
-	logger.info(
-		"Crawled " + report.getSuccessCrawled() + "/" + report.size() + " pages in " + chrono.compareToHour());
-	report.setTime(chrono.compare());
-
-    }
-
-    private void downloadAndSeek(Page page) {
-	Set<Page> newPages = new HashSet<>();
-
-	report.startCrawl(page.getUrl());
-
-	// Wait for a user friendly crawl
-	sleep(agressivity);
-	// soft way to stop thread
-	if (!running) {
-	    return;
 	}
 
-	try {
-	    // Download content
-	    String content = webRepo.getRawPage(page.getUrl());
+	private void downloadAndSeek(Page page) {
+		Set<Page> newPages = new HashSet<>();
 
-	    logger.debug("Url downloaded : " + page.getUrl());
-	    report.stopCrawl(page.getUrl());
+		report.startCrawl(page.getUrl());
 
-	    // Parse content
-	    htmlVisitor.indexify(page.getUrl(), content);
-
-	    // If maxhop not reached
-	    if (page.getHop() < maxHop) {
-		// retrieve new URL to download
-		newPages = pageTool.findUrlsInContent(page, content, authorized);
-		report.addNewPages(newPages);
-
-		// Download content and search for new URL
-		for (Page newPage : newPages) {
-		    downloadAndSeek(newPage);
-		    page.getUrlsContained().add(newPage.getUrl());
-
-		    // soft way to stop thread
-		    if (!running) {
-			break;
-		    }
+		// Wait for a user friendly crawl
+		sleep(agressivity);
+		// soft way to stop thread
+		if (!running) {
+			return;
 		}
-	    } else {
-		logger.debug("Max hop reached, no more research of inner URL  ");
 
-	    }
-	} catch (RestClientException e) {
-	    logger.error("RestClientException on page " + page.getUrl());
-	    report.errorCrawl(page.getUrl());
-	    setAsCrawlErrorPage(page);
+		try {
+			// Download content
+			String content = webRepo.getRawPage(page.getUrl());
 
-	    // Launching a connectivity test to know if we still have Internet
-	    // ... and wait if not
-	    webRepo.connectivityTest();
+			logger.debug("Url downloaded : " + page.getUrl());
+			report.stopCrawl(page.getUrl());
+
+			// Parse content
+			htmlVisitor.indexify(page.getUrl(), content);
+
+			// If maxhop not reached
+			if (page.getHop() < maxHop) {
+				// retrieve new URL to download
+				newPages = pageTool.findUrlsInContent(page, content, authorized);
+				report.addNewPages(newPages);
+
+				// Download content and search for new URL
+				for (Page newPage : newPages) {
+					downloadAndSeek(newPage);
+					page.getUrlsContained().add(newPage.getUrl());
+
+					// soft way to stop thread
+					if (!running) {
+						break;
+					}
+				}
+			} else {
+				logger.debug("Max hop reached, no more research of inner URL  ");
+
+			}
+		} catch (RestClientException e) {
+			logger.error("RestClientException on page " + page.getUrl() + "\n Message : " + e.getMessage());
+			report.errorCrawl(page.getUrl());
+			setAsCrawlErrorPage(page);
+
+			// Launching a connectivity test to know if we still have Internet
+			// ... and wait if not
+			webRepo.connectivityTest();
+		}
+
+		// Update states
+		// if (webSiteConnexion) {
+		// if (foundURL ) {
+		// report.stopCrawl(page.getUrl());
+		// } else {
+		// report.errorCrawl(page.getUrl());
+		// setAsCrawlErrorPage(page);
+		// }
+		// } else {
+		// report.errorCrawl(page.getUrl());
+		// setAsCrawlErrorPage(page);
+		// }
+
 	}
 
+	private void setAsCrawlErrorPage(Page page) {
+		if (page.getNbRetry() < props.getMaxRetry()) {
 
-
-	// Update states
-	//	if (webSiteConnexion) {
-	//	    if (foundURL ) {
-	//		report.stopCrawl(page.getUrl());
-	//	    } else {
-	//		report.errorCrawl(page.getUrl());
-	//		setAsCrawlErrorPage(page);
-	//	    }
-	//	} else {
-	//	    report.errorCrawl(page.getUrl());
-	//	    setAsCrawlErrorPage(page);
-	//	}
-
-    }
-
-    private void setAsCrawlErrorPage(Page page) {
-	if (page.getNbRetry() < props.getMaxRetry()) {
-
-	    page.setNbRetry(page.getNbRetry() + 1);
-	    enQueued.add(page);
-	}
-    }
-
-    private void sleep(Agressivity ag) {
-	try {
-	    int range = getRandomNumberInRange(ag.getMin(), ag.getMax());
-	    range = range * 1000;
-	    logger.debug("Thread will sleep " + range + "ms");
-	    Thread.sleep(range);
-
-	} catch (InterruptedException e) {
-	    logger.warn("Thread sleep caused an Exception");
-	}
-    }
-
-    private static int getRandomNumberInRange(int min, int max) {
-
-	if (min >= max) {
-	    throw new IllegalArgumentException("max must be greater than min");
+			page.setNbRetry(page.getNbRetry() + 1);
+			enQueued.add(page);
+		}
 	}
 
-	Random r = new Random();
-	return r.nextInt((max - min) + 1) + min;
-    }
+	private void sleep(Agressivity ag) {
+		try {
+			int range = getRandomNumberInRange(ag.getMin(), ag.getMax());
+			range = range * 1000;
+			logger.debug("Thread will sleep " + range + "ms");
+			Thread.sleep(range);
 
-    public void askToStop() {
-	running = false;
-    }
+		} catch (InterruptedException e) {
+			logger.warn("Thread sleep caused an Exception");
+		}
+	}
 
+	private static int getRandomNumberInRange(int min, int max) {
 
-    public Set<String> getSeeds() {
-	return seeds;
-    }
+		if (min >= max) {
+			throw new IllegalArgumentException("max must be greater than min");
+		}
 
-    public void setSeeds(Set<String> seeds) {
-	this.seeds = seeds;
-    }
+		Random r = new Random();
+		return r.nextInt((max - min) + 1) + min;
+	}
 
-    public int getMaxHop() {
-	return maxHop;
-    }
+	public void askToStop() {
+		running = false;
+	}
 
-    public void setMaxHop(int maxHop) {
-	this.maxHop = maxHop;
-    }
+	public Set<String> getSeeds() {
+		return seeds;
+	}
 
-    public Set<String> getAuthorised() {
-	return authorized;
-    }
+	public void setSeeds(Set<String> seeds) {
+		this.seeds = seeds;
+	}
 
-    public void setAuthorised(Set<String> authorised) {
-	this.authorized = authorised;
-    }
+	public int getMaxHop() {
+		return maxHop;
+	}
 
-    public Agressivity getAgressivity() {
-	return agressivity;
-    }
+	public void setMaxHop(int maxHop) {
+		this.maxHop = maxHop;
+	}
 
-    public void setAgressivity(Agressivity agressivity) {
-	this.agressivity = agressivity;
-    }
+	public Set<String> getAuthorised() {
+		return authorized;
+	}
 
-    public boolean getRunning() {
-	return running;
-    }
+	public void setAuthorised(Set<String> authorised) {
+		this.authorized = authorised;
+	}
 
-    public CrawlReport getReport() {
-	return report;
-    }
+	public Agressivity getAgressivity() {
+		return agressivity;
+	}
 
-    public Chrono getChrono() {
-	return chrono;
-    }
+	public void setAgressivity(Agressivity agressivity) {
+		this.agressivity = agressivity;
+	}
+
+	public boolean getRunning() {
+		return running;
+	}
+
+	public CrawlReport getReport() {
+		return report;
+	}
+
+	public Chrono getChrono() {
+		return chrono;
+	}
 }

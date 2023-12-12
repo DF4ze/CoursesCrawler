@@ -1,5 +1,7 @@
 package fr.ses10doigts.coursesCrawler.model.scrap.entity;
 
+import java.util.Objects;
+
 import fr.ses10doigts.coursesCrawler.model.scrap.AbstractCourseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -16,45 +18,45 @@ public class Arrivee extends AbstractCourseEntity {
     private String nomChv;
 
     public Arrivee(){
-	super();
+		super();
     }
 
     public Arrivee(String url, Long courseId, Integer numArrivee, Integer numChv, String nomChv) {
-	super();
-	setUrl(url);
-	setCourseID(courseId);
-	this.numArrivee = numArrivee;
-	this.numChv = numChv;
-	this.nomChv = nomChv;
+		super();
+		setUrl(url);
+		setCourseID(courseId);
+		this.numArrivee = numArrivee;
+		this.numChv = numChv;
+		this.nomChv = nomChv;
     }
 
 
 
 
-    public Integer getNumArrivee() {
-	return numArrivee;
-    }
-    public void setNumArrivee(Integer numArrivee) {
-	this.numArrivee = numArrivee;
-    }
-
-    public Integer getNumChv() {
-	return numChv;
-    }
-    public void setNumChv(Integer numChv) {
-	this.numChv = numChv;
-    }
-
-    public String getNomChv() {
-	return nomChv;
-    }
-    public void setNomChv(String nomChv) {
-	this.nomChv = nomChv;
-    }
 
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + Objects.hash(nomChv, numArrivee, numChv);
+		return result;
+	}
 
-    @Override
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Arrivee other = (Arrivee) obj;
+		return Objects.equals(nomChv, other.nomChv) && Objects.equals(numArrivee, other.numArrivee)
+				&& Objects.equals(numChv, other.numChv);
+	}
+
+	@Override
     public String toString() {
 	return "Arrivee [id=" + getId() + ", CourseId=" + getCourseID() + ", numArrivee=" + numArrivee + ", numChv="
 		+ numChv + ", nomChv=" + nomChv + "]";

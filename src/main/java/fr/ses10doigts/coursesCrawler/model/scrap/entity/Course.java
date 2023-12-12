@@ -1,9 +1,13 @@
 package fr.ses10doigts.coursesCrawler.model.scrap.entity;
 
+import java.util.Objects;
+
 import fr.ses10doigts.coursesCrawler.model.scrap.AbstractCourseEntity;
 import jakarta.persistence.Entity;
+import lombok.Data;
 
 @Entity
+@Data
 public class Course extends AbstractCourseEntity {
 
     private String  date;
@@ -25,60 +29,27 @@ public class Course extends AbstractCourseEntity {
 		+ ", depart=" + depart + "]";
     }
 
-    public String getDate() {
-	return date;
-    }
-    public void setDate(String date) {
-	this.date = date;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Course other = (Course) obj;
+		return Objects.equals(course, other.course) && Objects.equals(date, other.date)
+				&& Objects.equals(hippodrome, other.hippodrome) && Objects.equals(reunion, other.reunion)
+				&& Objects.equals(type, other.type);
+	}
 
-    public String getHippodrome() {
-	return hippodrome;
-    }
-    public void setHippodrome(String hippodrome) {
-	this.hippodrome = hippodrome;
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + Objects.hash(course, date, hippodrome, reunion, type);
+		return result;
+	}
 
-    public Integer getReunion() {
-	return reunion;
-    }
-    public void setReunion(Integer reunion) {
-	this.reunion = reunion;
-    }
-
-    public Integer getCourse() {
-	return course;
-    }
-    public void setCourse(Integer course) {
-	this.course = course;
-    }
-
-    public String getPrix() {
-	return prix;
-    }
-    public void setPrix(String prix) {
-	this.prix = prix;
-    }
-
-    public String getType() {
-	return type;
-    }
-    public void setType(String type) {
-	this.type = type;
-    }
-
-    public String getPrime() {
-	return prime;
-    }
-    public void setPrime(String prime) {
-	this.prime = prime;
-    }
-
-    public String getDepart() {
-	return depart;
-    }
-    public void setDepart(String depart) {
-	this.depart = depart;
-    }
 
 }

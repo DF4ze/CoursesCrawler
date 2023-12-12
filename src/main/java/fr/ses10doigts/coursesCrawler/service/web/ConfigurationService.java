@@ -89,33 +89,33 @@ public class ConfigurationService {
 
     public String generateUrlFromDates(String sStartDate, String sEndDate) {
 
-	Date startDate = null;
-	Date endDate = null;
-	try {
-	    startDate = writenDateFormat.parse(sStartDate);
-	    endDate = writenDateFormat.parse(sEndDate);
-	} catch (ParseException e) {
-	    return "Date must be dd/mm/yyyy";
-	}
+		Date startDate = null;
+		Date endDate = null;
+		try {
+			startDate = writenDateFormat.parse(sStartDate);
+			endDate = writenDateFormat.parse(sEndDate);
+		} catch (ParseException e) {
+			return "Date must be dd/mm/yyyy";
+		}
 
-	// Secure
-	Date comp = new Date();
-	if (startDate == null || endDate == null || startDate.after(endDate) || startDate.after(comp)
-		|| endDate.after(comp)) {
-	    return null;
-	}
-	// convert date to calendar
-	Calendar c = Calendar.getInstance();
-	c.setTime(startDate);
+		// Secure
+		Date comp = new Date();
+		if (startDate == null || endDate == null || startDate.after(endDate) || startDate.after(comp)
+				|| endDate.after(comp)) {
+			return null;
+		}
+		// convert date to calendar
+		Calendar c = Calendar.getInstance();
+		c.setTime(startDate);
 
-	String urlList = "";
-	do {
-	    comp = c.getTime();
-	    urlList += "https://www.geny.com/reunions-courses-pmu?date=" + urlDateFormat.format(comp) + "\n";
-	    c.add(Calendar.DATE, 1);
-	} while (comp.before(endDate));
+		String urlList = "";
+		do {
+			comp = c.getTime();
+			urlList += "https://www.geny.com/reunions-courses-pmu?date=" + urlDateFormat.format(comp) + "\n";
+			c.add(Calendar.DATE, 1);
+		} while (comp.before(endDate));
 
-	return urlList;
+		return urlList;
     }
 
 }

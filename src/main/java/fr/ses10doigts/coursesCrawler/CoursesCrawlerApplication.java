@@ -8,6 +8,10 @@ public class CoursesCrawlerApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(CoursesCrawlerApplication.class, args);
+
+//		System.getProperties().put("proxySet", "true");
+//		System.getProperties().put("socksProxyHost", "192.168.1.104");
+//		System.getProperties().put("socksProxyPort", "9050");
 	}
 
 }

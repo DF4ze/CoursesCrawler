@@ -15,37 +15,37 @@ import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 @Component
 public class LaunchService {
 
-    @Autowired
-    private ConfigurationService conf;
-    @Autowired
-    private CrawlService	 crawl;
-    @Autowired
-    private RefactorerService	 refacto;
+	@Autowired
+	private ConfigurationService conf;
+	@Autowired
+	private CrawlService crawl;
+	@Autowired
+	private RefactorerService refacto;
 
-    public Report manageLaunch() {
-	Configuration configuration = conf.getConfiguration();
+	public Report manageLaunch() {
+		Configuration configuration = conf.getConfiguration();
 
-	Report cr = new Report();
-	Thread t = null;
-	try {
-	    if (configuration.isLaunchCrawl()) {
-		cr = crawl.launchCrawl();
-		t = crawl.getTreatment();
-	    }
+		Report cr = new Report();
+		Thread t = null;
+		try {
+			if (configuration.isLaunchCrawl()) {
+				cr = crawl.launchCrawl();
+				t = crawl.getTreatment();
+			}
 
-	    if (configuration.isLaunchRefacto()) {
-		// TODO rapport
-		refacto.launchRefactorer(t);
+			if (configuration.isLaunchRefacto()) {
+				// TODO rapport
+				refacto.launchRefactorer(t);
 
-	    }
-	} catch (IOException e) {
+			}
+		} catch (IOException e) {
 
-	    cr.setFinalState(FinalState.ERROR);
-	    cr.setRunningState(RunningState.ENDED);
-	    cr.setMessage("Error reading seeds file");
+			cr.setFinalState(FinalState.ERROR);
+			cr.setRunningState(RunningState.ENDED);
+			cr.setMessage("Error reading seeds file");
+		}
+
+		return cr;
 	}
-
-	return cr;
-    }
 
 }

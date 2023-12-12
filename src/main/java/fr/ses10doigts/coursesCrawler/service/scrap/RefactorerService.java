@@ -14,54 +14,53 @@ import fr.ses10doigts.coursesCrawler.service.scrap.tool.RefactorerReport;
 @Component
 public class RefactorerService {
 
-    @Autowired
-    private Refactorer refactorer;
-    private Thread thread;
+	@Autowired
+	private Refactorer refactorer;
+	private Thread thread;
 
+	public RefactorerService() {
 
-    public RefactorerService() {
-
-    }
-
-    public void launchRefactorer() {
-	thread = new Thread(refactorer);
-
-	thread.start();
-    }
-
-    public void launchRefactorer(Thread t) {
-	refactorer.setFriend(t);
-	launchRefactorer();
-    }
-
-    public void stopRefactorer() {
-	refactorer.stop();
-    }
-
-    public Report getReportCurrentRefact() {
-	RefactorerReport refReport = refactorer.getReport();
-	Report report = new Report();
-
-	if (thread != null) {
-	    State state = thread.getState();
-	    // if thread is terminated ?
-	    if (state.equals(State.TERMINATED)) {
-		// has it (not) been stop by user ?
-		if (refactorer.getRunning()) {
-		    report.setFinalState(FinalState.SUCCESS);
-		} else {
-		    report.setFinalState(FinalState.WARNING);
-		}
-		report.setRunningState(RunningState.ENDED);
-	    } else if (state.equals(State.WAITING)) {
-		report.setRunningState(RunningState.WAITING);
-	    } else {
-		report.setRunningState(RunningState.PROCESSING);
-	    }
-	} else {
-	    report.setRunningState(RunningState.PENDING);
-	    report.setFinalState(FinalState.SUCCESS);
 	}
+
+	public void launchRefactorer() {
+		thread = new Thread(refactorer);
+
+		thread.start();
+	}
+
+	public void launchRefactorer(Thread t) {
+		refactorer.setFriend(t);
+		launchRefactorer();
+	}
+
+	public void stopRefactorer() {
+		refactorer.stop();
+	}
+
+	public Report getReportCurrentRefact() {
+		RefactorerReport refReport = refactorer.getReport();
+		Report report = new Report();
+
+		if (thread != null) {
+			State state = thread.getState();
+			// if thread is terminated ?
+			if (state.equals(State.TERMINATED)) {
+				// has it (not) been stop by user ?
+				if (refactorer.getRunning()) {
+					report.setFinalState(FinalState.SUCCESS);
+				} else {
+					report.setFinalState(FinalState.WARNING);
+				}
+				report.setRunningState(RunningState.ENDED);
+			} else if (state.equals(State.WAITING)) {
+				report.setRunningState(RunningState.WAITING);
+			} else {
+				report.setRunningState(RunningState.PROCESSING);
+			}
+		} else {
+			report.setRunningState(RunningState.PENDING);
+			report.setFinalState(FinalState.SUCCESS);
+		}
 
 	// @formatter:off
 	String message = "Refactorer status : "+report.getRunningState()+"\n"+
@@ -71,9 +70,8 @@ public class RefactorerService {
 		"- Time :   " + Chrono.longMillisToHour( refReport.getTime() )+ "\n";
 	//@formatter:on
 
-
-	report.setMessage(message);
-	return report;
-    }
+		report.setMessage(message);
+		return report;
+	}
 
 }

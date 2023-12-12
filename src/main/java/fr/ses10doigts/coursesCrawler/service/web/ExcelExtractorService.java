@@ -18,6 +18,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.CourseComplete;
@@ -33,132 +34,134 @@ public class ExcelExtractorService {
     private static final Logger	     logger  = LoggerFactory.getLogger(ExcelExtractorService.class);
 
     @Autowired
-    private CourseCompleteRepository ccRepo;
+	private CourseCompleteRepository ccRepo;
 
-    /**
-     * Read the "coursesComplete" DB and write an Excel file
-     *
-     * @return String with the path of the file
-     */
-    public String extractCourseCompletes() {
-	Workbook workbook = prepareExcelWorkBook();
+	/**
+	 * Read the "coursesComplete" DB and write an Excel file
+	 *
+	 * @return String with the path of the file
+	 */
+	public String extractCourseCompletes() {
+		Workbook workbook = prepareExcelWorkBook();
 
-	workbook = feedFromDB(workbook);
+		workbook = feedFromDB(workbook);
 
-	String fileName = filenameGenerator();
-	if (!writeToFile(workbook, fileName)) {
-	    fileName = null;
-	} else {
-	    logger.info("Excel file successfully generated");
+		String fileName = filenameGenerator();
+		if (!writeToFile(workbook, fileName)) {
+			fileName = null;
+		} else {
+			logger.info("Excel file successfully generated");
+		}
+
+		return fileName;
 	}
 
-	return fileName;
-    }
+	private Workbook prepareExcelWorkBook() {
+		Workbook workbook = new XSSFWorkbook();
 
+		Sheet sheet = workbook.createSheet(COURSES);
+		// sheet.setColumnWidth(0, 6000);
+		// sheet.setColumnWidth(1, 4000);
+		// ...
 
-    private Workbook prepareExcelWorkBook() {
-	Workbook workbook = new XSSFWorkbook();
+		Row header = sheet.createRow(0);
 
-	Sheet sheet = workbook.createSheet(COURSES);
-	//	sheet.setColumnWidth(0, 6000);
-	//	sheet.setColumnWidth(1, 4000);
-	//	...
+		CellStyle headerStyle = workbook.createCellStyle();
+		headerStyle.setFillForegroundColor(IndexedColors.AQUA.getIndex());
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-	Row header = sheet.createRow(0);
+		XSSFFont font = ((XSSFWorkbook) workbook).createFont();
+		font.setFontName("Arial");
+		font.setFontHeightInPoints((short) 8);
+		font.setBold(true);
+		headerStyle.setFont(font);
 
-	CellStyle headerStyle = workbook.createCellStyle();
-	headerStyle.setFillForegroundColor(IndexedColors.AQUA.getIndex());
-	headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		header = generateHeaderFromCourseComplete(header, headerStyle);
 
-	XSSFFont font = ((XSSFWorkbook) workbook).createFont();
-	font.setFontName("Arial");
-	font.setFontHeightInPoints((short) 8);
-	font.setBold(true);
-	headerStyle.setFont(font);
-
-	header = generateHeaderFromCourseComplete(header, headerStyle);
-
-	return workbook;
-    }
-
-    private Row generateHeaderFromCourseComplete(Row header, CellStyle headerStyle) {
-	List<String> fieldsName = ReflectionTool.getDesirableCourseCompleteFields();
-
-	// Capitalize fields
-	List<String> capFieldsName = new ArrayList<>();
-	for (String fieldName : fieldsName) {
-	    capFieldsName.add(fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1));
+		return workbook;
 	}
 
-	int i = 0;
-	for (String field : capFieldsName) {
-	    Cell headerCell = header.createCell(i++);
-	    headerCell.setCellValue(field);
-	    headerCell.setCellStyle(headerStyle);
-	}
+	private Row generateHeaderFromCourseComplete(Row header, CellStyle headerStyle) {
+		List<String> fieldsName = ReflectionTool.getDesirableCourseCompleteFields();
 
-	return header;
+		// Capitalize fields
+		List<String> capFieldsName = new ArrayList<>();
+		for (String fieldName : fieldsName) {
+			capFieldsName.add(fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1));
+		}
+
+		int i = 0;
+		for (String field : capFieldsName) {
+			Cell headerCell = header.createCell(i++);
+			headerCell.setCellValue(field);
+			headerCell.setCellStyle(headerStyle);
+		}
+
+		return header;
     }
 
     private Row generateRowFromCourseComplete(CourseComplete cc, Sheet sheet, CellStyle style, int line) {
 
-	Row row = sheet.createRow(line);
+		Row row = sheet.createRow(line);
 
-	List<String> fields = ReflectionTool.getDesirableCourseCompleteFields();
-	int i = 0;
-	for (String fieldName : fields) {
-	    String value = ReflectionTool.getValueOfCourseCompleteField(cc, fieldName);
+		List<String> fields = ReflectionTool.getDesirableCourseCompleteFields();
+		int i = 0;
+		for (String fieldName : fields) {
+			String value = ReflectionTool.getValueOfCourseCompleteField(cc, fieldName);
 
-	    Cell cell = row.createCell(i++);
-	    cell.setCellValue(value);
-	    cell.setCellStyle(style);
-	}
+			Cell cell = row.createCell(i++);
+			cell.setCellValue(value);
+			cell.setCellStyle(style);
+		}
 
-	return row;
+		return row;
     }
 
     private Workbook feedFromDB(Workbook workbook) {
-	List<CourseComplete> findAll = ccRepo.findAllOrderByDateCourse();
+		// List<CourseComplete> findAll = ccRepo.findAllOrderByDateCourseAsc();
+		List<CourseComplete> findAll = ccRepo
+				.findAll(Sort.by(Sort.Direction.ASC, "dateCourse", "numeroReunion", "numeroCourse"));
 
-	CellStyle style = workbook.createCellStyle();
-	style.setWrapText(true);
+		CellStyle style = workbook.createCellStyle();
+		style.setWrapText(true);
 
-	int i = 1; // leave a place for the header
-	for (CourseComplete cc : findAll) {
-	    generateRowFromCourseComplete(cc, workbook.getSheet(COURSES), style, i++);
+		int i = 1; // leave a place for the header
+		for (CourseComplete cc : findAll) {
+			generateRowFromCourseComplete(cc, workbook.getSheet(COURSES), style, i++);
+		}
+
+		return workbook;
 	}
 
-	return workbook;
-    }
+	private boolean writeToFile(Workbook wb, String filename) {
+		File currDir = new File(".");
+		String path = currDir.getAbsolutePath();
+		// String path2 = currDir.getAbsolutePath() +
+		// "\\src\\main\\resources\\static\\";
+		String fileLocation = path.substring(0, path.length() - 1) + filename;
+		String fileLocation2 = path.substring(0, path.length() - 1) + "src\\main\\resources\\static\\" + filename;
 
-    private boolean writeToFile(Workbook wb, String filename) {
-	File currDir = new File(".");
-	String path = currDir.getAbsolutePath();
-	//	String path2 = currDir.getAbsolutePath() + "\\src\\main\\resources\\static\\";
-	String fileLocation = path.substring(0, path.length() - 1) + filename;
-	String fileLocation2 = path.substring(0, path.length() - 1) + "src\\main\\resources\\static\\" + filename;
+		FileOutputStream outputStream;
+		FileOutputStream outputStream2;
+		boolean writeStatus = true;
+		try {
+			outputStream = new FileOutputStream(fileLocation);
+			outputStream2 = new FileOutputStream(fileLocation2);
 
-	FileOutputStream outputStream;
-	FileOutputStream outputStream2;
-	boolean writeStatus = true;
-	try {
-	    outputStream = new FileOutputStream(fileLocation);
-	    outputStream2 = new FileOutputStream(fileLocation2);
+			wb.write(outputStream);
+			wb.write(outputStream2);
+			wb.close();
+		} catch (IOException e) {
+			logger.error("Error writing Excel file : " + e.getMessage());
 
-	    wb.write(outputStream);
-	    wb.write(outputStream2);
-	    wb.close();
-	} catch (IOException e) {
-	    logger.error("Error writing Excel file : " + e.getMessage());
-
-	    writeStatus = false;
+			writeStatus = false;
+		}
+		return writeStatus;
 	}
-	return writeStatus;
-    }
 
-    private String filenameGenerator() {
-	String fileName = "courses.xlsx";
-	//	return sdf.format(new Date()) + fileName;
-	return fileName;
+	private String filenameGenerator() {
+		String fileName = "courses.xlsx";
+		// return sdf.format(new Date()) + fileName;
+		return fileName;
     }
 }

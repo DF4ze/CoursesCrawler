@@ -1,12 +1,16 @@
 package fr.ses10doigts.coursesCrawler.model.scrap.entity;
 
+import java.util.Objects;
+
 import fr.ses10doigts.coursesCrawler.model.scrap.AbstractCourseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.Data;
 
 @Entity
 @Table(uniqueConstraints=@UniqueConstraint(columnNames={"courseId", "numCheval"}))
+@Data
 public class Rapport extends AbstractCourseEntity{
 
 
@@ -22,56 +26,6 @@ public class Rapport extends AbstractCourseEntity{
     }
 
 
-
-    public Integer getNumCheval() {
-	return numCheval;
-    }
-    public void setNumCheval(Integer numCheval) {
-	this.numCheval = numCheval;
-    }
-
-
-
-    public Integer getArrivee() {
-	return arrivee;
-    }
-    public void setArrivee(Integer arrivee) {
-	this.arrivee = arrivee;
-    }
-
-
-    public Double getPlaceGeny() {
-	return placeGeny;
-    }
-
-    public void setPlaceGeny(Double placeGeny) {
-	this.placeGeny = placeGeny;
-    }
-
-    public Double getGagnantGeny() {
-	return gagnantGeny;
-    }
-
-    public void setGagnantGeny(Double gagnantGeny) {
-	this.gagnantGeny = gagnantGeny;
-    }
-
-    public Double getPlacePmu() {
-	return placePmu;
-    }
-
-    public void setPlacePmu(Double placePmu) {
-	this.placePmu = placePmu;
-    }
-
-    public Double getGagnantPmu() {
-	return gagnantPmu;
-    }
-
-    public void setGagnantPmu(Double gagantPmu) {
-	this.gagnantPmu = gagantPmu;
-    }
-
     @Override
     public String toString() {
 	return "Rapport [id=" + getId() + ", courseID=" + getCourseID() + ", numCheval=" + numCheval + ", arrivee="
@@ -80,4 +34,23 @@ public class Rapport extends AbstractCourseEntity{
     }
 
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Rapport other = (Rapport) obj;
+		return Objects.equals(arrivee, other.arrivee) && Objects.equals(numCheval, other.numCheval);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + Objects.hash(arrivee, numCheval);
+		return result;
+	}
 }

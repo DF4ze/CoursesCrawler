@@ -18,112 +18,111 @@ import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.ExcelExtractorService;
 import fr.ses10doigts.coursesCrawler.service.web.LaunchService;
 
-
 @Controller
 public class MainController {
 
-    @Autowired
-    private ConfigurationService  configurationService;
-    @Autowired
-    private CrawlService	  crawlService;
-    @Autowired
-    private RefactorerService	  refactoService;
-    @Autowired
-    private LaunchService	  launcher;
-    @Autowired
-    private ExcelExtractorService excelService;
+	@Autowired
+	private ConfigurationService configurationService;
+	@Autowired
+	private CrawlService crawlService;
+	@Autowired
+	private RefactorerService refactoService;
+	@Autowired
+	private LaunchService launcher;
+	@Autowired
+	private ExcelExtractorService excelService;
 
-    private static final Logger	 logger	= LoggerFactory.getLogger(MainController.class);
+	private static final Logger logger = LoggerFactory.getLogger(MainController.class);
 
-    @GetMapping("/")
-    public String home(Model model) {
-	model.addAttribute("configuration", configurationService.getConfiguration());
-	model.addAttribute("crawlReport", crawlService.getReportCurrentCrawl());
-	model.addAttribute("refactReport", refactoService.getReportCurrentRefact());
+	@GetMapping("/")
+	public String home(Model model) {
+		model.addAttribute("configuration", configurationService.getConfiguration());
+		model.addAttribute("crawlReport", crawlService.getReportCurrentCrawl());
+		model.addAttribute("refactReport", refactoService.getReportCurrentRefact());
 
-	return "home";
-    }
+		return "home";
+	}
 
-    @GetMapping("/generate")
-    public String generateXls(Model model) {
+	@GetMapping("/generate")
+	public String generateXls(Model model) {
 
-	excelService.extractCourseCompletes();
+		excelService.extractCourseCompletes();
 
-	model.addAttribute("configuration", configurationService.getConfiguration());
-	model.addAttribute("crawlReport", crawlService.getReportCurrentCrawl());
-	model.addAttribute("refactReport", refactoService.getReportCurrentRefact());
+		model.addAttribute("configuration", configurationService.getConfiguration());
+		model.addAttribute("crawlReport", crawlService.getReportCurrentCrawl());
+		model.addAttribute("refactReport", refactoService.getReportCurrentRefact());
 
-	return "redirect:/";
-    }
+		return "redirect:/";
+	}
 
-    @PostMapping(value = "/", params = "action=save")
-    public ModelAndView saveConfig(@ModelAttribute Configuration dto) {
-	logger.info("User ask to save config : " + dto);
+	@PostMapping(value = "/", params = "action=save")
+	public ModelAndView saveConfig(@ModelAttribute Configuration dto) {
+		logger.info("User ask to save config : " + dto);
 
-	configurationService.saveConfiguration(dto);
-	return new ModelAndView("redirect:/");
-    }
+		configurationService.saveConfiguration(dto);
+		return new ModelAndView("redirect:/");
+	}
 
-    @PostMapping(value = "/", params = "action=launch")
-    public ModelAndView launchCrawl(@ModelAttribute Configuration dto) {
-	logger.info("User ask to launch with config : " + dto);
+	@PostMapping(value = "/", params = "action=launch")
+	public ModelAndView launchCrawl(@ModelAttribute Configuration dto) {
+		logger.info("User ask to launch with config : " + dto);
 
-	configurationService.saveConfiguration(dto);
-	Report crawlReport = launcher.manageLaunch();
+		configurationService.saveConfiguration(dto);
+		Report crawlReport = launcher.manageLaunch();
 
-	ModelAndView mav = new ModelAndView("home");
-	mav.addObject("configuration", configurationService.getConfiguration());
-	mav.addObject("crawlReport", crawlReport);
-	mav.addObject("refactReport", refactoService.getReportCurrentRefact());
+		ModelAndView mav = new ModelAndView("home");
+		mav.addObject("configuration", configurationService.getConfiguration());
+		mav.addObject("crawlReport", crawlReport);
+		mav.addObject("refactReport", refactoService.getReportCurrentRefact());
 
-	return mav;
-    }
+		return mav;
+	}
 
-    @PostMapping(value = "/", params = "action=stop")
-    public ModelAndView stop() {
-	logger.info("User ask to stop ");
+	@PostMapping(value = "/", params = "action=stop")
+	public ModelAndView stop() {
+		logger.info("User ask to stop ");
 
-	crawlService.stopCurrentCrawl();
-	refactoService.stopRefactorer();
+		crawlService.stopCurrentCrawl();
+		refactoService.stopRefactorer();
 
-	ModelAndView mav = new ModelAndView("home");
-	mav.addObject("configuration", configurationService.getConfiguration());
-	mav.addObject("crawlReport", crawlService.getReportCurrentCrawl());
-	mav.addObject("refactReport", refactoService.getReportCurrentRefact());
+		ModelAndView mav = new ModelAndView("home");
+		mav.addObject("configuration", configurationService.getConfiguration());
+		mav.addObject("crawlReport", crawlService.getReportCurrentCrawl());
+		mav.addObject("refactReport", refactoService.getReportCurrentRefact());
 
-	return mav;
-    }
+		return mav;
+	}
 
-    @PostMapping(value = "/", params = "action=test")
-    public ModelAndView test() {
-	logger.info("Testing connectivity ");
+	@PostMapping(value = "/", params = "action=test")
+	public ModelAndView test() {
+		logger.info("Testing connectivity ");
 
-	crawlService.testConnectivity();
+		crawlService.testConnectivity();
 
-	ModelAndView mav = new ModelAndView("home");
-	mav.addObject("configuration", configurationService.getConfiguration());
-	mav.addObject("crawlReport", crawlService.getReportCurrentCrawl());
-	mav.addObject("refactReport", refactoService.getReportCurrentRefact());
+		ModelAndView mav = new ModelAndView("home");
+		mav.addObject("configuration", configurationService.getConfiguration());
+		mav.addObject("crawlReport", crawlService.getReportCurrentCrawl());
+		mav.addObject("refactReport", refactoService.getReportCurrentRefact());
 
-	return mav;
-    }
+		return mav;
+	}
 
-    @PostMapping(value = "/", params = "action=generate")
-    public ModelAndView generate(@ModelAttribute Configuration dto) {
-	logger.info("User ask to generate ");
+	@PostMapping(value = "/", params = "action=generate")
+	public ModelAndView generate(@ModelAttribute Configuration dto) {
+		logger.info("User ask to generate ");
 
-	String urls = configurationService.generateUrlFromDates(dto.getStartGenDate(), dto.getEndGenDate());
+		String urls = configurationService.generateUrlFromDates(dto.getStartGenDate(), dto.getEndGenDate());
 
-	dto.setTxtSeeds(urls);
+		dto.setTxtSeeds(urls);
 
-	configurationService.saveConfiguration(dto);
+		configurationService.saveConfiguration(dto);
 
-	ModelAndView mav = new ModelAndView("home");
-	mav.addObject("configuration", dto);
-	mav.addObject("crawlReport", crawlService.getReportCurrentCrawl());
-	mav.addObject("refactReport", refactoService.getReportCurrentRefact());
+		ModelAndView mav = new ModelAndView("home");
+		mav.addObject("configuration", dto);
+		mav.addObject("crawlReport", crawlService.getReportCurrentCrawl());
+		mav.addObject("refactReport", refactoService.getReportCurrentRefact());
 
-	return mav;
-    }
+		return mav;
+	}
 
 }

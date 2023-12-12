@@ -1,12 +1,16 @@
 package fr.ses10doigts.coursesCrawler.model.scrap.entity;
 
+import java.util.Objects;
+
 import fr.ses10doigts.coursesCrawler.model.scrap.AbstractCourseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.Data;
 
 @Entity
 @Table(uniqueConstraints=@UniqueConstraint(columnNames={"courseID", "numCheval"}))
+@Data
 public class Cote extends AbstractCourseEntity {
 
 
@@ -21,54 +25,35 @@ public class Cote extends AbstractCourseEntity {
     }
 
 
-    public Integer getNumCheval() {
-	return numCheval;
-    }
-    public void setNumCheval(Integer numCheval) {
-	this.numCheval = numCheval;
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result
+				+ Objects.hash(coteAvant, coteDepart, enjeuxAvant, enjeuxDepart, numCheval, rapportProbableGeny);
+		return result;
+	}
 
-    public Float getCoteDepart() {
-	return coteDepart;
-    }
 
-    public void setCoteDepart(Float coteDepart) {
-	this.coteDepart = coteDepart;
-    }
 
-    public Float getCoteAvant() {
-	return coteAvant;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Cote other = (Cote) obj;
+		return Objects.equals(coteAvant, other.coteAvant) && Objects.equals(coteDepart, other.coteDepart)
+				&& Objects.equals(enjeuxAvant, other.enjeuxAvant) && Objects.equals(enjeuxDepart, other.enjeuxDepart)
+				&& Objects.equals(numCheval, other.numCheval)
+				&& Objects.equals(rapportProbableGeny, other.rapportProbableGeny);
+	}
 
-    public void setCoteAvant(Float coteAvant) {
-	this.coteAvant = coteAvant;
-    }
 
-    public Float getEnjeuxDepart() {
-	return enjeuxDepart;
-    }
 
-    public void setEnjeuxDepart(Float enjeuxDepart) {
-	this.enjeuxDepart = enjeuxDepart;
-    }
-
-    public Float getEnjeuxAvant() {
-	return enjeuxAvant;
-    }
-
-    public void setEnjeuxAvant(Float enjeuxAvant) {
-	this.enjeuxAvant = enjeuxAvant;
-    }
-
-    public Float getRapportProbableGeny() {
-	return rapportProbableGeny;
-    }
-
-    public void setRapportProbableGeny(Float rapportProbableGeny) {
-	this.rapportProbableGeny = rapportProbableGeny;
-    }
-
-    @Override
+	@Override
     public String toString() {
 	return "Cote [id=" + getId() + ", courseID=" + getCourseID() + ", numCheval=" + numCheval + ", coteDepart="
 		+ coteDepart + ", coteAvant=" + coteAvant + ", enjeuxDepart=" + enjeuxDepart + ", enjeuxAvant="
