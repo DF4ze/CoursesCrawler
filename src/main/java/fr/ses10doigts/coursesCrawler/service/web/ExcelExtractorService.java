@@ -42,6 +42,7 @@ public class ExcelExtractorService {
 	 * @return String with the path of the file
 	 */
 	public String extractCourseCompletes() {
+		logger.debug("Start generating Excel file");
 		Workbook workbook = prepareExcelWorkBook();
 
 		workbook = feedFromDB(workbook);
@@ -127,6 +128,9 @@ public class ExcelExtractorService {
 
 		int i = 1; // leave a place for the header
 		for (CourseComplete cc : findAll) {
+			if (cc.getHippodrome().contains("(") || cc.getHippodrome().contains("["))
+				continue;
+
 			generateRowFromCourseComplete(cc, workbook.getSheet(COURSES), style, i++);
 		}
 

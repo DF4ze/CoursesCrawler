@@ -1,10 +1,10 @@
 package fr.ses10doigts.coursesCrawler.service.crawl;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Random;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +33,9 @@ public class ProcessorChain implements Runnable {
 	@Autowired
 	private CustomProperties props;
 
-	private Set<String> seeds;
+	private List<String> seeds;
 	private int maxHop;
-	private Set<String> authorized;
+	private List<String> authorized;
 	private Agressivity agressivity;
 	private boolean running = true;
 	private Queue<Page> enQueued;
@@ -47,7 +47,7 @@ public class ProcessorChain implements Runnable {
 	public ProcessorChain() {
 	}
 
-	public ProcessorChain(Set<String> seeds, int maxHop, Set<String> authorized, Agressivity agressivity) {
+	public ProcessorChain(List<String> seeds, int maxHop, List<String> authorized, Agressivity agressivity) {
 		super();
 		this.seeds = seeds;
 		this.maxHop = maxHop;
@@ -99,7 +99,7 @@ public class ProcessorChain implements Runnable {
 	}
 
 	private void downloadAndSeek(Page page) {
-		Set<Page> newPages = new HashSet<>();
+		List<Page> newPages = new ArrayList<>();
 
 		report.startCrawl(page.getUrl());
 
@@ -199,11 +199,11 @@ public class ProcessorChain implements Runnable {
 		running = false;
 	}
 
-	public Set<String> getSeeds() {
+	public List<String> getSeeds() {
 		return seeds;
 	}
 
-	public void setSeeds(Set<String> seeds) {
+	public void setSeeds(List<String> seeds) {
 		this.seeds = seeds;
 	}
 
@@ -215,11 +215,11 @@ public class ProcessorChain implements Runnable {
 		this.maxHop = maxHop;
 	}
 
-	public Set<String> getAuthorised() {
+	public List<String> getAuthorised() {
 		return authorized;
 	}
 
-	public void setAuthorised(Set<String> authorised) {
+	public void setAuthorised(List<String> authorised) {
 		this.authorized = authorised;
 	}
 

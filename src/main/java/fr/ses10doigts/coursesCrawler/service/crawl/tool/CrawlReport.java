@@ -1,9 +1,9 @@
 package fr.ses10doigts.coursesCrawler.service.crawl.tool;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import fr.ses10doigts.coursesCrawler.model.crawl.Page;
 import fr.ses10doigts.coursesCrawler.model.crawl.PageReport;
@@ -26,13 +26,13 @@ public class CrawlReport {
 	return new CrawlReport();
     }
 
-    public void setSeeds(Set<String> urls) {
+	public void setSeeds(List<String> urls) {
 	for (String url : urls) {
 	    addAndSetPending(url);
 	}
     }
 
-    public void addNewPages(Set<Page> pages) {
+	public void addNewPages(List<Page> pages) {
 	for (Page page : pages) {
 	    addAndSetPending(page.getUrl());
 	}

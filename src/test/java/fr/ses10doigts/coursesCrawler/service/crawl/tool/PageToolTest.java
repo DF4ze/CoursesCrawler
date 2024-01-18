@@ -2,8 +2,8 @@ package fr.ses10doigts.coursesCrawler.service.crawl.tool;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -21,8 +21,8 @@ public class PageToolTest {
     public void testFindUrl() throws Exception {
 	PageTool testSubject;
 	Page seed = new Page("http://test.fr", 1);
-	Set<String> authorised = new HashSet<>();
-	Set<Page> result;
+	List<String> authorised = new ArrayList<>();
+	List<Page> result;
 
 	authorised.add("foo");
 	authorised.add("bar");
@@ -50,10 +50,10 @@ public class PageToolTest {
     @Test
     public void testUrl2Pages() throws Exception {
 	PageTool tool;
-	Set<String> urls = new HashSet<>();
+	List<String> urls = new ArrayList<>();
 	urls.add("http://google.fr");
 
-	Set<Page> result;
+	List<Page> result;
 
 	// default test
 	tool = createTestSubject();

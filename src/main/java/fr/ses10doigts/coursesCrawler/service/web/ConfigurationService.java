@@ -5,7 +5,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Set;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ public class ConfigurationService {
 	try {
 	    // Retrieve seeds
 	    reader.setFilePath(props.getSeedsFile());
-	    Set<String> urls = reader.fileToSet();
+		List<String> urls = reader.fileToSet();
 	    String txtUrl = "";
 	    for (String url : urls) {
 		txtUrl += url + "\n";
@@ -52,7 +52,7 @@ public class ConfigurationService {
 
 	    // retrieve authorized words in url
 	    reader.setFilePath(props.getAuthorizedFile());
-	    Set<String> urlAuthorised = reader.fileToSet();
+		List<String> urlAuthorised = reader.fileToSet();
 	    String txtAuth = "";
 	    for (String url : urlAuthorised) {
 		txtAuth += url + "\n";

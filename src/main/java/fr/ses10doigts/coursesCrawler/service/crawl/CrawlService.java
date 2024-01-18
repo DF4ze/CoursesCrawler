@@ -2,7 +2,7 @@ package fr.ses10doigts.coursesCrawler.service.crawl;
 
 import java.io.IOException;
 import java.lang.Thread.State;
-import java.util.Set;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,11 +46,11 @@ public class CrawlService {
 	if (treatment == null || treatment.getState().equals(State.TERMINATED)) {
 	    // Retrieve seeds
 	    reader.setFilePath(props.getSeedsFile());
-	    Set<String> urls = reader.fileToSet();
+		List<String> urls = reader.fileToSet();
 
 	    // retrieve authorized words in url
 	    reader.setFilePath(props.getAuthorizedFile());
-	    Set<String> urlAuthorised = reader.fileToSet();
+		List<String> urlAuthorised = reader.fileToSet();
 
 	    logger.info("Following SEEDS will be crawled with a maxHop of " + props.getMaxHop());
 	    for (String string : urls) {

@@ -132,9 +132,15 @@ public class Refactorer implements Runnable {
 				continue;
 			}
 
+			boolean isBreak = false;
 			for (Rapport unRap : rapportsList) {
 				if (!running) {
 					return;
+				}
+
+				if (unRap.getArrivee() == null) {
+					isBreak = true;
+					break;
 				}
 
 				if (unRap.getArrivee() == 1) {
@@ -156,6 +162,10 @@ public class Refactorer implements Runnable {
 
 				}
 
+			}
+			if (isBreak) {
+				report.addSkipped(1);
+				continue;
 			}
 
 			rapportsList.clear();
@@ -188,7 +198,7 @@ public class Refactorer implements Runnable {
 
 			for (Cote uneCote : cotesList) {
 				// Les cotes avant
-				if (uneCote.getCoteAvant() < cc.getCotePremierAvant()) {
+				if (uneCote.getCoteAvant() != null && uneCote.getCoteAvant() < cc.getCotePremierAvant()) {
 					cc.setCoteTroisiemeAvant(cc.getCoteDeuxiemeAvant());
 					cc.setCoteDeuxiemeAvant(cc.getCotePremierAvant());
 					cc.setCotePremierAvant(uneCote.getCoteAvant());
@@ -201,7 +211,7 @@ public class Refactorer implements Runnable {
 					cc.setPourcentDeuxiemeAvant(cc.getPourcentPremierAvant());
 					cc.setPourcentPremierAvant(uneCote.getEnjeuxAvant());
 
-				} else if (uneCote.getCoteAvant() < cc.getCoteDeuxiemeAvant()) {
+				} else if (uneCote.getCoteAvant() != null && uneCote.getCoteAvant() < cc.getCoteDeuxiemeAvant()) {
 					cc.setCoteTroisiemeAvant(cc.getCoteDeuxiemeAvant());
 					cc.setCoteDeuxiemeAvant(uneCote.getCoteAvant());
 
@@ -211,7 +221,7 @@ public class Refactorer implements Runnable {
 					cc.setPourcentTroisiemeAvant(cc.getPourcentDeuxiemeAvant());
 					cc.setPourcentDeuxiemeAvant(uneCote.getEnjeuxAvant());
 
-				} else if (uneCote.getCoteAvant() < cc.getCoteTroisiemeAvant()) {
+				} else if (uneCote.getCoteAvant() != null && uneCote.getCoteAvant() < cc.getCoteTroisiemeAvant()) {
 					cc.setCoteTroisiemeAvant(uneCote.getCoteAvant());
 
 					cc.setNumeroChlTroisiemeAvant(uneCote.getNumCheval());
@@ -254,7 +264,7 @@ public class Refactorer implements Runnable {
 				// Cotes < 5
 				cc.setNombreChevauxInfCinqAvant(0);
 				cc.setNombreChevauxInfCinqDepart(0);
-				if (uneCote.getCoteAvant() < 5)
+				if (uneCote.getCoteAvant() != null && uneCote.getCoteAvant() < 5)
 					cc.setNombreChevauxInfCinqAvant(cc.getNombreChevauxInfCinqAvant() + 1);
 				if (uneCote.getCoteDepart() < 5)
 					cc.setNombreChevauxInfCinqDepart(cc.getNombreChevauxInfCinqDepart() + 1);

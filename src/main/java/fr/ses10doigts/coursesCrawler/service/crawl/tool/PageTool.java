@@ -1,7 +1,7 @@
 package fr.ses10doigts.coursesCrawler.service.crawl.tool;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,8 +16,8 @@ public class PageTool {
 
     private static final Logger logger = LoggerFactory.getLogger(PageTool.class);
 
-    public Set<Page> url2Pages(Set<String> urls) {
-	Set<Page> pages = new HashSet<>();
+	public List<Page> url2Pages(List<String> urls) {
+		List<Page> pages = new ArrayList<>();
 
 	for (String url : urls) {
 	    pages.add( new Page(url, 0));
@@ -38,14 +38,14 @@ public class PageTool {
 	return baseUrl;
     }
 
-    public Set<Page> findUrlsInContent(Page seed, String content, Set<String> authorized) {
+	public List<Page> findUrlsInContent(Page seed, String content, List<String> authorized) {
 	//	String regex = "https?://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
 	String regex = "href=\\\"((https?://)?[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|])\\\"";
 	Pattern pattern = Pattern.compile(regex);
 	Matcher matcher = pattern.matcher(content);
 
 	String baseUrl = getBaseUrl(seed.getUrl());
-	Set<String> potentialUrls = new HashSet<>();
+	List<String> potentialUrls = new ArrayList<>();
 
 	if (logger.isDebugEnabled()) {
 	    String auth = "";
@@ -85,7 +85,7 @@ public class PageTool {
 	///////////
 	// Updating status
 	// * On new Pages
-	Set<Page> newPages = url2Pages(potentialUrls);
+	List<Page> newPages = url2Pages(potentialUrls);
 	String urlList = "";
 	for (Page page : newPages) {
 	    // Defining HOP

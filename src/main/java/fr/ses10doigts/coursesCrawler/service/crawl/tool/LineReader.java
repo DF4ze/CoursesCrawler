@@ -4,9 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -17,7 +16,7 @@ public class LineReader {
 
 
 
-    public Set<String> fileToSet() throws IOException {
+	public List<String> fileToSet() throws IOException {
 
 	if (filePath == null) {
 	    throw new RuntimeException("FilePath not set");
@@ -26,7 +25,7 @@ public class LineReader {
 	Path path = Paths.get(filePath);
 	List<String> lines = Files.readAllLines(path);
 
-	Set<String> urlList = new HashSet<>();
+	List<String> urlList = new ArrayList<String>();
 	for (String url : lines) {
 	    if (!url.isBlank()) {
 		urlList.add(url);
