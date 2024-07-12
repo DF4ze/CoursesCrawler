@@ -30,10 +30,14 @@ public class Chrono {
     }
 
     public static String longMillisToHour(long millis) {
-	long seconds = millis / 1000;
-	LocalTime timeOfDay = LocalTime.ofSecondOfDay(seconds);
-	String time = timeOfDay.toString();
+		try {
+			long seconds = millis / 1000;
+			LocalTime timeOfDay = LocalTime.ofSecondOfDay(seconds);
+			String time = timeOfDay.toString();
 
-	return time;
+			return time;
+		} catch (Exception e) {
+			return "00:00";
+		}
     }
 }

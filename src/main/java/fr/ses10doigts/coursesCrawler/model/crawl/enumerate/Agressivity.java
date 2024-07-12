@@ -3,6 +3,7 @@ package fr.ses10doigts.coursesCrawler.model.crawl.enumerate;
 public enum Agressivity {
     // @formatter:off
     HARD(0,1),
+    MEDIUM_HARD(1,5),
     MEDIUM(5,10),
     SOFT(5, 20),
     REALLY_SOFT(10,30);

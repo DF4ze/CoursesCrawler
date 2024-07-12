@@ -78,7 +78,26 @@
             <input type="checkbox" class="form-check-input" name="actions" id="doRefacto" th:field="*{launchRefacto}">
             <label class="form-check-label" for="checkTravel">Do Refactorization</label>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-6 form-group">
+	        <div class="row mb-3">
+				<div class="col-sm-4">
+				    <div class="datepicker date input-group">
+				        <input type="text"  placeholder="Choisir une date de début" class=" col-sm-10 form-control" id="debutDateRefacto" th:field="*{startRefactoDate}">
+				        <div class="col-sm-2 input-group-append"><span class="input-group-text px-4"><i class="fa fa-calendar"></i></span></div>
+				    </div>
+			    </div>
+				<div class="col-sm-4">
+				    <div class="mt-1 datepicker date input-group">
+				        <input type="text"  placeholder="Choisir une date de fin" class="col-sm-10 form-control" id="finDateRefacto" th:field="*{endRefactoDate}">
+				        <div class="col-sm-2 input-group-append"><span class="input-group-text px-4"><i class="fa fa-calendar"></i></span></div>
+				    </div>
+			    </div>
+				<div class="col-sm-4">
+			    	<button type="button" name="action" value="generate" class="mt-1 col-sm-3 btn btn-success " ><i class="bi bi-trash"></i></button>
+			    </div>
+			</div>
+        </div>
+<!--        <div class="col-sm-6"></div>-->
     </div>
 
 

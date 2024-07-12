@@ -4,11 +4,15 @@ import java.util.Objects;
 
 import fr.ses10doigts.coursesCrawler.model.scrap.AbstractCourseEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Data;
 
 @Entity
 @Data
-public class CourseComplete extends AbstractCourseEntity{
+@Table(uniqueConstraints = {
+		@UniqueConstraint(name = "UniqueCourse", columnNames = { "dateCourse", "numeroReunion", "numeroCourse" }) })
+public class CourseComplete extends AbstractCourseEntity {
 
 	///////// Info course
 	private String dateCourse;

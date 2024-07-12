@@ -42,7 +42,7 @@ public class ExcelExtractorService {
 	 * @return String with the path of the file
 	 */
 	public String extractCourseCompletes() {
-		logger.debug("Start generating Excel file");
+		logger.info("Start generating Excel file");
 		Workbook workbook = prepareExcelWorkBook();
 
 		workbook = feedFromDB(workbook);
