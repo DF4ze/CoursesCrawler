@@ -24,6 +24,7 @@ public class RefactorerService {
 
 	public void launchRefactorer() {
 		thread = new Thread(refactorer);
+		resetRefactorer();
 
 		thread.start();
 	}
@@ -35,6 +36,11 @@ public class RefactorerService {
 
 	public void stopRefactorer() {
 		refactorer.stop();
+	}
+
+	public void resetRefactorer() {
+		refactorer.setStart();
+		refactorer.resetReport();
 	}
 
 	public Report getReportCurrentRefact() {
@@ -72,6 +78,10 @@ public class RefactorerService {
 
 		report.setMessage(message);
 		return report;
+	}
+
+	public Thread getThread() {
+		return thread;
 	}
 
 }

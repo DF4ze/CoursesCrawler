@@ -121,6 +121,8 @@ public class Refactorer implements Runnable {
 			cc.setPrime(course.getPrime());
 			cc.setTypeCourse(course.getType());
 			cc.setAutoStart(course.getDepart());
+			cc.setHeures(course.getHeures());
+			cc.setMinutes(course.getMinutes());
 
 			////////////////////////////////////
 			// Infos Rapport
@@ -241,7 +243,7 @@ public class Refactorer implements Runnable {
 
 					cc.setPourcentTroisiemeDepart(cc.getPourcentDeuxiemeDepart());
 					cc.setPourcentDeuxiemeDepart(cc.getPourcentPremierDepart());
-					cc.setPourcentPremierDepart(uneCote.getEnjeuxAvant());
+					cc.setPourcentPremierDepart(uneCote.getEnjeuxDepart());
 
 				} else if (uneCote.getCoteDepart() < cc.getCoteDeuxiemeDepart()) {
 					cc.setCoteTroisiemeDepart(cc.getCoteDeuxiemeDepart());
@@ -251,14 +253,14 @@ public class Refactorer implements Runnable {
 					cc.setNumeroChlDeuxiemeDepart(uneCote.getNumCheval());
 
 					cc.setPourcentTroisiemeDepart(cc.getPourcentDeuxiemeDepart());
-					cc.setPourcentDeuxiemeDepart(uneCote.getEnjeuxAvant());
+					cc.setPourcentDeuxiemeDepart(uneCote.getEnjeuxDepart());
 
 				} else if (uneCote.getCoteDepart() < cc.getCoteTroisiemeDepart()) {
 					cc.setCoteTroisiemeDepart(uneCote.getCoteDepart());
 
 					cc.setNumeroChlTroisiemeDepart(uneCote.getNumCheval());
 
-					cc.setPourcentTroisiemeDepart(uneCote.getEnjeuxAvant());
+					cc.setPourcentTroisiemeDepart(uneCote.getEnjeuxDepart());
 				}
 
 				// Cotes < 5
@@ -574,12 +576,21 @@ public class Refactorer implements Runnable {
 
 	}
 
+	public void setStart() {
+		running = true;
+
+	}
+
 	public void setFriend(Thread t) {
 		friend = t;
 	}
 
 	public RefactorerReport getReport() {
 		return report;
+	}
+
+	public void resetReport() {
+		report = RefactorerReport.getInstance();
 	}
 
 	public boolean getRunning() {

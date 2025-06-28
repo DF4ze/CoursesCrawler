@@ -16,6 +16,8 @@ public class CourseComplete extends AbstractCourseEntity {
 
 	///////// Info course
 	private String dateCourse;
+	private String heures;
+	private String minutes;
 	private Integer numeroReunion;
 	private Integer numeroCourse;
 	private String hippodrome;

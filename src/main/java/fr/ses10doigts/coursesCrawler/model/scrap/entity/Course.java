@@ -11,6 +11,8 @@ import lombok.Data;
 public class Course extends AbstractCourseEntity {
 
     private String  date;
+	private String heures;
+	private String minutes;
     private String  hippodrome;
     private Integer reunion;
     private Integer course;

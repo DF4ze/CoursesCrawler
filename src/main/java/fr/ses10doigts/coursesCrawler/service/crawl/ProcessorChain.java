@@ -42,6 +42,8 @@ public class ProcessorChain implements Runnable {
 	private CrawlReport report = CrawlReport.getInstance();
 	private Chrono chrono;
 
+	private boolean isFirst = true;
+
 	private static final Logger logger = LoggerFactory.getLogger(ProcessorChain.class);
 
 	public ProcessorChain() {
@@ -72,13 +74,13 @@ public class ProcessorChain implements Runnable {
 		for (String string : authorized) {
 			auth += string + ", ";
 		}
-	// @formatter:off
-	logger.info("Crawl Start with parameters :\n " +
-		"- " + enQueued.size() + " seed(s)\n" +
-		"- maxHop : " + maxHop + "\n" +
-		"- authorized : "+auth+"\n"
-		+ "- agressivity : "+agressivity);
-	// @formatter:on
+		// @formatter:off
+		logger.info("Crawl Start with parameters :\n " +
+			"- " + enQueued.size() + " seed(s)\n" +
+			"- maxHop : " + maxHop + "\n" +
+			"- authorized : "+auth+"\n"
+			+ "- agressivity : "+agressivity);
+		// @formatter:on
 
 		do {
 			for (Page page = null; (page = enQueued.poll()) != null;) {
@@ -104,7 +106,12 @@ public class ProcessorChain implements Runnable {
 		report.startCrawl(page.getUrl());
 
 		// Wait for a user friendly crawl
-		sleep(agressivity);
+		if (!isFirst) {
+			sleep(agressivity);
+		} else {
+			isFirst = false;
+		}
+
 		// soft way to stop thread
 		if (!running) {
 			return;
@@ -142,6 +149,7 @@ public class ProcessorChain implements Runnable {
 			}
 		} catch (RestClientException e) {
 			logger.error("RestClientException on page " + page.getUrl() + "\n Message : " + e.getMessage());
+			e.printStackTrace();
 			report.errorCrawl(page.getUrl());
 			setAsCrawlErrorPage(page);
 
@@ -199,6 +207,11 @@ public class ProcessorChain implements Runnable {
 		running = false;
 	}
 
+	public void askToStart() {
+		running = true;
+		isFirst = true;
+	}
+
 	public List<String> getSeeds() {
 		return seeds;
 	}
@@ -237,6 +250,10 @@ public class ProcessorChain implements Runnable {
 
 	public CrawlReport getReport() {
 		return report;
+	}
+
+	public void resetReport() {
+		report = CrawlReport.getInstance();
 	}
 
 	public Chrono getChrono() {

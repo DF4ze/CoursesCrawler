@@ -145,26 +145,45 @@ public class ExcelExtractorService {
 		String fileLocation = path.substring(0, path.length() - 1) + filename;
 		String fileLocation2 = path.substring(0, path.length() - 1) + "src\\main\\resources\\static\\" + filename;
 
-		FileOutputStream outputStream;
-		FileOutputStream outputStream2;
-		boolean writeStatus = true;
+		FileOutputStream outputStream = null;
+		FileOutputStream outputStream2 = null;
 		try {
 			outputStream = new FileOutputStream(fileLocation);
-			outputStream2 = new FileOutputStream(fileLocation2);
-
-			wb.write(outputStream);
-			wb.write(outputStream2);
-			wb.close();
 		} catch (IOException e) {
 			logger.error("Error writing Excel file : " + e.getMessage());
-
-			writeStatus = false;
 		}
-		return writeStatus;
+		try {
+			outputStream2 = new FileOutputStream(fileLocation2);
+		} catch (IOException e) {
+			logger.error("Error writing Excel file : " + e.getMessage());
+		}
+
+		if( outputStream != null ) {
+            try {
+                wb.write(outputStream);
+            } catch (IOException e) {
+                ;
+            }
+        }
+		if( outputStream2 != null ) {
+            try {
+                wb.write(outputStream2);
+            } catch (IOException e) {
+                ;
+            }
+        }
+
+        try {
+            wb.close();
+        } catch (IOException e) {
+            ;
+        }
+
+        return outputStream != null || outputStream2 != null;
 	}
 
 	private String filenameGenerator() {
-		String fileName = "courses.xlsx";
+		String fileName = "files/courses.xlsx";
 		// return sdf.format(new Date()) + fileName;
 		return fileName;
     }

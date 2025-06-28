@@ -26,5 +26,7 @@ public class CustomProperties {
 	private Date startRefactoDate;
 	private Date endRefactoDate;
 
+	private String botToken;
+	private String botUsername;
 
 }

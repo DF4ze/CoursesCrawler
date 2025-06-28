@@ -115,7 +115,9 @@ public class RepositoryService {
 
 		for (Partant partant : partants) {
 			try {
-				partantRepository.save(partant);
+				// partantRepository.save(partant);
+				partantRepository.saveOrUpdate(partant);
+
 			} catch (Exception e) {
 				logger.error(e.getMessage());
 			}

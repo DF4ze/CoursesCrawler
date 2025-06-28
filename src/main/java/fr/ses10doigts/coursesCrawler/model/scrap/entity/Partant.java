@@ -9,9 +9,10 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.Data;
 
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = { "courseId", "numCheval" }))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = { "courseID", "numCheval" }))
 @Data
 public class Partant extends AbstractCourseEntity implements Cloneable {
+
 
 	private Integer numCheval;
 	private String nomCheval;

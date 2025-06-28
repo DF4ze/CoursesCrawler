@@ -1,31 +1,30 @@
 #Global configuration
-spring.application.name=CoursesCrawler
+#spring.profiles.active=setYourProfileName
 
 #False for dev mod only
-spring.thymeleaf.cache=false 
+spring.thymeleaf.cache=true 
 
- #Tomcat configuration
- server.port=9001
+#Tomcat configuration
+server.port=9002
  
 #Log level configuration
-logging.level.root=ERROR
-logging.level.org.springframework.boot.web.embedded.tomcat=INFO
+logging.level.fr.ses10doigts.coursesCrawler==INFO
   
 # output to a file
-logging.file.name=courseCrawler.log
+logging.file.name=courseCrawlerScheduler.log
 logging.pattern.file=%d %p %c{1.} [%t] %m%n
 logging.pattern.console=%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n
   
-  
- #Mysql Config
+#Mysql Config
 spring.jpa.hibernate.ddl-auto=update
-spring.datasource.url=jdbc:mysql://${MYSQL_HOST:localhost}:3306/courses
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-  
-# Scheduler Quartz
-spring.quartz.job-store-type=jdbc
-spring.quartz.jdbc.initialize-schema=never
-  
+spring.datasource.username=setYourDBUserName
+spring.datasource.password=setYourDBPassword
+
+#Telegram bot
+fr.ses10doigts.crawler.botToken=token...
+fr.ses10doigts.crawler.botUsername=botname...
+
+#In app parameters    
 fr.ses10doigts.crawler.maxHop=1
 fr.ses10doigts.crawler.seedsFile=seeds.txt
 fr.ses10doigts.crawler.authorizedFile=authorized.txt

@@ -1,14 +1,9 @@
 package fr.ses10doigts.coursesCrawler.service.web;
 
-import java.io.IOException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import fr.ses10doigts.coursesCrawler.model.crawl.Report;
-import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.FinalState;
-import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.RunningState;
-import fr.ses10doigts.coursesCrawler.model.web.Configuration;
 import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 
@@ -22,30 +17,18 @@ public class LaunchService {
 	@Autowired
 	private RefactorerService refacto;
 
+	private Thread t = null;
+
 	public Report manageLaunch() {
-		Configuration configuration = conf.getConfiguration();
+		return crawl.manageLaunch();
+	}
 
-		Report cr = new Report();
-		Thread t = null;
-		try {
-			if (configuration.isLaunchCrawl()) {
-				cr = crawl.launchCrawl();
-				t = crawl.getTreatment();
-			}
+	public Thread getCrawlThread() {
+		return t;
+	}
 
-			if (configuration.isLaunchRefacto()) {
-				// TODO rapport
-				refacto.launchRefactorer(t);
-
-			}
-		} catch (IOException e) {
-
-			cr.setFinalState(FinalState.ERROR);
-			cr.setRunningState(RunningState.ENDED);
-			cr.setMessage("Error reading seeds file");
-		}
-
-		return cr;
+	public Thread getRefactoThread() {
+		return refacto.getThread();
 	}
 
 }

@@ -11,70 +11,122 @@ import org.springframework.stereotype.Service;
 
 import fr.ses10doigts.coursesCrawler.CustomProperties;
 import fr.ses10doigts.coursesCrawler.model.crawl.Report;
+import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.FinalState;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.RunningState;
+import fr.ses10doigts.coursesCrawler.model.web.Configuration;
 import fr.ses10doigts.coursesCrawler.repository.web.WebCrawlingProxy;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
+import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
+import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 
 @Service
 public class CrawlService {
     @Autowired
     private WebCrawlingProxy webService;
-
     @Autowired
-    private LineReader		reader;
-
+	private LineReader reader;
+	@Autowired
+	private CustomProperties props;
     @Autowired
-    private CustomProperties	props;
-
+	private ProcessorChain pc;
     @Autowired
-    private ProcessorChain	pc;
+	private ConfigurationService configurationService;
+	@Autowired
+	private RefactorerService refactoService;
+
 
     private static Thread	treatment = null;
 
     private static final Logger	logger = LoggerFactory.getLogger(CrawlService.class);
 
     public String getPage(String url) {
-	return webService.getRawPage(url);
+		return webService.getRawPage(url);
     }
 
 
 
     public Report launchCrawl() throws IOException {
-	if (treatment == null || treatment.getState().equals(State.TERMINATED)) {
-	    // Retrieve seeds
-	    reader.setFilePath(props.getSeedsFile());
-		List<String> urls = reader.fileToSet();
+		if (treatment == null || treatment.getState().equals(State.TERMINATED)) {
+			// Retrieve seeds
+			reader.setFilePath(props.getSeedsFile());
+			List<String> urls = reader.fileToSet();
 
-	    // retrieve authorized words in url
-	    reader.setFilePath(props.getAuthorizedFile());
-		List<String> urlAuthorised = reader.fileToSet();
+			// retrieve authorized words in url
+			reader.setFilePath(props.getAuthorizedFile());
+			List<String> urlAuthorised = reader.fileToSet();
 
-	    logger.info("Following SEEDS will be crawled with a maxHop of " + props.getMaxHop());
-	    for (String string : urls) {
-		logger.info("   - " + string);
-	    }
+			logger.info("Following SEEDS will be crawled with a maxHop of " + props.getMaxHop());
+			for (String string : urls) {
+				logger.info("   - " + string);
+			}
 
-	    // Creating and launching thread
-	    // ProcessorChain pc = new ProcessorChain(urls, props.getMaxHop(),
-	    // urlAuthorised, Agressivity.REALLY_SOFT);
-	    pc.setSeeds(urls);
-	    pc.setMaxHop(props.getMaxHop());
-	    pc.setAuthorised(urlAuthorised);
-	    pc.setAgressivity(props.getAgressivity());
-	    treatment = new Thread(pc);
-	    treatment.start();
-	    logger.info("Thread started");
+			// Creating and launching thread
+			// ProcessorChain pc = new ProcessorChain(urls, props.getMaxHop(),
+			// urlAuthorised, Agressivity.REALLY_SOFT);
+			pc.setSeeds(urls);
+			pc.setMaxHop(props.getMaxHop());
+			pc.setAuthorised(urlAuthorised);
+			pc.setAgressivity(props.getAgressivity());
+			pc.askToStart();
+			treatment = new Thread(pc);
+			treatment.start();
+			logger.info("Thread started");
 
-	    //	CrawlReport report = new CrawlReport();
-	    //	report.setRunningState(RunningState.PROCESSING);
-	    //	report.setFinalState(FinalState.SUCCESS);
-	    //	report.setMessage("Will run " + urls.size() + " urls");
+			// CrawlReport report = new CrawlReport();
+			// report.setRunningState(RunningState.PROCESSING);
+			// report.setFinalState(FinalState.SUCCESS);
+			// report.setMessage("Will run " + urls.size() + " urls");
+		} else {
+			logger.warn("Unable to launch a crawl, One is already running...");
+		}
+		return getReportCurrentCrawl();
 	}
-	return getReportCurrentCrawl();
-    }
+
+	public Report manageLaunch() {
+		Configuration configuration = configurationService.getConfiguration();
+
+		Report cr = new Report();
+		try {
+			if (configuration.isLaunchCrawl()) {
+				cr = launchCrawl();
+			}
+
+			if (configuration.isLaunchRefacto()) {
+				// TODO rapport
+				refactoService.launchRefactorer(treatment);
+
+			}
+		} catch (IOException e) {
+
+			cr.setFinalState(FinalState.ERROR);
+			cr.setRunningState(RunningState.ENDED);
+			cr.setMessage("Error reading seeds file");
+		}
+
+		return cr;
+	}
+
+	public void launchSurveyCrawl(String startDay, String endDay) {
+		logger.debug("DAYS : " + startDay + " " + endDay);
+		String urls = configurationService.generateUrlFromDates(startDay, endDay);
+		logger.debug("URLS : " + urls);
+
+		Configuration conf = new Configuration();
+		conf.setAgressivity(Agressivity.MEDIUM_HARD);
+		conf.setAuthorized(// "www.geny.com/cotes\r\n"
+				// + "arrivee-et-rapports\r\n"
+				// +
+				"partants-pmu\r\n");
+		conf.setLaunchCrawl(true);
+		conf.setLaunchRefacto(false);
+		conf.setMaxHop(1);
+		conf.setTxtSeeds(urls);
+		configurationService.saveConfiguration(conf);
+		manageLaunch();
+	}
 
     public Report getReportCurrentCrawl() {
 	CrawlReport crawlReport = pc.getReport();
@@ -114,9 +166,18 @@ public class CrawlService {
     }
 
     public Report stopCurrentCrawl() {
-	pc.askToStop();
+		pc.askToStop();
 
-	return getReportCurrentCrawl();
+		Report report = getReportCurrentCrawl();
+		pc.resetReport();
+
+		return report;
+	}
+
+	public Report startCurrentCrawl() {
+		pc.askToStart();
+
+		return getReportCurrentCrawl();
     }
 
     public Thread getTreatment() {

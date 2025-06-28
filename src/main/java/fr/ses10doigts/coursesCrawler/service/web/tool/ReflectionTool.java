@@ -26,17 +26,17 @@ public class ReflectionTool {
      * @return
      */
     public static List<Field> getListAllFields(@SuppressWarnings("rawtypes") Class clazz) {
-	if (clazz == null) {
-	    return Collections.emptyList();
-	}
+		if (clazz == null) {
+			return Collections.emptyList();
+		}
 
-	List<Field> result = new ArrayList<>(getListAllFields(clazz.getSuperclass()));
-	List<Field> filteredFields = Arrays
-		.stream(clazz.getDeclaredFields()).filter(f -> Modifier.isPublic(f.getModifiers())
-			|| Modifier.isProtected(f.getModifiers()) || Modifier.isPrivate(f.getModifiers()))
-		.collect(Collectors.toList());
-	result.addAll(filteredFields);
-	return result;
+		List<Field> result = new ArrayList<>(getListAllFields(clazz.getSuperclass()));
+		List<Field> filteredFields = Arrays
+				.stream(clazz.getDeclaredFields()).filter(f -> Modifier.isPublic(f.getModifiers())
+						|| Modifier.isProtected(f.getModifiers()) || Modifier.isPrivate(f.getModifiers()))
+				.collect(Collectors.toList());
+		result.addAll(filteredFields);
+		return result;
     }
 
     /**
@@ -46,17 +46,17 @@ public class ReflectionTool {
      * @return
      */
     public static Map<String, Field> getMapAllFields(@SuppressWarnings("rawtypes") Class clazz) {
-	Map<String, Field> mReturn = new HashMap<>();
-	if (clazz == null) {
-	    return mReturn;
-	}
+		Map<String, Field> mReturn = new HashMap<>();
+		if (clazz == null) {
+			return mReturn;
+		}
 
-	List<Field> list = getListAllFields(clazz);
-	for (Field field : list) {
-	    mReturn.put(field.getName(), field);
-	}
+		List<Field> list = getListAllFields(clazz);
+		for (Field field : list) {
+			mReturn.put(field.getName(), field);
+		}
 
-	return mReturn;
+		return mReturn;
     }
 
     /**
@@ -85,24 +85,23 @@ public class ReflectionTool {
     }
 
     public static String getValueOfCourseCompleteField(CourseComplete cc, String fieldName) {
-	String sReturn = null;
-	try {
-	    Map<String, Field> fields = getMapAllFields(cc.getClass());
-	    Field field = fields.get(fieldName);
-	    if (field == null) {
-		throw new Exception("Field " + fieldName + " not found in CC object");
-	    }
+		String sReturn = null;
+		try {
+			Map<String, Field> fields = getMapAllFields(cc.getClass());
+			Field field = fields.get(fieldName);
+			if (field == null) {
+				throw new Exception("Field " + fieldName + " not found in CC object");
+			}
 
-	    field.setAccessible(true);
-	    Object value = field.get(cc);
+			field.setAccessible(true);
+			Object value = field.get(cc);
 
-	    sReturn = (value == null ? "" : value) + "";
+			sReturn = (value == null ? "" : value) + "";
 
-	} catch (Exception e) {
-	    logger.warn("Error during Reflection reading of CourseComplete field : " + e.getMessage());
-	}
+		} catch (Exception e) {
+			logger.warn("Error during Reflection reading of CourseComplete field : " + e.getMessage());
+		}
 
-
-	return sReturn;
+		return sReturn;
     }
 }

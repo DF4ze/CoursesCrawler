@@ -38,7 +38,7 @@ build/
 
 # Log file
 *.log
-*.log*
+*.log.*
 
 # BlueJ files
 *.ctxt
@@ -58,3 +58,14 @@ build/
 
 # Bin Files #
 *.xls*
+
+# Fichiers de configuration sensibles (contenant des clés/secrets)
+application-dev.properties
+application-prod.properties
+application-telegram.properties
+
+# On garde les fichiers suivants :
+# - application.properties (commun)
+# - application-profile.properties.template (modèle)
+!application.properties
+!application-profile.properties.template

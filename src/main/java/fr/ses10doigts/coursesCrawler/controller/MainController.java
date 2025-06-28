@@ -16,7 +16,6 @@ import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.ExcelExtractorService;
-import fr.ses10doigts.coursesCrawler.service.web.LaunchService;
 
 @Controller
 public class MainController {
@@ -27,8 +26,6 @@ public class MainController {
 	private CrawlService crawlService;
 	@Autowired
 	private RefactorerService refactoService;
-	@Autowired
-	private LaunchService launcher;
 	@Autowired
 	private ExcelExtractorService excelService;
 
@@ -68,7 +65,7 @@ public class MainController {
 		logger.info("User ask to launch with config : " + dto);
 
 		configurationService.saveConfiguration(dto);
-		Report crawlReport = launcher.manageLaunch();
+		Report crawlReport = crawlService.manageLaunch();
 
 		ModelAndView mav = new ModelAndView("home");
 		mav.addObject("configuration", configurationService.getConfiguration());

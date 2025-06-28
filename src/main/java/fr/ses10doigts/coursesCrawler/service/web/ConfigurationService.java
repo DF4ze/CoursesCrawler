@@ -32,37 +32,39 @@ public class ConfigurationService {
 
 
     public Configuration getConfiguration() {
-	Configuration conf = new Configuration();
+		Configuration conf = new Configuration();
 
-	conf.setAgressivity(props.getAgressivity());
-	conf.setMaxHop(props.getMaxHop());
-	conf.setMaxRetry(props.getMaxRetry());
-	conf.setLaunchCrawl(props.isDoCrawl());
-	conf.setLaunchRefacto(props.isDoRefacto());
+		conf.setAgressivity(props.getAgressivity());
+		conf.setMaxHop(props.getMaxHop());
+		conf.setMaxRetry(props.getMaxRetry());
+		conf.setLaunchCrawl(props.isDoCrawl());
+		conf.setLaunchRefacto(props.isDoRefacto());
+		conf.setBotToken(props.getBotToken());
+		conf.setBotUsername(props.getBotUsername());
 
-	try {
-	    // Retrieve seeds
-	    reader.setFilePath(props.getSeedsFile());
-		List<String> urls = reader.fileToSet();
-	    String txtUrl = "";
-	    for (String url : urls) {
-		txtUrl += url + "\n";
-	    }
-	    conf.setTxtSeeds(txtUrl);
+		try {
+			// Retrieve seeds
+			reader.setFilePath(props.getSeedsFile());
+			List<String> urls = reader.fileToSet();
+			String txtUrl = "";
+			for (String url : urls) {
+				txtUrl += url + "\n";
+			}
+			conf.setTxtSeeds(txtUrl);
 
-	    // retrieve authorized words in url
-	    reader.setFilePath(props.getAuthorizedFile());
-		List<String> urlAuthorised = reader.fileToSet();
-	    String txtAuth = "";
-	    for (String url : urlAuthorised) {
-		txtAuth += url + "\n";
-	    }
-	    conf.setAuthorized(txtAuth);
+			// retrieve authorized words in url
+			reader.setFilePath(props.getAuthorizedFile());
+			List<String> urlAuthorised = reader.fileToSet();
+			String txtAuth = "";
+			for (String url : urlAuthorised) {
+				txtAuth += url + "\n";
+			}
+			conf.setAuthorized(txtAuth);
 
-	} catch (Exception e) {
-	    logger.warn("Seeds or/and Authorised file(s) not found ");
-	}
-	return conf;
+		} catch (Exception e) {
+			logger.warn("Seeds or/and Authorised file(s) not found ");
+		}
+		return conf;
     }
 
     public void saveConfiguration(Configuration conf) {
@@ -100,8 +102,11 @@ public class ConfigurationService {
 
 		// Secure
 		Date comp = new Date();
-		if (startDate == null || endDate == null || startDate.after(endDate) || startDate.after(comp)
-				|| endDate.after(comp)) {
+		if (startDate == null || endDate == null || startDate.after(endDate)
+		// || startDate.after(comp)
+		// || endDate.after(comp)
+		) {
+			logger.error("Troubles with dates...");
 			return null;
 		}
 		// convert date to calendar

@@ -230,6 +230,8 @@ public class GenyParser implements HtmlParser {
 		String type = null;
 		String prime = null;
 		String depart = "non";
+		String heures = null;
+		String minutes = null;
 		elements = xPathTool.getElements(doc, "/span[@class='infoCourse']");
 		if (elements != null && elements.size() > 0) {
 			String txt = elements.get(0).text();
@@ -269,6 +271,15 @@ public class GenyParser implements HtmlParser {
 			}
 			logger.debug("Autostart : " + depart);
 
+			// Heure
+			p = Pattern.compile("Départ\\s+(\\d{1,2})h(\\d{2})");
+			m = p.matcher(txt);
+			if (m.find()) {
+				heures = m.group(1);
+				minutes = m.group(2);
+			}
+			logger.debug("heure : " + heures + ":" + minutes);
+
 		}
 
 		Course course = null;
@@ -295,6 +306,8 @@ public class GenyParser implements HtmlParser {
 			course.setPrime(prime);
 			course.setDepart(depart);
 			course.setUrl(url);
+			course.setHeures(heures);
+			course.setMinutes(minutes);
 		}
 
 		if (course != null) {

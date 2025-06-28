@@ -20,6 +20,6 @@ public class Configuration {
 	private String startRefactoDate;
 	private String endRefactoDate;
 
-
-
+	private String botToken;
+	private String botUsername;
 }

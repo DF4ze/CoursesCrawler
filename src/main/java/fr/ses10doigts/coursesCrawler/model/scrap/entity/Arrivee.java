@@ -6,9 +6,11 @@ import fr.ses10doigts.coursesCrawler.model.scrap.AbstractCourseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.Data;
 
 @Entity
 @Table(uniqueConstraints=@UniqueConstraint(columnNames={"courseID", "numChv"}))
+@Data
 public class Arrivee extends AbstractCourseEntity {
 
 
