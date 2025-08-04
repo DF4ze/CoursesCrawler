@@ -1,4 +1,4 @@
-package fr.ses10doigts.coursesCrawler.model.web;
+package fr.ses10doigts.coursesCrawler.model.schedule;
 
 import java.time.LocalDateTime;
 
@@ -17,11 +17,12 @@ public class ScheduledTask {
     private Long id;
 
     private String name;
-    private String cronExpression;
+    private Long CourseID;
 
     @Enumerated(EnumType.STRING)
-    private Status status; // SCHEDULED, RUNNING, SUCCESS, ERROR
+    private ScheduleStatus status; // SCHEDULED, RUNNING, SUCCESS, ERROR
 
+	private LocalDateTime plannedExecution;
     private LocalDateTime lastExecution;
     private String errorMessage;
 	private LocalDateTime creationDate;

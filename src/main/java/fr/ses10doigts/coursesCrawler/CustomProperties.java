@@ -2,6 +2,7 @@ package fr.ses10doigts.coursesCrawler;
 
 import java.util.Date;
 
+import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -23,10 +24,12 @@ public class CustomProperties {
     private Agressivity	agressivity;
     private boolean	doCrawl;
     private boolean	doRefacto;
+	private boolean waitOnRetry = false;
 	private Date startRefactoDate;
 	private Date endRefactoDate;
 
 	private String botToken;
 	private String botUsername;
 
+    private Verbose telegramVerbose;
 }

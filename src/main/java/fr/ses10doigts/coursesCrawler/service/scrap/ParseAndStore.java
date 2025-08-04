@@ -22,10 +22,10 @@ public class ParseAndStore implements HtmlVisitor {
     @Override
     public void indexify(String url, String archiveBody) {
 
-	EntitiesList bl = parser.parse(url, archiveBody);
+        EntitiesList bl = parser.parse(url, archiveBody);
 
-	if (bl != null && !bl.get().isEmpty()) {
-	    repository.addAll(bl);
-	}
+        if (bl != null && !bl.get().isEmpty()) {
+            repository.addAll(bl);
+        }
     }
 }

@@ -126,10 +126,10 @@ public class GenyParser implements HtmlParser {
 		Long longCourse = parse_numCourse();
 		EntitiesList bl = null;
 		List<Course> findByCourseID = courseRepository.findByCourseID(longCourse);
-		// si la course a déjà été parsée on ne la renseigne pas de nouveau pour éviter
-		// les doublons
+		// Si la course existe déjà, on la met à jour.
+		Course savedCourse = null;
 		if (!findByCourseID.isEmpty()) {
-			return bl;
+			savedCourse = findByCourseID.get(0);
 		}
 
 		// extraction de l'ID de la date
@@ -148,7 +148,7 @@ public class GenyParser implements HtmlParser {
 				if (m.matches()) {
 					date = m.group(1);
 					SimpleDateFormat sdf2DYear = new SimpleDateFormat("dd/MM/yy");
-					SimpleDateFormat sdf4DYear = new SimpleDateFormat("yyyy/MM/dd");
+					SimpleDateFormat sdf4DYear = new SimpleDateFormat("yyyy-MM-dd");
 					try {
 						Date parse = sdf2DYear.parse(date);
 						date = sdf4DYear.format(parse);
@@ -295,7 +295,7 @@ public class GenyParser implements HtmlParser {
 	    // @formatter:on
 
 			course = new Course();
-			course.setId(longCourse);
+
 			course.setCourseID(longCourse);
 			course.setCourse(numCourse);
 			course.setDate(date);
@@ -308,6 +308,13 @@ public class GenyParser implements HtmlParser {
 			course.setUrl(url);
 			course.setHeures(heures);
 			course.setMinutes(minutes);
+
+			if( savedCourse != null ) {
+				course.setId(savedCourse.getId());
+				if( !savedCourse.getHeures().equals(heures) || !savedCourse.getMinutes().equals(minutes)) {
+					course.setDateChanged(true);
+				}
+			}
 		}
 
 		if (course != null) {
@@ -682,13 +689,13 @@ public class GenyParser implements HtmlParser {
 
 		EntitiesList cotesCourse = null;
 
-		if (url.indexOf("/cotes/") != -1 && longCourse != null) {
+		if (url.contains("/cotes") && longCourse != null) {
 			logger.debug("=================================== Cote");
 			logger.info(url);
 
 			Elements lignes = xPathTool.getElements(doc, "/div[@id='div_tableau_cotes']/table/tbody/tr");
 
-			if (lignes != null && lignes.size() > 0) {
+			if (lignes != null && !lignes.isEmpty()) {
 
 				for (int i = 0; i < lignes.size(); i++) {
 					Element uneLigne = lignes.get(i);
@@ -701,7 +708,7 @@ public class GenyParser implements HtmlParser {
 					Float enjeuxAvant = null;
 					Float coteAvant = null;
 					Float coteDepart = null;
-					if (cellules != null && cellules.size() > 0 && !cellules.text().isBlank()) {
+					if (cellules != null && !cellules.isEmpty() && !cellules.text().isBlank()) {
 						for (int j = 0; j < cellules.size(); j++) {
 							Element uneCellule = cellules.get(j);
 
@@ -753,7 +760,7 @@ public class GenyParser implements HtmlParser {
 						} // fin for cellules
 
 						if (numCheval != null) {
-							logger.debug("Cvl : " + numCheval + " cote : " + coteDepart + " enjeux : " + enjeuxDepart);
+                            logger.debug("Cvl : {} cote : {} enjeux av: {}", numCheval, coteDepart, enjeuxAvant);
 						}
 
 						if (numCheval != null && coteDepart != null && enjeuxDepart != null) {
@@ -776,7 +783,7 @@ public class GenyParser implements HtmlParser {
 					}
 				} // fin for lignes
 
-				if (cotesCourse.size() == 0) {
+                if (cotesCourse == null || cotesCourse.size() == 0) {
 					logger.warn("!!!!!!!!!!!!!!!!!!!!!!!!! Page sans Cote : " + url);
 				} else {
 					logger.info("Adding " + cotesCourse.size() + " cotes");

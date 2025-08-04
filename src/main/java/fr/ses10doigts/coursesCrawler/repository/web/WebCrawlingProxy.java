@@ -20,14 +20,22 @@ public class WebCrawlingProxy {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebCrawlingProxy.class);
 
-	public String getRawPage(String url) {
+	private static final RestTemplate restTemplate = new RestTemplate();
 
-		RestTemplate restTemplate = new RestTemplate();
-		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, null,
-				new ParameterizedTypeReference<String>() {
-				});
-		String body = response.getBody();
-		return body;
+
+	public String getRawPage(String url) {
+		try{
+			ResponseEntity<String> response = restTemplate.exchange(
+					url,
+					HttpMethod.GET,
+					null,
+					new ParameterizedTypeReference<String>() {}
+			);
+			return response.getBody();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException("Erreur lors de l'appel HTTP", e);
+		}
 	}
 
 	public String getUrlContents(String theUrl) {

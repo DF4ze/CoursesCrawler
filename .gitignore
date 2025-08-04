@@ -63,6 +63,7 @@ build/
 application-dev.properties
 application-prod.properties
 application-telegram.properties
+application-test.properties
 
 # On garde les fichiers suivants :
 # - application.properties (commun)

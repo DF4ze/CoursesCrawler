@@ -1,6 +1,7 @@
-package fr.ses10doigts.coursesCrawler.model.web;
+package fr.ses10doigts.coursesCrawler.model;
 
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
+import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
 import lombok.Data;
 
 @Data
@@ -13,6 +14,7 @@ public class Configuration {
     private Agressivity	agressivity;
     private boolean	launchCrawl;
     private boolean	launchRefacto;
+	private boolean waitOnRetry;
 
     private String	startGenDate;
     private String	endGenDate;
@@ -22,4 +24,6 @@ public class Configuration {
 
 	private String botToken;
 	private String botUsername;
+
+    private Verbose telegramVerbose;
 }

@@ -20,6 +20,7 @@ public class Course extends AbstractCourseEntity {
     private String  type;
     private String  prime;
     private String depart;
+	private Boolean dateChanged;
 
     public Course() {
     }

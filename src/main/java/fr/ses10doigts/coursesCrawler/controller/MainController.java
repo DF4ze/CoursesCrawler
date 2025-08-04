@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import fr.ses10doigts.coursesCrawler.model.crawl.Report;
-import fr.ses10doigts.coursesCrawler.model.web.Configuration;
+import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;

@@ -3,6 +3,7 @@ package fr.ses10doigts.coursesCrawler.service.scrap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,9 @@ public class RepositoryService {
 
 		for (Cote cote : cotes) {
 			try {
+				Optional<Cote> rez = coteRepository.findByCourseIDAndNumCheval(cote.getCourseID(), cote.getNumCheval());
+                rez.ifPresent(value -> cote.setId(value.getId()));
+
 				coteRepository.save(cote);
 			} catch (Exception e) {
 				logger.error(e.getMessage());

@@ -14,7 +14,7 @@ import fr.ses10doigts.coursesCrawler.model.crawl.Report;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.FinalState;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.RunningState;
-import fr.ses10doigts.coursesCrawler.model.web.Configuration;
+import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.repository.web.WebCrawlingProxy;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
@@ -48,7 +48,7 @@ public class CrawlService {
 
 
 
-    public Report launchCrawl() throws IOException {
+	public Report launchCrawl(boolean withException) throws IOException {
 		if (treatment == null || treatment.getState().equals(State.TERMINATED)) {
 			// Retrieve seeds
 			reader.setFilePath(props.getSeedsFile());
@@ -70,6 +70,8 @@ public class CrawlService {
 			pc.setMaxHop(props.getMaxHop());
 			pc.setAuthorised(urlAuthorised);
 			pc.setAgressivity(props.getAgressivity());
+			pc.setWithException(withException);
+			pc.setWaitOnRetry(props.isWaitOnRetry());
 			pc.askToStart();
 			treatment = new Thread(pc);
 			treatment.start();
@@ -86,12 +88,16 @@ public class CrawlService {
 	}
 
 	public Report manageLaunch() {
+		return manageLaunch(false);
+	}
+
+	public Report manageLaunch(boolean withException) {
 		Configuration configuration = configurationService.getConfiguration();
 
 		Report cr = new Report();
 		try {
 			if (configuration.isLaunchCrawl()) {
-				cr = launchCrawl();
+				cr = launchCrawl(withException);
 			}
 
 			if (configuration.isLaunchRefacto()) {
@@ -110,21 +116,21 @@ public class CrawlService {
 	}
 
 	public void launchSurveyCrawl(String startDay, String endDay) {
-		logger.debug("DAYS : " + startDay + " " + endDay);
+        logger.debug("DAYS : {} {}", startDay, endDay);
 		String urls = configurationService.generateUrlFromDates(startDay, endDay);
-		logger.debug("URLS : " + urls);
+        logger.debug("URLS : {}", urls);
 
 		Configuration conf = new Configuration();
 		conf.setAgressivity(Agressivity.MEDIUM_HARD);
-		conf.setAuthorized(// "www.geny.com/cotes\r\n"
-				// + "arrivee-et-rapports\r\n"
-				// +
-				"partants-pmu\r\n");
+		conf.setAuthorized("partants-pmu\r\n");
 		conf.setLaunchCrawl(true);
 		conf.setLaunchRefacto(false);
+		conf.setMaxRetry(10);
+		conf.setWaitOnRetry(true);
 		conf.setMaxHop(1);
 		conf.setTxtSeeds(urls);
 		configurationService.saveConfiguration(conf);
+
 		manageLaunch();
 	}
 

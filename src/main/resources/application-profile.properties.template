@@ -1,5 +1,3 @@
-#Global configuration
-#spring.profiles.active=setYourProfileName
 
 #False for dev mod only
 spring.thymeleaf.cache=true 
@@ -9,8 +7,10 @@ server.port=9002
  
 #Log level configuration
 logging.level.fr.ses10doigts.coursesCrawler==INFO
+# In PROD, change 'static' location to access files for download
+#spring.web.resources.static-locations=file:/home/oklm/courses/files
   
-# output to a file
+# Logs
 logging.file.name=courseCrawlerScheduler.log
 logging.pattern.file=%d %p %c{1.} [%t] %m%n
 logging.pattern.console=%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n
@@ -23,6 +23,7 @@ spring.datasource.password=setYourDBPassword
 #Telegram bot
 fr.ses10doigts.crawler.botToken=token...
 fr.ses10doigts.crawler.botUsername=botname...
+fr.ses10doigts.crawler.telegramVerbose=HIGH
 
 #In app parameters    
 fr.ses10doigts.crawler.maxHop=1

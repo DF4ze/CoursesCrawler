@@ -43,6 +43,8 @@ public class ProcessorChain implements Runnable {
 	private Chrono chrono;
 
 	private boolean isFirst = true;
+	private boolean withException = false;
+	private boolean waitOnRetry = false;
 
 	private static final Logger logger = LoggerFactory.getLogger(ProcessorChain.class);
 
@@ -89,10 +91,11 @@ public class ProcessorChain implements Runnable {
 				downloadAndSeek(page);
 			}
 
-		} while (enQueued.size() != 0);
+		} while (!enQueued.isEmpty());
 
 		// Report
 
+		logger.info("=========================");
 		logger.info("Crawl ended");
 		logger.info(
 				"Crawled " + report.getSuccessCrawled() + "/" + report.size() + " pages in " + chrono.compareToHour());
@@ -114,14 +117,16 @@ public class ProcessorChain implements Runnable {
 
 		// soft way to stop thread
 		if (!running) {
+			logger.debug("running is false : stopping crawl thread");
 			return;
 		}
 
 		try {
 			// Download content
 			String content = webRepo.getRawPage(page.getUrl());
+			// String content = webRepo.getUrlContents(page.getUrl());
 
-			logger.debug("Url downloaded : " + page.getUrl());
+            logger.debug("Url downloaded : {}", page.getUrl());
 			report.stopCrawl(page.getUrl());
 
 			// Parse content
@@ -135,11 +140,15 @@ public class ProcessorChain implements Runnable {
 
 				// Download content and search for new URL
 				for (Page newPage : newPages) {
+					if( newPage.getUrl().equals( page.getUrl() ) ){
+						continue;
+					}
 					downloadAndSeek(newPage);
 					page.getUrlsContained().add(newPage.getUrl());
 
 					// soft way to stop thread
 					if (!running) {
+						logger.debug("running is false : stopping crawl thread");
 						break;
 					}
 				}
@@ -147,7 +156,7 @@ public class ProcessorChain implements Runnable {
 				logger.debug("Max hop reached, no more research of inner URL  ");
 
 			}
-		} catch (RestClientException e) {
+		} catch (Exception /*| RestClientException*/ e) {
 			logger.error("RestClientException on page " + page.getUrl() + "\n Message : " + e.getMessage());
 			e.printStackTrace();
 			report.errorCrawl(page.getUrl());
@@ -158,26 +167,27 @@ public class ProcessorChain implements Runnable {
 			webRepo.connectivityTest();
 		}
 
-		// Update states
-		// if (webSiteConnexion) {
-		// if (foundURL ) {
-		// report.stopCrawl(page.getUrl());
-		// } else {
-		// report.errorCrawl(page.getUrl());
-		// setAsCrawlErrorPage(page);
-		// }
-		// } else {
-		// report.errorCrawl(page.getUrl());
-		// setAsCrawlErrorPage(page);
-		// }
-
 	}
 
 	private void setAsCrawlErrorPage(Page page) {
-		if (page.getNbRetry() < props.getMaxRetry()) {
 
+		logger.warn("Error crawling : " + page.getUrl());
+		if (page.getNbRetry() < props.getMaxRetry()) {
+			logger.warn(
+					"Page is set to retry (nb retry: " + page.getNbRetry() + "/max retry " + props.getMaxRetry() + ")");
 			page.setNbRetry(page.getNbRetry() + 1);
 			enQueued.add(page);
+
+			if (waitOnRetry) {
+				logger.debug("waitOnRetry is set");
+				sleep(agressivity);
+			}
+
+		} else {
+			logger.warn("Reach max retry : " + page.getNbRetry() + "/" + props.getMaxRetry());
+			if (withException) {
+				throw new RuntimeException("Max retry reached on page " + page.getUrl());
+			}
 		}
 	}
 
@@ -210,6 +220,7 @@ public class ProcessorChain implements Runnable {
 	public void askToStart() {
 		running = true;
 		isFirst = true;
+		report = CrawlReport.getInstance();
 	}
 
 	public List<String> getSeeds() {
@@ -258,5 +269,15 @@ public class ProcessorChain implements Runnable {
 
 	public Chrono getChrono() {
 		return chrono;
+	}
+
+	public void setWithException(boolean withException) {
+		this.withException = withException;
+
+	}
+
+	public void setWaitOnRetry(boolean waitOnRetry) {
+		this.waitOnRetry = waitOnRetry;
+
 	}
 }

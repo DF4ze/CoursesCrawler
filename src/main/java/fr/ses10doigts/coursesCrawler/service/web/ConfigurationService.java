@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import fr.ses10doigts.coursesCrawler.CustomProperties;
-import fr.ses10doigts.coursesCrawler.model.web.Configuration;
+import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineWriter;
 
@@ -41,6 +41,7 @@ public class ConfigurationService {
 		conf.setLaunchRefacto(props.isDoRefacto());
 		conf.setBotToken(props.getBotToken());
 		conf.setBotUsername(props.getBotUsername());
+		conf.setTelegramVerbose(props.getTelegramVerbose());
 
 		try {
 			// Retrieve seeds
@@ -76,6 +77,7 @@ public class ConfigurationService {
 	    props.setMaxRetry(conf.getMaxRetry());
 	    props.setDoCrawl(conf.isLaunchCrawl());
 	    props.setDoRefacto(conf.isLaunchRefacto());
+		props.setWaitOnRetry(conf.isWaitOnRetry());
 
 	    writer.setFilePath(props.getSeedsFile());
 	    writer.StringToFile(conf.getTxtSeeds());

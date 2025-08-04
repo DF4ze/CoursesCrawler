@@ -22,10 +22,15 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 			    SELECT c FROM Course c
 			    JOIN Partant p ON c.courseID = p.courseID
 			    WHERE c.date = :date
+			    AND c.type = :type
+			    AND c.reunion <= :reunion
 			    GROUP BY c.id
-			    HAVING COUNT(p.id) > :minPartants
+			    HAVING COUNT(p.id) >= :minPartants
 			""")
-	List<Course> findCoursesWithMoreThanXPartantsOnDate(@Param("minPartants") long minPartants,
+	List<Course> findCoursesWithCriteria(
+			@Param("minPartants") long minPartants,
+			@Param("type") String typeCourse,
+			@Param("reunion") int reunionNumMax,
 			@Param("date") String date);
 
 }
