@@ -2,22 +2,24 @@ package fr.ses10doigts.coursesCrawler.model.schedule;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import fr.ses10doigts.coursesCrawler.model.scrap.entity.Course;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
 @Data
 public class ScheduledTask {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
-    private Long CourseID;
+    private Long idCourse;
+    private LocalDateTime courseStart;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "courseid", nullable = false)
+    private Course course;
 
     @Enumerated(EnumType.STRING)
     private ScheduleStatus status; // SCHEDULED, RUNNING, SUCCESS, ERROR

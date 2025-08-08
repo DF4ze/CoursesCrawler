@@ -58,6 +58,10 @@ build/
 
 # Bin Files #
 *.xls*
+authorized.txt
+seeds.txt
+authorized_scheduler.txt
+seeds_scheduler.txt
 
 # Fichiers de configuration sensibles (contenant des clés/secrets)
 application-dev.properties

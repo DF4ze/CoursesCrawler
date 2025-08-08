@@ -4,8 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 
@@ -35,8 +35,13 @@ import jakarta.annotation.PostConstruct;
 @Service
 @Profile({ "dev", "telegram" })
 public class SchedulerService {
-	@Getter  @Setter
-    private static int timeBefore = 20;
+	@Getter
+    private int timeBefore = 20;
+	public void setTimeBefore( int tb ){
+		timeBefore = tb;
+		changeScheduledTaskTiming( tb );
+	}
+
 	@Getter  @Setter
     private static int nbPartantMin = 14;
 	@Getter @Setter
@@ -79,11 +84,11 @@ public class SchedulerService {
 				checkerService.check(task, pourcentFavoris, typeCourse, nbPartantMin, nbPartantMax, nbReunionMax);
 
 				if( task.getStatus() == ScheduleStatus.RESCHEDULED ){
-					logger.debug("RESCHEDULED task for course : {}", task.getCourseID());
-					List<Course> byCourseID = courseRepository.findByCourseID(task.getCourseID());
+					logger.debug("RESCHEDULED task for course : {}", task.getIdCourse());
+					List<Course> byCourseID = courseRepository.findByCourseID(task.getIdCourse());
 					if( !byCourseID.isEmpty() ){
 						Course c = byCourseID.get(0);
-						LocalDateTime target = getTargetFromCourse(c, 0);
+						LocalDateTime target = getTargetFromCourse(c, timeBefore);
 
 						logger.debug("new target : {}", target);
 
@@ -96,7 +101,7 @@ public class SchedulerService {
 						taskRepository.save(task);
 
 					}else{
-						logger.warn("No course founded for id : {}", task.getCourseID());
+						logger.warn("No course founded for id : {}", task.getIdCourse());
 					}
 				}
 			}catch (Exception e){
@@ -221,9 +226,8 @@ public class SchedulerService {
 						.append("✔️ Type course : ").append( typeCourse ).append( "\n" )
 						.append("✔️ Réunion max : ").append( nbReunionMax ).append( "\n\n" );
 
-				int courseNb = 0;
+				int nbSchedule = 0;
 				for (Course course : courses) {
-					courseNb++;
 
 					boolean inStats = typeCourse.equalsIgnoreCase(course.getType())
                             && course.getReunion() <= nbReunionMax;
@@ -232,7 +236,7 @@ public class SchedulerService {
 						continue;
 					}
 
-					LocalDateTime targetTime = getTargetFromCourse(course, courseNb);
+					LocalDateTime targetTime = getTargetFromCourse(course, timeBefore);
 
 					String courseDescr = "\uD83C\uDFC7 " + course.getHippodrome() + ", R:" + course.getReunion()
 							+ ", C:" + course.getCourse() + " à " + course.getHeures() + "h" + course.getMinutes() + "\n"
@@ -253,8 +257,10 @@ public class SchedulerService {
 					}
 
 					scheduleTask(targetTime, course, messageId, courseDescr);
-
+					nbSchedule++;
 				}
+
+				logger.info("{} New tasks scheduled.", nbSchedule);
 
 				try {
                     logger.debug("Send message : {}", rep);
@@ -272,49 +278,45 @@ public class SchedulerService {
 	}
 
 	@NotNull
-	private LocalDateTime getTargetFromCourse(Course course, int courseNb) {
+	private LocalDateTime getTargetFromCourse( Course course, int minusMinute ) {
 		// Calculer l'heure de la course
 		int hour = Integer.parseInt(course.getHeures());
 		int minute = Integer.parseInt(course.getMinutes());
 
 		LocalDate date = LocalDate.parse(course.getDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		LocalTime time = LocalTime.of(hour, minute, 0);
-		LocalDateTime targetTime = null;
-		if ( false
-				// Arrays.asList(environment.getActiveProfiles()).contains("dev")
-		// || Arrays.asList(environment.getActiveProfiles()).contains("telegram")
-		) {
-			// ! \\ In dev mode: Target is every Xs
-			targetTime = LocalDateTime.now().plusSeconds(courseNb * 60L);
-		} else {
-			targetTime = LocalDateTime.of(date, time).minusMinutes(timeBefore);
-		}
-		return targetTime;
+
+        return LocalDateTime.of(date, time).minusMinutes(minusMinute);
 	}
 
 	private void scheduleTask(LocalDateTime date, Course course, Long telegramMessageId,
 			String courseDescription)  {
 
-		if (taskRepository.existsByCourseUrl(course.getUrl())) {
-            logger.debug("Course already planned to be checked: {}", course.getUrl());
-			return;
-		}
-
-        logger.debug("Planning task for {}", course.getUrl());
-
-		logger.debug("Creating task");
 		// Créer ScheduledTask
 		ScheduledTask task = new ScheduledTask();
+
+		Optional<ScheduledTask> byCourseUrl = taskRepository.findByCourseUrl(course.getUrl());
+		if (byCourseUrl.isPresent()) {
+            logger.debug("Modifying already planned task: {}", course.getUrl());
+			task.setId(byCourseUrl.get().getId());
+		}else{
+			logger.debug("Planning task for {}", course.getUrl());
+		}
+
 		task.setName(course.getUrl());
-		task.setCourseID(course.getCourseID());
+		task.setIdCourse(course.getCourseID());
+		task.setCourse(course);
+		task.setCourseStart(getTargetFromCourse(course, 0));
 		task.setPlannedExecution(date);
 		task.setStatus(ScheduleStatus.SCHEDULED);
-		task.setCreationDate(LocalDateTime.now());
+		if( task.getId() == null )
+			task.setCreationDate(LocalDateTime.now());
 		task.setCourseUrl(course.getUrl());
 		task.setTelegramMessageId(telegramMessageId);
 		task.setCourseDescription(courseDescription);
 
 		logger.debug("Saving it to DB");
+		logger.debug(task.toString());
 		// Sauvegarder en base
 		ScheduledTask savedTask = taskRepository.save(task);
 
@@ -326,7 +328,13 @@ public class SchedulerService {
 		return day.format(formatter);
 	}
 
-	private void printScheduledJobs()  {
+	private void changeScheduledTaskTiming(int tb) {
+		List<ScheduledTask> scheduledTasksFromNow = taskRepository.findScheduledTasksFromNow(ScheduleStatus.SCHEDULED, LocalDateTime.now());
+		for( ScheduledTask task : scheduledTasksFromNow ){
+			task.setPlannedExecution( task.getCourseStart().minusMinutes(tb) );
+			taskRepository.save(task);
+		}
+		logger.info("{} Scheduled task updated", scheduledTasksFromNow.size());
 	}
 
 	private List<ScheduledTask> getOldScheduledTasks() {

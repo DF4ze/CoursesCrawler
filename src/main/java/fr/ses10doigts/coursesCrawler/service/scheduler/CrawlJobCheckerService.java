@@ -54,18 +54,6 @@ public class CrawlJobCheckerService {
 
     public void check(ScheduledTask task, float percent, String courseType, int nbPartantMin, int nbPartantMax, int nbReunionMax)  {
 
-
-		// TODO remove :
-		if( task == null ){
-			task = new ScheduledTask();
-			task.setCourseUrl("https://www.geny.com/partants-pmu/2025-07-05-enghien-pmu-prix-du-moulin-rouge_c1581820");
-			task.setStatus(ScheduleStatus.SCHEDULED);
-			task.setPlannedExecution(LocalDateTime.now().minusMinutes(15));
-			task.setCourseDescription("Attelé - Course D (trot) - 56 000€ - 2150m - 8 Partants - Sable - corde : à gauche - Départ : Autostart\n");
-			task.setTelegramMessageId(-4706435457L);
-
-		}
-
 		if( task == null ){
 			logger.warn("/!\\ Given task is null");
 			return;
@@ -106,12 +94,12 @@ public class CrawlJobCheckerService {
 				Course c = courses.get(0);
 				if( c.getDateChanged() != null && c.getDateChanged() ){
 					// Est-on après "now"
-					LocalTime nowPlus5 = LocalTime.now().plusMinutes(5);
+					LocalTime nowPlus = LocalTime.now().plusMinutes(4);
 
 					int hour = Integer.parseInt(c.getHeures());
 					int minute = Integer.parseInt(c.getMinutes());
 					LocalTime courseTime = LocalTime.of(hour, minute);
-					if( courseTime.isAfter(nowPlus5) ){
+					if( courseTime.isAfter(nowPlus) ){
 						task.setStatus(ScheduleStatus.RESCHEDULED);
 						return;
 					}
@@ -126,38 +114,45 @@ public class CrawlJobCheckerService {
 			logger.debug("Retreive stats");
 			CourseComplete courseStats = getCourseStats(codeCourse, cotes);
 
-			boolean isPartantsOK = courseStats.getNombrePartant() >= nbPartantMin
-					&& courseStats.getNombrePartant() <= nbPartantMax;
+			boolean isInStats = false;
+			String stats = "";
+			// Parfois pas de résultat de la course...
+			if( courseStats.getNombrePartant() != null ) {
+				boolean isPartantsOK = courseStats.getNombrePartant() >= nbPartantMin
+						&& courseStats.getNombrePartant() <= nbPartantMax;
 
-            boolean isPercentOk = true;
-			float sumPercent = 0;
-			if( courseStats.getPourcentPremierAvant() != null && courseStats.getPourcentDeuxiemeAvant() != null &&
-					courseStats.getPourcentTroisiemeAvant() != null) {
-				sumPercent = courseStats.getPourcentPremierAvant() + courseStats.getPourcentDeuxiemeAvant()
-						+ courseStats.getPourcentTroisiemeAvant();
+				boolean isPercentOk = true;
+				float sumPercent = 0;
+				if (courseStats.getPourcentPremierAvant() != null && courseStats.getPourcentDeuxiemeAvant() != null &&
+						courseStats.getPourcentTroisiemeAvant() != null) {
+					sumPercent = courseStats.getPourcentPremierAvant() + courseStats.getPourcentDeuxiemeAvant()
+							+ courseStats.getPourcentTroisiemeAvant();
+				}
+
+				if (sumPercent < percent) {
+					isPercentOk = false;
+				}
+
+				boolean isTypeOk = courseType.equalsIgnoreCase(courseStats.getTypeCourse());
+
+				boolean isNbReuMaxOk = courseStats.getNumeroReunion() <= nbReunionMax;
+
+				isInStats = isTypeOk && isPercentOk && isPartantsOK && isNbReuMaxOk;
+
+				//@formatter:off
+				stats = ( isInStats ? "✅ Course dans les stats.\nMiser sur Cheval N°"+courseStats.getNumeroChlPremierAvant() : "❌ Course hors stats...")+"\n\n"
+					+(isPartantsOK?"✅":"❌")+" nb Partant: "+courseStats.getNombrePartant()+"\n"
+					+(isPercentOk?"✅":"❌")+" Pourcent: "+courseStats.getPourcentPremierAvant()
+							+" + "+ courseStats.getPourcentDeuxiemeAvant()
+							+" + "+ courseStats.getPourcentTroisiemeAvant()
+							+" = "+sumPercent+"\n"
+					+(isTypeOk?"✅":"❌")+" Type: "+courseStats.getTypeCourse()+"\n"
+					+(isNbReuMaxOk?"✅":"❌")+" N° Réunion: "+courseStats.getNumeroReunion();
+				//@formatter:on
+
+			}else{
+				stats = "❌ Sans résultats...";
 			}
-
-			if (sumPercent < percent) {
-				isPercentOk = false;
-			}
-
-			boolean isTypeOk = courseType.equalsIgnoreCase(courseStats.getTypeCourse());
-
-			boolean isNbReuMaxOk = courseStats.getNumeroReunion() <= nbReunionMax;
-
-			boolean isInStats = isTypeOk && isPercentOk && isPartantsOK && isNbReuMaxOk;
-
-            //@formatter:off
-			String stats = ( isInStats ? "✅ Course dans les stats.\nMiser sur Cheval N°"+courseStats.getNumeroChlPremierAvant() : "❌ Course hors stats...")+"\n\n"
-				+(isPartantsOK?"✅":"❌")+" nb Partant: "+courseStats.getNombrePartant()+"\n"
-				+(isPercentOk?"✅":"❌")+" Pourcent: "+courseStats.getPourcentPremierAvant()
-						+" + "+ courseStats.getPourcentDeuxiemeAvant()
-						+" + "+ courseStats.getPourcentTroisiemeAvant()
-						+" = "+sumPercent+"\n"
-				+(isTypeOk?"✅":"❌")+" Type: "+courseStats.getTypeCourse()+"\n"
-				+(isNbReuMaxOk?"✅":"❌")+" N° Réunion: "+courseStats.getNumeroReunion();
-			//@formatter:on
-
 
             logger.debug("Course checked : {}\n{}", task.getCourseDescription(), stats);
 

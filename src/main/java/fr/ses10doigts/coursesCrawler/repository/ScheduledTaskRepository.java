@@ -2,6 +2,7 @@ package fr.ses10doigts.coursesCrawler.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -31,6 +32,8 @@ public interface ScheduledTaskRepository extends JpaRepository<ScheduledTask, Lo
 	);
 
 	boolean existsByCourseUrl(String courseUrl);
+
+	Optional<ScheduledTask> findByCourseUrl( String courseUrl );
 
 	@Query("SELECT s FROM ScheduledTask s " +
 			"WHERE s.status = :status " +

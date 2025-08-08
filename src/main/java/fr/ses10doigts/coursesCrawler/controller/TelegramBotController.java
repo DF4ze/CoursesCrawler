@@ -121,14 +121,14 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 					} else if (userMessage.startsWith("/timebefore")) {
 						String[] param = userMessage.split(" ");
 						if (param.length == 2) {
-							SchedulerService.setTimeBefore(Integer.parseInt(param[1]));
+							schedulerService.setTimeBefore(Integer.parseInt(param[1]));
 							telegramService.sendMessage(message.getChatId(),
 									"Temps de check avant l'heure de la course définit à " + param[1] + " minutes");
 							isValueChanged = true;
 						} else {
 							telegramService.sendMessage(message.getChatId(),
 									"Temps de check avant l'heure de la course actuellement définit à "
-											+ SchedulerService.getTimeBefore() + " minutes");
+											+ schedulerService.getTimeBefore() + " minutes");
 						}
 
 					} else if (userMessage.startsWith("/verbose")) {
