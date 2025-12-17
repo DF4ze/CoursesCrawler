@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>fr.ses10doigts</groupId>
 	<artifactId>CoursesCrawler</artifactId>
-	<version>1.3.8</version>
+	<version>1.4.9</version>
 	<name>CoursesCrawler</name>
 	<description>Change money concience</description>
 	<properties>
@@ -68,12 +68,12 @@
 		<dependency> 
 		  <groupId>org.apache.poi</groupId>
 		  <artifactId>poi</artifactId> 
-		  <version>5.2.3</version> 
+		  <version>5.5.1</version>
 		</dependency> 
 		<dependency> 
 		  <groupId>org.apache.poi</groupId> 
 		  <artifactId>poi-ooxml</artifactId> 
-		  <version>5.2.3</version> 
+		  <version>5.5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -89,7 +89,8 @@
 		<dependency>
 		  <groupId>org.telegram</groupId>
 		  <artifactId>telegrambots-client</artifactId>
-		  <version>8.0.0</version>
+		  <version>9.2.0</version>
+		  <!--version>8.0.0</version-->
 		</dependency>
 	</dependencies>
 

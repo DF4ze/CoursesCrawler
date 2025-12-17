@@ -34,9 +34,39 @@ public class TelegramService {
     }
 
     public void sendMessage(Long chatId, String text) throws TelegramApiException {
-        SendMessage sendMessage = new SendMessage(chatId + "", escapeMarkdownPreservingLinks( text ));
-        sendMessage.setParseMode("MarkdownV2");
-        telegramClient.execute(sendMessage);
+        int maxTries = 3;
+        boolean error = false;
+        int count = 0;
+        TelegramApiException exception = null;
+        do {
+            try {
+                SendMessage sendMessage = new SendMessage(chatId + "", escapeMarkdownPreservingLinks(text));
+                sendMessage.setParseMode("MarkdownV2");
+                telegramClient.execute(sendMessage);
+                if( error )
+                    logger.info("Message well sent");
+                error = false;
+
+            }catch (TelegramApiException e){
+                error = true;
+                count++;
+                exception = e;
+
+                if( count < maxTries ){
+                    logger.warn("Error sending Telegram message, sleep 1min then try again... Try {}", count);
+                    try {
+                        Thread.sleep(60*1000);
+                    } catch (InterruptedException ignore) {
+                        ;
+                    }
+                }
+            }
+        }while( error && count < maxTries );
+
+        if( error ){
+            logger.error("Unable to send Telegram message after {} tries : \n{}", count, escapeMarkdownPreservingLinks(text));
+            throw exception;
+        }
     }
 
     public static boolean isWebhookActive(String token) {

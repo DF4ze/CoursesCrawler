@@ -9,7 +9,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 
+import fr.ses10doigts.coursesCrawler.model.paris.Paris;
 import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
+import fr.ses10doigts.coursesCrawler.service.bet.BetService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
 import lombok.Getter;
@@ -19,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -56,9 +57,6 @@ public class SchedulerService {
 	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
 	@Autowired
-	private Environment environment;
-
-	@Autowired
 	private CrawlService crawlService;
 	@Autowired
 	private TelegramService telegramService;
@@ -71,6 +69,8 @@ public class SchedulerService {
 	private ScheduledTaskRepository taskRepository;
 	@Autowired
 	private CourseRepository courseRepository;
+	@Autowired
+	private BetService betService;
 
 
 	@Scheduled(cron = "${fr.ses10doigts.crawler.schedulerChecker}") // Toutes les minutes
@@ -79,9 +79,23 @@ public class SchedulerService {
 		List<ScheduledTask> scheduledTasks = getScheduledTasks();
 		logger.debug("Founded {} task(s) to execute.", scheduledTasks.size());
 
+		boolean once = true;
+
 		for(ScheduledTask task : scheduledTasks){
+			// Une seule fois, on met à jour la dernière course
+			if( once ) {
+				once = false;
+				try {
+					Paris paris = betService.getLastBet();
+					if (paris != null)
+						checkerService.checkEnd(paris.getCourse().getCourseID(), task.getTelegramMessageId());
+				} catch (Exception e) {
+					logger.error("Error during ScheduledTask : {}", e.getMessage());
+				}
+			}
+
 			try{
-				checkerService.check(task, pourcentFavoris, typeCourse, nbPartantMin, nbPartantMax, nbReunionMax);
+				checkerService.checkStart(task, pourcentFavoris, typeCourse, nbPartantMin, nbPartantMax, nbReunionMax);
 
 				if( task.getStatus() == ScheduleStatus.RESCHEDULED ){
 					logger.debug("RESCHEDULED task for course : {}", task.getIdCourse());
@@ -128,7 +142,7 @@ public class SchedulerService {
 
 	}
 
-	@Scheduled(cron = "${fr.ses10doigts.crawler.dailyTask}") // Tous les jours à 10h00 du matin (en fonction de la property)
+	@Scheduled(cron = "${fr.ses10doigts.crawler.dailyTask}") // Tous les jours à 9h00 du matin (en fonction de la property)
 	public void everyMorning() {
 		logger.info("Starting Daily Crawl");
 		String toDay = dayDate();
@@ -167,9 +181,13 @@ public class SchedulerService {
 
 		manageEndOfCrawl(crawlService.getTreatment(), chatId, startDay, endDay);
 
-		if( configurationService.getConfiguration().getTelegramVerbose().equals(Verbose.HIGH) ) {
-			telegramService.sendMessage(chatId, "Crawl du " + startDay + (startDay.equals(endDay) ? "" : " au " + endDay)
-					+ " lancé. Résultat dans env. 5-10 min.");
+		try {
+			if (configurationService.getConfiguration().getTelegramVerbose().equals(Verbose.HIGH)) {
+				telegramService.sendMessage(chatId, "Crawl du " + startDay + (startDay.equals(endDay) ? "" : " au " + endDay)
+						+ " lancé. Résultat dans env. 5-10 min.");
+			}
+		}catch (Exception e){
+			logger.warn("Error sending Telegram message... Daily crawl is done! {}", e.getMessage());
 		}
 
 		if (startAndStop)
@@ -180,6 +198,7 @@ public class SchedulerService {
 			String endDate) {
 
 		if (t == null) {
+			logger.warn("Crawl Thread is null...");
 			return;
 		}
 
@@ -210,27 +229,24 @@ public class SchedulerService {
 						nbPartantMin, typeCourse, nbReunionMax, day
 				);
 
-                logger.debug("Après le crawl, {} courses trouvées en BDD avec nbPartant {}, type '{}', Reu max {}.",
-						courses.size(), nbPartantMin, typeCourse, nbReunionMax
-				);
-
+				int nbScheduled = 0;
 				StringBuilder rep = new StringBuilder();
-				rep.append("\uD83D\uDCC6").append( day ).append(" : \n");
-				if( courses.isEmpty() ){
-					rep.append( "❌ Pas de courses répondant aux critères aujourd'hui !" );
-				}else {
-					rep.append("✅ ").append( courses.size() ).append(" course(s) aujourd'hui !" );
-				}
-				rep.append("\nCritères :\n" )
-						.append("✔️ Partants min : ").append( nbPartantMin ).append( "\n" )
-						.append("✔️ Type course : ").append( typeCourse ).append( "\n" )
-						.append("✔️ Réunion max : ").append( nbReunionMax ).append( "\n\n" );
-
-				int nbSchedule = 0;
 				for (Course course : courses) {
 
 					boolean inStats = typeCourse.equalsIgnoreCase(course.getType())
-                            && course.getReunion() <= nbReunionMax;
+                            && course.getReunion() <= nbReunionMax
+							&& !(
+								course.getHippodrome().contains("(")
+								|| course.getHippodrome().contains(")")
+								|| course.getHippodrome().contains("[")
+								|| course.getHippodrome().contains("]")
+							);
+					if( course.getHippodrome().contains("(")
+							|| course.getHippodrome().contains(")")
+							|| course.getHippodrome().contains("[")
+							|| course.getHippodrome().contains("]") ){
+						logger.warn("Current course remove because seems to not be in France : {}", course.getHippodrome());
+					}
 
 					if( !inStats ){
 						continue;
@@ -257,18 +273,33 @@ public class SchedulerService {
 					}
 
 					scheduleTask(targetTime, course, messageId, courseDescr);
-					nbSchedule++;
+					nbScheduled++;
 				}
 
-				logger.info("{} New tasks scheduled.", nbSchedule);
+				logger.debug("Après le crawl, {} courses trouvées en BDD avec nbPartant {}, type '{}', Reu max {}.",
+						nbScheduled, nbPartantMin, typeCourse, nbReunionMax
+				);
+
+				StringBuilder finalRep = new StringBuilder();
+				finalRep.append("\uD83D\uDCC6").append( day ).append(" : \n");
+				if( courses.isEmpty() ){
+					finalRep.append( "❌ Pas de courses répondant aux critères aujourd'hui !" );
+				}else {
+					finalRep.append("✅ ").append( nbScheduled ).append(" course(s) aujourd'hui !" );
+				}
+				finalRep.append("\nCritères :\n" )
+						.append("✔️ Partants min : ").append( nbPartantMin ).append( "\n" )
+						.append("✔️ Type course : ").append( typeCourse ).append( "\n" )
+						.append("✔️ Réunion max : ").append( nbReunionMax ).append( "\n\n" )
+						.append(rep);
+				logger.info("{} New tasks scheduled.", nbScheduled);
 
 				try {
-                    logger.debug("Send message : {}", rep);
-					telegramService.sendMessage(messageId, rep.toString());
+                    logger.debug("Send message : {}", finalRep);
+					telegramService.sendMessage(messageId, finalRep.toString());
 
 				} catch (Exception e) {
-					logger.error("Error sending Telegram : " + rep + "\n-------------\nException message : "
-							+ e.getMessage());
+                    logger.error("Error sending Telegram : {}\n-------------\nException message : {}", finalRep, e.getMessage());
 				}
 			}
 

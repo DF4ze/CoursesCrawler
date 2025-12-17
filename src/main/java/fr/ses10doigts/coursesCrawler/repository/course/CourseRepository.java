@@ -19,14 +19,14 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findAllBetween( Long courseIDStart, Long courseIDStop );
 
 	@Query("""
-			    SELECT c FROM Course c
-			    JOIN Partant p ON c.courseID = p.courseID
-			    WHERE c.date = :date
-			    AND c.type = :type
-			    AND c.reunion <= :reunion
-			    GROUP BY c.id
-			    HAVING COUNT(p.id) >= :minPartants
-			""")
+		SELECT c FROM Course c
+		JOIN Partant p ON c.courseID = p.courseID
+		WHERE c.date = :date
+		  AND c.type = :type
+		  AND c.reunion <= :reunion
+		GROUP BY c.id
+		HAVING COUNT(CASE WHEN p.probableGeny IS NOT NULL THEN 1 END) >= :minPartants
+	""")
 	List<Course> findCoursesWithCriteria(
 			@Param("minPartants") long minPartants,
 			@Param("type") String typeCourse,
