@@ -117,7 +117,6 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 											"/log [X]\n" +
 											"➡\uFE0F Affiche les logs (C'est technique, pour moi)");
 
-
 					} else if (userMessage.startsWith("/timebefore")) {
 						String[] param = userMessage.split(" ");
 						if (param.length == 2) {
