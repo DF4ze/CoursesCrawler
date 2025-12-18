@@ -70,11 +70,13 @@ public class BetService {
         Paris paris = null;
         if(optParis.isPresent() ){
             paris = optParis.get();
-            if( course.getNumeroChlPremierAvant() != null ) {
+            if( course.getNumeroChvlPremier() != null ) {
                 paris.setIsWin(course.getNumeroChvlPremier().equals(paris.getNumChevalMise()));
+            }else{
+                logger.warn("No First place?!!!");
             }
 
-            if (paris.getIsWin() == true){
+            if (true == paris.getIsWin()){
                 paris.setGain( course.getRapGagnantPmu() );
             }
 
