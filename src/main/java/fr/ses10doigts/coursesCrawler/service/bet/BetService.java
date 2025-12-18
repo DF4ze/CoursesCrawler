@@ -18,6 +18,8 @@ public class BetService {
 
     @Autowired
     private ParisRepository parisRepository;
+    @Autowired
+    private BetNodeService betNodeService;
 
     public Paris generateBet(Course course, BigDecimal bet, int numCheval){
 
@@ -55,11 +57,17 @@ public class BetService {
         paris.setNumChevalMise(numCheval);
         paris.setCourse(course);
 
-        logger.info("New bet on {}, {}€", paris.getCourse().getCourseID(), paris.getMise());
-
+        logger.info("New betObject on c{}, {}€ on N°{}", paris.getCourse().getCourseID(), paris.getMise(), numCheval);
         parisRepository.save(paris);
-
         logger.info("Bet saved");
+
+        try {
+            logger.info("Launching webAction");
+            betNodeService.launchBetProcess(course.getCourseID(), paris.getMise(), numCheval);
+            logger.info("Ended");
+        }catch (Exception e){
+            logger.error("Error occurred during WebAction : {}",e.getMessage());
+        }
 
         return paris;
     }
