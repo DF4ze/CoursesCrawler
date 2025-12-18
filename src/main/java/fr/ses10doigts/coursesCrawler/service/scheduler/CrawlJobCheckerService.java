@@ -227,7 +227,7 @@ public class CrawlJobCheckerService {
 
 			// Calcul stats
 			logger.info("Retrieve rapports...");
-			CourseComplete courseStats = getCourseStats(course, rapports);
+			CourseComplete courseStats = getCourseStats(rapports);
 			Paris paris = betService.updateBetResult(courseStats);
 
 			//@formatter:off
@@ -278,16 +278,26 @@ public class CrawlJobCheckerService {
 		return found;
 	}
 
-	private CourseComplete getCourseStats(Course course, Set<Rapport> rapports) {
+	private CourseComplete getCourseStats(Set<Rapport> rapports) {
 		CourseComplete cc = new CourseComplete();
 
+        boolean found = false;
 		for(Rapport rapport : rapports){
 			if( rapport.getArrivee() == 1 ){
-				cc.setCourseID(course.getCourseID());
+				cc.setCourseID(rapport.getCourseID());
 				cc.setRapGagnantPmu( rapport.getGagnantPmu() );
 				cc.setNumeroChvlPremier( rapport.getNumCheval() );
+                found = true;
+                break;
 			}
 		}
+
+        if( found ){
+            logger.info("Rapport found: c{}, rap {}, N°{}",
+                    cc.getCourseID(), cc.getRapGagnantPmu(), cc.getNumeroChvlPremier());
+        }else{
+            logger.warn("No first place in given Rapports !!!!!!!!!");
+        }
 
 		return cc;
 	}
