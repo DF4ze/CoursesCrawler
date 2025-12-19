@@ -47,6 +47,8 @@ public class CrawlJobCheckerService {
 	@Autowired
 	private RapportRepository rapportRepository;
 	@Autowired
+	private ArriveeRepository arriveeRepository;
+	@Autowired
 	private ScheduledTaskRepository taskRepository;
 	@Autowired
 	private TelegramService telegramService;
@@ -227,19 +229,28 @@ public class CrawlJobCheckerService {
 
 			// Calcul stats
 			logger.info("Retrieve rapports...");
-			CourseComplete courseStats = getCourseStats(rapports);
+			CourseComplete courseStats = new CourseComplete();
+			if( !rapports.isEmpty() ) {
+				courseStats = getCourseStats(rapports);
+			}else{
+				logger.warn("Seems that trouble parsing Rapport, will use Arrivee to define 1st place...");
+				Set<Arrivee> arrivees = arriveeRepository.findByCourseID(courseID);
+				courseStats = getCourseResult(arrivees);
+			}
+			courseStats.setCourseID(courseID); // parfois problème de parsing des rapport et donc ils sont vides... TODO
 			Paris paris = betService.updateBetResult(courseStats);
 
 			//@formatter:off
-			String txt = "\uD83C\uDFC1 Résultat course: "+course.getHippodrome()+", "+course.getReunion()+", "+course.getCourse()+" à "+course.getHeures()+"h"+course.getMinutes()
-					+ "\uD83D\uDD17 [Lien Arrivées](https://www.geny.com/arrivee-et-rapports-pmu?id_course=" + courseID + ")\n\n"
+			String txt = "\uD83C\uDFC1 Résultat course: \n"+course.getHippodrome()+", R"+course.getReunion()+", C"+course.getCourse()+" à "+course.getHeures()+"h"+course.getMinutes()
+					+ "\n\uD83D\uDD17 [Lien Arrivées](https://www.geny.com/arrivee-et-rapports-pmu?id_course=" + courseID + ")\n\n"
 					+( paris.getIsWin() ?
 						"✅ Gagnée.\n" +
-						"Misé "+paris.getMise()+" sur Cheval N°"+paris.getNumChevalMise()+"\n"+
-						"- Gain: "+paris.getGain()
+						"Misé "+paris.getMise()+" sur N°"+paris.getNumChevalMise()+"\n"+
+						"- Gain: "+(paris.getGain() == null? "(Problème récup Gain...)":paris.getGain()+"x"+paris.getMise()+"="
+								+(paris.getMise().multiply( BigDecimal.valueOf(paris.getGain()) )))
 					: "❌ Perdue.\n" +
-						"Misé "+paris.getMise()+" sur Cheval N°"+paris.getNumChevalMise()+"\n"+
-						"Est arrivé 1er le cheval N°"+courseStats.getNumeroChvlPremier()
+						"Misé "+paris.getMise()+" sur N°"+paris.getNumChevalMise()+"\n"+
+						"Est arrivé 1er le N°"+courseStats.getNumeroChvlPremier()
 					);
 			//@formatter:on
 
@@ -254,6 +265,7 @@ public class CrawlJobCheckerService {
 			throw new RuntimeException(e); // TODO personal exception
 		}
 	}
+
 
 
 	private Long extractCode(String url) {
@@ -276,6 +288,31 @@ public class CrawlJobCheckerService {
 		}
 
 		return found;
+	}
+
+
+	private CourseComplete getCourseResult(Set<Arrivee> arrivees) {
+		CourseComplete cc = new CourseComplete();
+
+		boolean found = false;
+		for(Arrivee arrivee: arrivees){
+			if( arrivee.getNumArrivee() == 1 ){
+				cc.setCourseID(arrivee.getCourseID());
+				//cc.setRapGagnantPmu( arrivee.getGagnantPmu() );
+				cc.setNumeroChvlPremier( arrivee.getNumChv() );
+				found = true;
+				break;
+			}
+		}
+
+		if( found ){
+			logger.info("Arrivée found: c{}, rap {}, N°{}",
+					cc.getCourseID(), cc.getRapGagnantPmu(), cc.getNumeroChvlPremier());
+		}else{
+			logger.warn("No first place in given Arrivée !!!!!!!!!");
+		}
+
+		return cc;
 	}
 
 	private CourseComplete getCourseStats(Set<Rapport> rapports) {

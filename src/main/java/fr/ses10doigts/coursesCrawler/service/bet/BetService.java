@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -86,6 +87,10 @@ public class BetService {
 
             if (true == paris.getIsWin()){
                 paris.setGain( course.getRapGagnantPmu() );
+
+                if( paris.getGain() == null ){
+                    logger.warn("!!!!! Error in parsing course arrival for {}... unable to retreive Gain !!!", course.getCourseID());
+                }
             }
 
             paris.setIsEnded(true);
@@ -99,6 +104,7 @@ public class BetService {
         return paris;
     }
 
+    @Transactional(readOnly = true)
     public Paris getLastBet() {
         return parisRepository.findLastParis().orElse(null);
     }

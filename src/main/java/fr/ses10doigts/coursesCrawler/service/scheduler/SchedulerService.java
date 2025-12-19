@@ -87,7 +87,7 @@ public class SchedulerService {
 				once = false;
 				try {
 					Paris paris = betService.getLastBet();
-					if (paris != null)
+					if (paris != null && !paris.getIsEnded())
 						checkerService.checkEnd(paris.getCourse().getCourseID(), task.getTelegramMessageId());
 				} catch (Exception e) {
 					logger.error("Error during ScheduledTask : {}", e.getMessage());

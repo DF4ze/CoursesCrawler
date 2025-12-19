@@ -13,6 +13,7 @@ public interface ParisRepository extends JpaRepository<Paris, Long> {
 	@Query("""
 		SELECT p
 		FROM Paris p
+		LEFT JOIN FETCH p.parisPrecedent
 		LEFT JOIN Paris p2 ON p = p2.parisPrecedent
 		WHERE p2 IS NULL
 	""")

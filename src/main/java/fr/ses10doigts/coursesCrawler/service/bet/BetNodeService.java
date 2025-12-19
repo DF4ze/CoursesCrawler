@@ -17,7 +17,7 @@ public class BetNodeService {
         String sBet =String.valueOf(bet);
         String sChvlNb = String.valueOf(chvlNb);
         ProcessBuilder pb = new ProcessBuilder(
-                "node", "/home/klm/auto_lumex/script.js", sCourse, sBet, sChvlNb
+                "node", "/home/oklm/auto_lumex/script.js", sCourse, sBet, sChvlNb
         );
 
         boolean isOk = true;
