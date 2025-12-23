@@ -22,22 +22,22 @@ public class BetService {
     @Autowired
     private BetNodeService betNodeService;
 
+    @Transactional
     public Paris generateBet(Course course, BigDecimal bet, int numCheval){
 
         logger.info("Bet service Generate");
-        Optional<Paris> optLastParis = parisRepository.findLastParis();
+        Paris lastParis = parisRepository.findLastParis().orElse(null);
         Paris paris = new Paris();
         int coefBet = 1;
 
-        if (optLastParis.isPresent()){
-            Paris lastParis = optLastParis.get();
+        if (lastParis != null){
             paris.setParisPrecedent(lastParis);
 
             logger.info("Last bet on course : {}", lastParis.getCourse().getCourseID());
 
             if( lastParis.getIsEnded()) {
                 Paris betCursor = lastParis;
-                while (!betCursor.getIsWin()) {
+                while (betCursor.getIsEnded() && !betCursor.getIsWin()) {
                     if( coefBet == 4 )
                         coefBet = 1;
                     coefBet *= 2;
@@ -104,7 +104,6 @@ public class BetService {
         return paris;
     }
 
-    @Transactional(readOnly = true)
     public Paris getLastBet() {
         return parisRepository.findLastParis().orElse(null);
     }
