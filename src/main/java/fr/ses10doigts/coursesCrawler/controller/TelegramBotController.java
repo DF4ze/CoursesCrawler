@@ -209,6 +209,7 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 						);
 
 					} else if (userMessage.startsWith("/log")) {
+                        logger.info("Received /log");
 						int nb = 50;
 						String[] param = userMessage.split(" ");
 						if (param.length == 2) {

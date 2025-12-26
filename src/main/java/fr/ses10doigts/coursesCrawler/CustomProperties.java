@@ -32,4 +32,7 @@ public class CustomProperties {
 	private String botUsername;
 
     private Verbose telegramVerbose;
+
+    private String puppeteerUser;
+    private String puppeteerPwd;
 }

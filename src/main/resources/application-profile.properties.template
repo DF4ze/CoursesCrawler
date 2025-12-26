@@ -25,6 +25,11 @@ fr.ses10doigts.crawler.botToken=token...
 fr.ses10doigts.crawler.botUsername=botname...
 fr.ses10doigts.crawler.telegramVerbose=HIGH
 
+#Pupeteer via NodeJs
+fr.ses10doigts.crawler.puppeteerPath=/path/to/script.js
+fr.ses10doigts.crawler.puppeteerUser=email
+fr.ses10doigts.crawler.puppeteerPwd=password
+
 #In app parameters    
 fr.ses10doigts.crawler.maxHop=1
 fr.ses10doigts.crawler.seedsFile=seeds.txt

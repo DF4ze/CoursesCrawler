@@ -1,7 +1,9 @@
 package fr.ses10doigts.coursesCrawler.service.bet;
 
+import fr.ses10doigts.coursesCrawler.CustomProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -12,12 +14,17 @@ import java.math.BigDecimal;
 public class BetNodeService {
     private static final Logger logger = LoggerFactory.getLogger(BetNodeService.class);
 
+    @Autowired
+    private CustomProperties props;
+
     boolean launchBetProcess(long courseID, BigDecimal bet, int chvlNb){
         String sCourse = String.valueOf(courseID);
         String sBet =String.valueOf(bet);
         String sChvlNb = String.valueOf(chvlNb);
         ProcessBuilder pb = new ProcessBuilder(
-                "node", "/home/oklm/auto_lumex/script.js", sCourse, sBet, sChvlNb
+                "node", "/home/oklm/auto_lumex/script.js", sCourse, sBet, sChvlNb,
+                props.getPuppeteerUser(),
+                props.getPuppeteerPwd()
         );
 
         boolean isOk = true;
