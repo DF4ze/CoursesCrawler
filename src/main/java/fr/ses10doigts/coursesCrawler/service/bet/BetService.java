@@ -38,9 +38,9 @@ public class BetService {
             if( lastParis.getIsEnded()) {
                 Paris betCursor = lastParis;
                 while (betCursor.getIsEnded() && !betCursor.getIsWin()) {
-                    if( coefBet == 4 )
-                        coefBet = 1;
                     coefBet *= 2;
+                    if( coefBet > 4 )
+                        coefBet = 1;
 
                     betCursor = betCursor.getParisPrecedent();
                     if( betCursor == null )
