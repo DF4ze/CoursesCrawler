@@ -322,7 +322,7 @@ public class CrawlJobCheckerService {
 		for(Rapport rapport : rapports){
 			if( rapport.getArrivee() == 1 ){
 				cc.setCourseID(rapport.getCourseID());
-				cc.setRapGagnantPmu( rapport.getGagnantPmu() );
+				cc.setRapGagnantGeny( rapport.getGagnantGeny() );
 				cc.setNumeroChvlPremier( rapport.getNumCheval() );
                 found = true;
                 break;

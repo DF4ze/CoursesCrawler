@@ -86,7 +86,7 @@ public class BetService {
             }
 
             if (true == paris.getIsWin()){
-                paris.setGain( course.getRapGagnantPmu() );
+                paris.setGain( course.getRapGagnantGeny() );
 
                 if( paris.getGain() == null ){
                     logger.warn("!!!!! Error in parsing course arrival for {}... unable to retreive Gain !!!", course.getCourseID());
