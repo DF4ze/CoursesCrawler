@@ -18,6 +18,9 @@ public class BetNodeService {
     private CustomProperties props;
 
     boolean launchBetProcess(long courseID, BigDecimal bet, int chvlNb){
+        if( !props.getPuppeteerActivated().equals("true") )
+            return false;
+
         String sCourse = String.valueOf(courseID);
         String sBet =String.valueOf(bet);
         String sChvlNb = String.valueOf(chvlNb);

@@ -33,6 +33,7 @@ public class CustomProperties {
 
     private Verbose telegramVerbose;
 
+    private String puppeteerActivated;
     private String puppeteerUser;
     private String puppeteerPwd;
     private String puppeteerPath;
