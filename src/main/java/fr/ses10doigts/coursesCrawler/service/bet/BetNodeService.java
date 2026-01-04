@@ -22,7 +22,7 @@ public class BetNodeService {
         String sBet =String.valueOf(bet);
         String sChvlNb = String.valueOf(chvlNb);
         ProcessBuilder pb = new ProcessBuilder(
-                "node", "/home/oklm/auto_lumex/script.js", sCourse, sBet, sChvlNb,
+                "node", props.getPuppeteerPath(), sCourse, sBet, sChvlNb,
                 props.getPuppeteerUser(),
                 props.getPuppeteerPwd()
         );

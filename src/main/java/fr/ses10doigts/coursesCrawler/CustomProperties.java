@@ -35,4 +35,5 @@ public class CustomProperties {
 
     private String puppeteerUser;
     private String puppeteerPwd;
+    private String puppeteerPath;
 }
