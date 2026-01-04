@@ -1,5 +1,6 @@
 package fr.ses10doigts.coursesCrawler.controller;
 
+import fr.ses10doigts.coursesCrawler.service.web.ExcelStreamExtractorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class MainController {
 	@Autowired
 	private RefactorerService refactoService;
 	@Autowired
-	private ExcelExtractorService excelService;
+	private ExcelStreamExtractorService excelService;
 
 	private static final Logger logger = LoggerFactory.getLogger(MainController.class);
 

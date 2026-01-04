@@ -34,7 +34,7 @@ public class ReflectionTool {
 		List<Field> filteredFields = Arrays
 				.stream(clazz.getDeclaredFields()).filter(f -> Modifier.isPublic(f.getModifiers())
 						|| Modifier.isProtected(f.getModifiers()) || Modifier.isPrivate(f.getModifiers()))
-				.collect(Collectors.toList());
+				.toList();
 		result.addAll(filteredFields);
 		return result;
     }
