@@ -7,8 +7,10 @@ import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.ses10doigts.coursesCrawler.model.paris.GlobalBilanParis;
 import fr.ses10doigts.coursesCrawler.model.schedule.ScheduledTask;
 import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
+import fr.ses10doigts.coursesCrawler.service.bet.BilanService;
 import fr.ses10doigts.coursesCrawler.service.misc.LogAccessService;
 import fr.ses10doigts.coursesCrawler.service.scheduler.CrawlJobCheckerService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
@@ -39,6 +41,8 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 	private TelegramService telegramService;
 	@Autowired
 	private LogAccessService logService;
+    @Autowired
+    private BilanService bilanService;
 
 	private final List<Long> authorizedChat = new ArrayList<>();
 	{
@@ -273,7 +277,10 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 						schedulerService.launchMainScheduledCrawl(startDay, endDay, startAndStop, message.getChatId());
 
 
-					}
+					}else if (userMessage.startsWith("/bilan")){
+                        GlobalBilanParis globalBilan = bilanService.getGlobalBilan();
+                        telegramService.sendMessage(message.getChatId(), globalBilan.toString());
+                    }
 
 					if(isValueChanged){
                         logger.info("User changed value : {}", userMessage);
