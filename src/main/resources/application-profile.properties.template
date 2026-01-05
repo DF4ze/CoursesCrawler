@@ -32,6 +32,9 @@ fr.ses10doigts.crawler.puppeteerPath=/path/to/script.js
 fr.ses10doigts.crawler.puppeteerUser=email
 fr.ses10doigts.crawler.puppeteerPwd=password
 
+# Bet
+fr.ses10doigts.crawler.puppeteerInitialBet=1
+
 #In app parameters    
 fr.ses10doigts.crawler.maxHop=1
 fr.ses10doigts.crawler.seedsFile=seeds.txt

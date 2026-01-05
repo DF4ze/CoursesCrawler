@@ -25,6 +25,7 @@ import fr.ses10doigts.coursesCrawler.model.schedule.ScheduleStatus;
 import fr.ses10doigts.coursesCrawler.repository.ScheduledTaskRepository;
 import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,9 @@ import org.springframework.stereotype.Service;
 @Profile({ "devWithTelegram", "telegram" })
 public class CrawlJobCheckerService {
 	private static final Logger logger = LoggerFactory.getLogger(CrawlJobCheckerService.class);
+
+	@Value("${fr.ses10doigts.crawler.puppeteerInitialBet}")
+	private Long INITIAL_BET;
 
     @Autowired
 	private ConfigurationService configurationService;
@@ -145,7 +149,7 @@ public class CrawlJobCheckerService {
 
 				Paris paris = null;
 				if( isInStats ){
-					paris = betService.generateBet(c, new BigDecimal(100), courseStats.getNumeroChlPremierAvant());
+					paris = betService.generateBet(c, new BigDecimal(INITIAL_BET), courseStats.getNumeroChlPremierAvant());
 				}
 
 
