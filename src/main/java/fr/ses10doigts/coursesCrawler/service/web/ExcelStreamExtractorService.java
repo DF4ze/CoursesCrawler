@@ -3,6 +3,7 @@ package fr.ses10doigts.coursesCrawler.service.web;
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.CourseComplete;
 import fr.ses10doigts.coursesCrawler.repository.course.CourseCompleteRepository;
 import fr.ses10doigts.coursesCrawler.service.web.tool.ReflectionTool;
+import jakarta.persistence.EntityManager;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -22,6 +24,9 @@ import java.util.stream.Stream;
 public class ExcelStreamExtractorService {
     @Autowired
     private CourseCompleteRepository repository;
+    @Autowired
+    private EntityManager entityManager;
+
     @Value("${fr.ses10doigts.crawler.export-dir}")
     private String exportDir;
 
@@ -33,9 +38,9 @@ public class ExcelStreamExtractorService {
         try {
             String sFile = exportDir + "courses.xlsx";
             logger.info("Starting generating Excel file to : {}", sFile);
-            try (SXSSFWorkbook workbook = new SXSSFWorkbook(100)) { // buffer 100 lignes
+            try (SXSSFWorkbook workbook = new SXSSFWorkbook(50)) { // buffer 100 lignes
 
-                Sheet sheet = workbook.createSheet(SHEET_NAME);
+                SXSSFSheet sheet = workbook.createSheet(SHEET_NAME);
 
                 // En-tête
                 generateHeaderFromCourseComplete(workbook);
@@ -49,12 +54,29 @@ public class ExcelStreamExtractorService {
                 try (Stream<CourseComplete> stream = repository.streamAll()) {
                     stream.forEach(entity -> {
                         generateRowFromCourseComplete(entity, sheet, style, rowNum[0]++);
+
+                        entityManager.detach(entity);
+                        if( rowNum[0] % 50 == 0 ) {
+                            logger.debug("Clear buffer");
+                            entityManager.clear();
+                        }
+
+                        if (rowNum[0] % 100 == 0) {
+                            try {
+                                sheet.flushRows(100);
+                            } catch (IOException e) {
+                                logger.warn("Error occurred during flushRows");
+                            }
+                        }
                     });
                 }
 
                 try (FileOutputStream out = new FileOutputStream( sFile )) {
                     workbook.write(out);
                 }
+
+                logger.debug("End Clear buffer");
+                entityManager.clear();
             }
             logger.info("Generation successful");
 
