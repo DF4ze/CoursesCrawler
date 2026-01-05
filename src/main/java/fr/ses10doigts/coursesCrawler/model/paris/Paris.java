@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -24,6 +25,12 @@ public class Paris extends AbstractEntity {
     private Integer numChevalMise;
     private BigDecimal mise;
     private Boolean isEnded;
+
+    private LocalDate date;
+    private Integer annee;
+    private Integer mois;
+    private Integer semaine;
+
 
     @Override
     public String toString() {

@@ -16,6 +16,12 @@ public class Page implements Comparable<Page> {
     private Integer	nbRetry;
     private TypePage type;
 
+    public Page(String url, int hop) {
+        this.url = url;
+        this.hop = hop;
+        nbRetry = 0;
+    }
+
     @Override
     public int compareTo(Page page) {
 	return getUrl().compareTo(page.getUrl());

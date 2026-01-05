@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.WeekFields;
 import java.util.Optional;
 
 @Service
@@ -26,8 +29,14 @@ public class BetService {
     public Paris generateBet(Course course, BigDecimal bet, int numCheval){
 
         logger.info("Bet service Generate");
-        Paris lastParis = parisRepository.findLastParis().orElse(null);
+        LocalDate now = LocalDate.now(ZoneId.of("Europe/Paris"));
         Paris paris = new Paris();
+        paris.setDate(now);
+        paris.setAnnee(now.getYear());
+        paris.setMois(now.getMonthValue());
+        paris.setSemaine(now.get(WeekFields.ISO.weekOfWeekBasedYear()));
+
+        Paris lastParis = parisRepository.findLastParis().orElse(null);
         int coefBet = 1;
 
         if (lastParis != null){
