@@ -16,7 +16,6 @@ import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.FinalState;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.RunningState;
 import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.repository.web.WebCrawlingProxy;
-import fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
 import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
@@ -31,7 +30,7 @@ public class CrawlService {
 	@Autowired
 	private CustomProperties props;
     @Autowired
-	private ProcessorChain pc;
+	private ProcessorChain processorChain;
     @Autowired
 	private ConfigurationService configurationService;
 	@Autowired
@@ -42,13 +41,8 @@ public class CrawlService {
 
     private static final Logger	logger = LoggerFactory.getLogger(CrawlService.class);
 
-    public String getPage(String url) {
-		return webService.getRawPage(url);
-    }
 
-
-
-	public Report launchCrawl(boolean withException) throws IOException {
+	private Report startCrawl(boolean withException) throws IOException {
 		if (treatment == null || treatment.getState().equals(State.TERMINATED)) {
 			// Retrieve seeds
 			reader.setFilePath(props.getSeedsFile());
@@ -66,14 +60,14 @@ public class CrawlService {
 			// Creating and launching thread
 			// ProcessorChain pc = new ProcessorChain(urls, props.getMaxHop(),
 			// urlAuthorised, Agressivity.REALLY_SOFT);
-			pc.setSeeds(urls);
-			pc.setMaxHop(props.getMaxHop());
-			pc.setAuthorised(urlAuthorised);
-			pc.setAgressivity(props.getAgressivity());
-			pc.setWithException(withException);
-			pc.setWaitOnRetry(props.isWaitOnRetry());
-			pc.askToStart();
-			treatment = new Thread(pc);
+			processorChain.setSeeds(urls);
+			processorChain.setMaxHop(props.getMaxHop());
+			processorChain.setAuthorised(urlAuthorised);
+			processorChain.setAgressivity(props.getAgressivity());
+			processorChain.setWithException(withException);
+			processorChain.setWaitOnRetry(props.isWaitOnRetry());
+			processorChain.initialize();
+			treatment = new Thread(processorChain);
 			treatment.start();
 			logger.info("Thread started");
 
@@ -87,17 +81,17 @@ public class CrawlService {
 		return getReportCurrentCrawl();
 	}
 
-	public Report manageLaunch() {
-		return manageLaunch(false);
+	public Report crawlFromConfig() {
+		return crawlFromConfig(false);
 	}
 
-	public Report manageLaunch(boolean withException) {
+	public Report crawlFromConfig(boolean withException) {
 		Configuration configuration = configurationService.getConfiguration();
 
 		Report cr = new Report();
 		try {
 			if (configuration.isLaunchCrawl()) {
-				cr = launchCrawl(withException);
+				cr = startCrawl(withException);
 			}
 
 			if (configuration.isLaunchRefacto()) {
@@ -115,7 +109,7 @@ public class CrawlService {
 		return cr;
 	}
 
-	public void launchSurveyCrawl(String startDay, String endDay) {
+	public void datesCrawl(String startDay, String endDay) {
         logger.debug("DAYS : {} {}", startDay, endDay);
 		String urls = configurationService.generateUrlFromDates(startDay, endDay);
         logger.debug("URLS : {}", urls);
@@ -131,26 +125,26 @@ public class CrawlService {
 		conf.setTxtSeeds(urls);
 		configurationService.saveConfiguration(conf);
 
-		manageLaunch();
+		crawlFromConfig();
 	}
 
     public Report getReportCurrentCrawl() {
-	CrawlReport crawlReport = pc.getReport();
+	fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport crawlReport = processorChain.getReport();
 	Report report = new Report();
 
 	if (treatment != null) {
 	    State state = treatment.getState();
 	    // if thread is terminated ?
 	    if (state.equals(State.TERMINATED)) {
-		// has it (not) been stop by user ?
-		if (pc.getRunning()) {
-		    report.setFinalState(FinalState.SUCCESS);
-		} else {
-		    report.setFinalState(FinalState.WARNING);
-		}
-		report.setRunningState(RunningState.ENDED);
+			// has it (not) been stop by user ?
+			if (processorChain.getRunning()) {
+				report.setFinalState(FinalState.SUCCESS);
+			} else {
+				report.setFinalState(FinalState.WARNING);
+			}
+			report.setRunningState(RunningState.ENDED);
 	    } else {
-		report.setRunningState(RunningState.PROCESSING);
+			report.setRunningState(RunningState.PROCESSING);
 	    }
 	} else {
 	    report.setRunningState(RunningState.PENDING);
@@ -171,27 +165,14 @@ public class CrawlService {
 	return report;
     }
 
-    public Report stopCurrentCrawl() {
-		pc.askToStop();
-
-		Report report = getReportCurrentCrawl();
-		pc.resetReport();
-
-		return report;
+    public void stopCurrentCrawl() {
+		processorChain.askToStop();
+		processorChain.resetReport();
 	}
 
-	public Report startCurrentCrawl() {
-		pc.askToStart();
-
-		return getReportCurrentCrawl();
-    }
-
     public Thread getTreatment() {
-	return treatment;
+		return treatment;
     }
 
-    public boolean testConnectivity() {
-	return webService.connectivityTest();
-    }
 
 }

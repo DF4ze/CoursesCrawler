@@ -6,11 +6,13 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 
+import fr.ses10doigts.coursesCrawler.service.scrap.VisitorParseAndStore;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 
 import fr.ses10doigts.coursesCrawler.CustomProperties;
 import fr.ses10doigts.coursesCrawler.model.crawl.Page;
@@ -18,71 +20,62 @@ import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.repository.web.WebCrawlingProxy;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.PageTool;
-import fr.ses10doigts.coursesCrawler.service.scrap.HtmlVisitor;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
 
 @Service
 public class ProcessorChain implements Runnable {
 
+	private static final Logger logger = LoggerFactory.getLogger(ProcessorChain.class);
+
 	@Autowired
-	private PageTool pageTool;
+	protected PageTool pageTool;
 	@Autowired
-	private WebCrawlingProxy webRepo;
+	protected WebCrawlingProxy webRepo;
 	@Autowired
-	private HtmlVisitor htmlVisitor;
+	protected VisitorParseAndStore parseAndStore;
 	@Autowired
 	private CustomProperties props;
 
-	private List<String> seeds;
-	private int maxHop;
-	private List<String> authorized;
-	private Agressivity agressivity;
-	private boolean running = true;
-	private Queue<Page> enQueued;
-	private CrawlReport report = CrawlReport.getInstance();
-	private Chrono chrono;
+	@Setter
+	protected List<String> seeds;
+	@Setter
+	protected int maxHop;
+	@Setter
+	protected boolean withException = false;
+	@Setter
+	protected boolean waitOnRetry = true;
+	@Setter
+	protected Agressivity agressivity;
+	@Getter
+	protected CrawlReport report = CrawlReport.getInstance();
 
-	private boolean isFirst = true;
-	private boolean withException = false;
-	private boolean waitOnRetry = false;
+	protected boolean running = true;
+	protected List<String> authorized;
+	protected Queue<Page> enQueued;
+	protected boolean isFirst = true;
 
-	private static final Logger logger = LoggerFactory.getLogger(ProcessorChain.class);
 
-	public ProcessorChain() {
-	}
-
-	public ProcessorChain(List<String> seeds, int maxHop, List<String> authorized, Agressivity agressivity) {
-		super();
-		this.seeds = seeds;
-		this.maxHop = maxHop;
-		this.authorized = authorized;
-		this.agressivity = agressivity;
-	}
 
 	@Override
 	public void run() {
-		chrono = new Chrono();
+        Chrono chrono = new Chrono();
 		chrono.pick();
 		if (seeds.isEmpty()) {
 			throw new RuntimeException("Seeds is empty!");
 		}
 
 		// Initialisation
-		enQueued = new LinkedList<Page>(pageTool.url2Pages(seeds));
+		enQueued = new LinkedList<>(pageTool.url2Pages(seeds));
 		report.setSeeds(seeds);
 
 		// Informations
-		String auth = "";
+		StringBuilder auth = new StringBuilder();
 		for (String string : authorized) {
-			auth += string + ", ";
+			auth.append(string).append(", ");
 		}
-		// @formatter:off
-		logger.info("Crawl Start with parameters :\n " +
-			"- " + enQueued.size() + " seed(s)\n" +
-			"- maxHop : " + maxHop + "\n" +
-			"- authorized : "+auth+"\n"
-			+ "- agressivity : "+agressivity);
-		// @formatter:on
+
+		logger.info("Crawl Start with parameters :\n - {} seed(s)\n- maxHop : {}\n- authorized : {}\n- agressivity : {}"
+				,enQueued.size(),maxHop,auth,agressivity);
 
 		do {
 			for (Page page = null; (page = enQueued.poll()) != null;) {
@@ -97,18 +90,17 @@ public class ProcessorChain implements Runnable {
 
 		logger.info("=========================");
 		logger.info("Crawl ended");
-		logger.info(
-				"Crawled " + report.getSuccessCrawled() + "/" + report.size() + " pages in " + chrono.compareToHour());
+        logger.info("Crawled {}/{} pages in {}", report.getSuccessCrawled(), report.size(), chrono.compareToHour());
 		report.setTime(chrono.compare());
 
 	}
 
-	private void downloadAndSeek(Page page) {
+	protected void downloadAndSeek(Page page) {
 		List<Page> newPages = new ArrayList<>();
 
 		report.startCrawl(page.getUrl());
 
-		// Wait for a user friendly crawl
+		// Wait for a user-friendly crawl
 		if (!isFirst) {
 			sleep(agressivity);
 		} else {
@@ -127,10 +119,10 @@ public class ProcessorChain implements Runnable {
 			// String content = webRepo.getUrlContents(page.getUrl());
 
             logger.debug("Url downloaded : {}", page.getUrl());
-			report.stopCrawl(page.getUrl());
+			report.lastCrawledUrl(page.getUrl());
 
 			// Parse content
-			htmlVisitor.indexify(page.getUrl(), content);
+			parseAndStore.indexify(page, content);
 
 			// If maxhop not reached
 			if (page.getHop() < maxHop) {
@@ -143,7 +135,10 @@ public class ProcessorChain implements Runnable {
 					if( newPage.getUrl().equals( page.getUrl() ) ){
 						continue;
 					}
-					downloadAndSeek(newPage);
+
+					if( getRunning() )
+						downloadAndSeek(newPage);
+
 					page.getUrlsContained().add(newPage.getUrl());
 
 					// soft way to stop thread
@@ -157,24 +152,22 @@ public class ProcessorChain implements Runnable {
 
 			}
 		} catch (Exception /*| RestClientException*/ e) {
-			logger.error("RestClientException on page " + page.getUrl() + "\n Message : " + e.getMessage());
-			e.printStackTrace();
+            logger.error("RestClientException on page {}\n Message : {}", page.getUrl(), e.getMessage());
 			report.errorCrawl(page.getUrl());
 			setAsCrawlErrorPage(page);
 
-			// Launching a connectivity test to know if we still have Internet
+			// Launching a connectivity test to know if we still have the Internet
 			// ... and wait if not
 			webRepo.connectivityTest();
 		}
 
 	}
 
-	private void setAsCrawlErrorPage(Page page) {
+	void setAsCrawlErrorPage(Page page) {
 
-		logger.warn("Error crawling : " + page.getUrl());
+        logger.warn("Error crawling : {}", page.getUrl());
 		if (page.getNbRetry() < props.getMaxRetry()) {
-			logger.warn(
-					"Page is set to retry (nb retry: " + page.getNbRetry() + "/max retry " + props.getMaxRetry() + ")");
+            logger.warn("Page is set to retry (nb retry: {}/max retry {})", page.getNbRetry(), props.getMaxRetry());
 			page.setNbRetry(page.getNbRetry() + 1);
 			enQueued.add(page);
 
@@ -184,18 +177,18 @@ public class ProcessorChain implements Runnable {
 			}
 
 		} else {
-			logger.warn("Reach max retry : " + page.getNbRetry() + "/" + props.getMaxRetry());
+            logger.warn("Reach max retry : {}/{}", page.getNbRetry(), props.getMaxRetry());
 			if (withException) {
 				throw new RuntimeException("Max retry reached on page " + page.getUrl());
 			}
 		}
 	}
 
-	private void sleep(Agressivity ag) {
+	void sleep(Agressivity ag) {
 		try {
 			int range = getRandomNumberInRange(ag.getMin(), ag.getMax());
 			range = range * 1000;
-			logger.debug("Thread will sleep " + range + "ms");
+            logger.debug("Thread will sleep {}ms", range);
 			Thread.sleep(range);
 
 		} catch (InterruptedException e) {
@@ -217,67 +210,23 @@ public class ProcessorChain implements Runnable {
 		running = false;
 	}
 
-	public void askToStart() {
+	public void initialize() {
 		running = true;
 		isFirst = true;
 		report = CrawlReport.getInstance();
 	}
 
-	public List<String> getSeeds() {
-		return seeds;
-	}
 
-	public void setSeeds(List<String> seeds) {
-		this.seeds = seeds;
-	}
-
-	public int getMaxHop() {
-		return maxHop;
-	}
-
-	public void setMaxHop(int maxHop) {
-		this.maxHop = maxHop;
-	}
-
-	public List<String> getAuthorised() {
-		return authorized;
-	}
-
-	public void setAuthorised(List<String> authorised) {
+    public void setAuthorised(List<String> authorised) {
 		this.authorized = authorised;
 	}
 
-	public Agressivity getAgressivity() {
-		return agressivity;
-	}
-
-	public void setAgressivity(Agressivity agressivity) {
-		this.agressivity = agressivity;
-	}
-
-	public boolean getRunning() {
+    public boolean getRunning() {
 		return running;
 	}
 
-	public CrawlReport getReport() {
-		return report;
-	}
-
-	public void resetReport() {
+    public void resetReport() {
 		report = CrawlReport.getInstance();
 	}
 
-	public Chrono getChrono() {
-		return chrono;
-	}
-
-	public void setWithException(boolean withException) {
-		this.withException = withException;
-
-	}
-
-	public void setWaitOnRetry(boolean waitOnRetry) {
-		this.waitOnRetry = waitOnRetry;
-
-	}
 }

@@ -6,10 +6,7 @@ import java.util.List;
 public class EntitiesList {
 
 
-    private List<AbstractEntity> entitiesList = new ArrayList<AbstractEntity>();
-
-    public EntitiesList() {
-    }
+    private List<AbstractEntity> entitiesList = new ArrayList<>();
 
 
     public void add( AbstractEntity bean ){

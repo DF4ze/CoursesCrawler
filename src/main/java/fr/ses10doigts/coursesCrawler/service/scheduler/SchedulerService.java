@@ -34,7 +34,7 @@ import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import jakarta.annotation.PostConstruct;
 
 @Service
-@Profile({ "dev", "telegram" })
+@Profile({ "devWithTelegram", "telegram" })
 public class SchedulerService {
 	@Getter
     private int timeBefore = 20;
@@ -177,7 +177,7 @@ public class SchedulerService {
 	public void launchMainScheduledCrawl(String startDay, String endDay, boolean startAndStop, Long chatId)
 			throws TelegramApiException {
 
-		crawlService.launchSurveyCrawl(startDay, endDay);
+		crawlService.datesCrawl(startDay, endDay);
 
 		manageEndOfCrawl(crawlService.getTreatment(), chatId, startDay, endDay);
 

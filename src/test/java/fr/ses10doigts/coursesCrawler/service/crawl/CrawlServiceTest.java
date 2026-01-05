@@ -13,8 +13,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 @ActiveProfiles("test")
 class CrawlServiceTest {
@@ -46,7 +44,7 @@ class CrawlServiceTest {
         conf.setTxtSeeds(urls);
         configurationService.saveConfiguration(conf);
 
-        crawlService.manageLaunch(true);
+        crawlService.crawlFromConfig(true);
 
     }
 

@@ -64,6 +64,7 @@ authorized_scheduler.txt
 seeds_scheduler.txt
 
 # Fichiers de configuration sensibles (contenant des clés/secrets)
+application-devWithTelegram.properties
 application-dev.properties
 application-prod.properties
 application-telegram.properties

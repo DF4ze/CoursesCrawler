@@ -30,7 +30,7 @@ import fr.ses10doigts.coursesCrawler.service.scheduler.SchedulerService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 
 @Component
-@Profile({ "dev", "telegram" })
+@Profile({ "devWithTelegram", "telegram" })
 public class TelegramBotController implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
 	private static final Logger logger = LoggerFactory.getLogger(TelegramBotController.class);
 

@@ -124,7 +124,7 @@ public class CrawlReport {
 
     }
 
-    public void stopCrawl(String url) {
+    public void lastCrawledUrl(String url) {
 		synchronized (urlsReport) {
 			PageReport pr = new PageReport();
 			pr.chainState = ChainState.CRAWLING;

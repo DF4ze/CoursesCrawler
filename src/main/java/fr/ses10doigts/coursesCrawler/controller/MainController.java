@@ -16,7 +16,6 @@ import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
-import fr.ses10doigts.coursesCrawler.service.web.ExcelExtractorService;
 
 @Controller
 public class MainController {
@@ -66,7 +65,7 @@ public class MainController {
 		logger.info("User ask to launch with config : " + dto);
 
 		configurationService.saveConfiguration(dto);
-		Report crawlReport = crawlService.manageLaunch();
+		Report crawlReport = crawlService.crawlFromConfig();
 
 		ModelAndView mav = new ModelAndView("home");
 		mav.addObject("configuration", configurationService.getConfiguration());
@@ -91,19 +90,6 @@ public class MainController {
 		return mav;
 	}
 
-	@PostMapping(value = "/", params = "action=test")
-	public ModelAndView test() {
-		logger.info("Testing connectivity ");
-
-		crawlService.testConnectivity();
-
-		ModelAndView mav = new ModelAndView("home");
-		mav.addObject("configuration", configurationService.getConfiguration());
-		mav.addObject("crawlReport", crawlService.getReportCurrentCrawl());
-		mav.addObject("refactReport", refactoService.getReportCurrentRefact());
-
-		return mav;
-	}
 
 	@PostMapping(value = "/", params = "action=generate")
 	public ModelAndView generate(@ModelAttribute Configuration dto) {

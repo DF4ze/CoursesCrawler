@@ -6,8 +6,6 @@ import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import fr.ses10doigts.coursesCrawler.model.paris.Paris;
 import fr.ses10doigts.coursesCrawler.model.schedule.ScheduledTask;
@@ -15,6 +13,7 @@ import fr.ses10doigts.coursesCrawler.model.scrap.entity.*;
 import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
 import fr.ses10doigts.coursesCrawler.repository.course.*;
 import fr.ses10doigts.coursesCrawler.service.bet.BetService;
+import fr.ses10doigts.coursesCrawler.service.scrap.tool.FieldTool;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile({ "dev", "telegram" })
+@Profile({ "devWithTelegram", "telegram" })
 public class CrawlJobCheckerService {
 	private static final Logger logger = LoggerFactory.getLogger(CrawlJobCheckerService.class);
 
@@ -69,7 +68,7 @@ public class CrawlJobCheckerService {
 				+ ", courseDescr: " + task.getCourseDescription());
 
         try {
-			Long codeCourse = extractCode(task.getCourseUrl());
+			Long codeCourse = FieldTool.extractCode(task.getCourseUrl());
 
 			// Lancer un crawl de la page uniquement
 			Configuration conf = new Configuration();
@@ -83,7 +82,7 @@ public class CrawlJobCheckerService {
 			conf.setTxtSeeds("https://www.geny.com/cotes?id_course="+codeCourse);
 			configurationService.saveConfiguration(conf);
 			logger.debug("Starting scheduled crawl");
-			crawlService.manageLaunch(true);
+			crawlService.crawlFromConfig(true);
 
 			// Attendre sa fin
 			Thread crawlThread = crawlService.getTreatment();
@@ -210,7 +209,7 @@ public class CrawlJobCheckerService {
 			conf.setTxtSeeds("https://www.geny.com/arrivee-et-rapports-pmu?id_course="+courseID);
 			configurationService.saveConfiguration(conf);
 			logger.info("Starting crawl for ended course");
-			crawlService.manageLaunch(true);
+			crawlService.crawlFromConfig(true);
 
 			// Attendre sa fin
 			Thread crawlThread = crawlService.getTreatment();
@@ -268,27 +267,7 @@ public class CrawlJobCheckerService {
 
 
 
-	private Long extractCode(String url) {
-		Pattern pattern = Pattern.compile("_c(\\d+)$");
-		Matcher matcher = pattern.matcher(url);
 
-		Long found = null;
-		if (matcher.find()) {
-			String code = matcher.group(1);
-			found = Long.parseLong(code);
-
-		}else{
-			pattern = Pattern.compile("id_course=(\\d+)$");
-			matcher = pattern.matcher(url);
-			if (matcher.find()) {
-				String code = matcher.group(1);
-				found = Long.parseLong(code);
-
-			}
-		}
-
-		return found;
-	}
 
 
 	private CourseComplete getCourseResult(Set<Arrivee> arrivees) {

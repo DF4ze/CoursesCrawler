@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import fr.ses10doigts.coursesCrawler.model.crawl.Page;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -46,8 +47,8 @@ public class GenyParser implements HtmlParser {
 	}
 
 	@Override
-	public EntitiesList parse(String url, String body) {
-		this.url = url;
+	public EntitiesList parse(Page page, String body) {
+		this.url = page.getUrl();
 		this.body = body == null ? "" : body;
 
 		EntitiesList beansList = new EntitiesList();
@@ -61,26 +62,31 @@ public class GenyParser implements HtmlParser {
 		EntitiesList beansListRapport = parse_rapport();
 		if (beansListRapport != null) {
 			beansList.addAll(beansListRapport);
+			page.setType(TypePage.RAPPORT);
 		}
 
 		EntitiesList beansListArrive = parse_arrivee();
 		if (beansListArrive != null) {
 			beansList.addAll(beansListArrive);
+			page.setType(TypePage.ARRIVEE);
 		}
 
 		EntitiesList beansListPartant = parse_partant();
 		if (beansListPartant != null) {
 			beansList.addAll(beansListPartant);
+			page.setType(TypePage.RAPPORT);
 		}
 
 		EntitiesList beansListCote = parse_cote();
-		if (beansListCote != null) {
+		if (!beansListCote.get().isEmpty()) {
 			beansList.addAll(beansListCote);
+			page.setType(TypePage.COTE);
 		}
 
 		try {
 			Thread.sleep(10l);
 		} catch (InterruptedException e) {
+			//
 		}
 
 		return beansList;
@@ -687,7 +693,7 @@ public class GenyParser implements HtmlParser {
 	private EntitiesList parse_cote() {
 		Long longCourse = parse_numCourse();
 
-		EntitiesList cotesCourse = null;
+		EntitiesList cotesCourse = new EntitiesList();
 
 		if (url.contains("/cotes") && longCourse != null) {
 			logger.debug("=================================== Cote");
@@ -697,103 +703,111 @@ public class GenyParser implements HtmlParser {
 
 			if (lignes != null && !lignes.isEmpty()) {
 
-				for (int i = 0; i < lignes.size(); i++) {
-					Element uneLigne = lignes.get(i);
-					Elements cellules = uneLigne.select("td");
+                for (Element uneLigne : lignes) {
+                    Elements cellules = uneLigne.select("td");
 
-					// logger.debug("Line N°" + i + " content : " + cellules.text());
+                    // logger.debug("Line N°" + i + " content : " + cellules.text());
 
-					Integer numCheval = null;
-					Float enjeuxDepart = null;
-					Float enjeuxAvant = null;
-					Float coteAvant = null;
-					Float coteDepart = null;
-					if (cellules != null && !cellules.isEmpty() && !cellules.text().isBlank()) {
-						for (int j = 0; j < cellules.size(); j++) {
-							Element uneCellule = cellules.get(j);
+                    Integer numCheval = null;
+                    Float enjeuxDepart = null;
+                    Float enjeuxAvant = null;
+                    Float coteAvant = null;
+                    Float coteDepart = null;
+                    if (!cellules.isEmpty() && !cellules.text().isBlank()) {
+                        for (int j = 0; j < cellules.size(); j++) {
+                            Element uneCellule = cellules.get(j);
 
-							// logger.debug("Treating cell N°" + j + " content : " + uneCellule.text());
-							try {
-								switch (j) {
-								case 0:
-									numCheval = Integer.parseInt(uneCellule.text().trim());
-									break;
-								case 6:
-									String txt = uneCellule.text().trim();
-									txt = txt.replace(",", ".");
-									coteAvant = Float.parseFloat(txt);
-									break;
-								case 7:
-									txt = uneCellule.text().trim();
-									txt = txt.replace(",", ".");
-									coteDepart = Float.parseFloat(txt);
-									break;
-								case 9:
-									txt = uneCellule.text().trim();
-									txt = txt.replace(",", ".");
-									txt = txt.replace(" ", "");
-									txt = txt.replace("%", "");
-									txt = txt.replaceAll("[^\\d\\.\\,\\-]", "");
+                            // logger.debug("Treating cell N°" + j + " content : " + uneCellule.text());
+                            try {
+                                switch (j) {
+                                    case 0:
+                                        numCheval = Integer.parseInt(uneCellule.text().trim());
+                                        break;
+                                    case 6:
+                                        String txt = uneCellule.text().trim();
+                                        txt = txt.replace(",", ".");
+                                        coteAvant = Float.parseFloat(txt);
+                                        break;
+                                    case 7:
+                                        txt = uneCellule.text().trim();
+                                        txt = txt.replace(",", ".");
+                                        coteDepart = Float.parseFloat(txt);
+                                        break;
+                                    case 9:
+                                        txt = uneCellule.text().trim();
+                                        txt = txt.replace(",", ".");
+                                        txt = txt.replace(" ", "");
+                                        txt = txt.replace("%", "");
+                                        txt = txt.replaceAll("[^\\d\\.\\,\\-]", "");
 
-									enjeuxAvant = Float.parseFloat(txt);
-									break;
-								case 10:
-									txt = uneCellule.text().trim();
-									txt = txt.replace(",", ".");
-									txt = txt.replace(" ", "");
-									txt = txt.replace("%", "");
-									txt = txt.replaceAll("[^\\d\\.\\,\\-]", "");
+                                        enjeuxAvant = Float.parseFloat(txt);
+                                        break;
+                                    case 10:
+                                        txt = uneCellule.text().trim();
+                                        txt = txt.replace(",", ".");
+                                        txt = txt.replace(" ", "");
+                                        txt = txt.replace("%", "");
+                                        txt = txt.replaceAll("[^\\d\\.\\,\\-]", "");
 
-									enjeuxDepart = Float.parseFloat(txt);
-									break;
-								default:
-									break;
-								}
+                                        enjeuxDepart = Float.parseFloat(txt);
+                                        break;
+                                    default:
+                                        break;
+                                }
 
-							} catch (Exception e) {
-								// Trop de spam si affiché
-								// logger.error("Erreur sur la ligne 'cote' : " + uneLigne.text() + " Message :"
-								// + e.getMessage());
+                            } catch (Exception e) {
+                                // Trop de spam si affiché
+                                // logger.error("Erreur sur la ligne 'cote' : " + uneLigne.text() + " Message :"
+                                // + e.getMessage());
 
-							}
+                            }
 
-						} // fin for cellules
+                        } // fin for cellules
 
-						if (numCheval != null) {
+                        if (numCheval != null) {
                             logger.debug("Cvl : {} cote : {} enjeux av: {}", numCheval, coteDepart, enjeuxAvant);
-						}
+                        }
 
-						if (numCheval != null && coteDepart != null && enjeuxDepart != null) {
-							if (cotesCourse == null) {
-								cotesCourse = new EntitiesList();
-							}
+                        if (numCheval != null && coteDepart != null && enjeuxDepart != null) {
+                            Cote cote = new Cote();
+                            cote.setUrl(url);
+                            cote.setCourseID(longCourse);
+                            cote.setNumCheval(numCheval);
+                            cote.setCoteDepart(coteDepart);
+                            cote.setCoteAvant(coteAvant);
+                            cote.setEnjeuxDepart(enjeuxDepart);
+                            cote.setEnjeuxAvant(enjeuxAvant);
+                            cote.setValide(true);
 
-							Cote cote = new Cote();
-							cote.setUrl(url);
-							cote.setCourseID(longCourse);
-							cote.setNumCheval(numCheval);
-							cote.setCoteDepart(coteDepart);
-							cote.setCoteAvant(coteAvant);
-							cote.setEnjeuxDepart(enjeuxDepart);
-							cote.setEnjeuxAvant(enjeuxAvant);
+                            cotesCourse.add(cote);
+                        }
+                    }
+                } // fin for lignes
 
-							cotesCourse.add(cote);
-
-						}
-					}
-				} // fin for lignes
-
-                if (cotesCourse == null || cotesCourse.size() == 0) {
-					logger.warn("!!!!!!!!!!!!!!!!!!!!!!!!! Page sans Cote : " + url);
+                if (cotesCourse.get().isEmpty()) {
+					cotesCourse.add(buildCoteForInvalid());
+                    logger.warn("!!!!!!!!!!!!!!!!!!!!!!!!! Page sans Cote : {}", url);
 				} else {
-					logger.info("Adding " + cotesCourse.size() + " cotes");
+                    logger.info("Adding {} cotes", cotesCourse.size());
 				}
 
+			}else if( body.contains("Il n'y a pas de cotes pour cette course") ) {
+				cotesCourse.add(buildCoteForInvalid());
 			}
+
 		}
 
 		return cotesCourse;
 	}
+
+	private Cote buildCoteForInvalid(){
+		Cote cote = new Cote();
+		cote.setUrl(url);
+		cote.setValide(false);
+
+		return cote;
+	}
+
 
 	private EntitiesList parse_partant() {
 		Long longCourse = parse_numCourse();

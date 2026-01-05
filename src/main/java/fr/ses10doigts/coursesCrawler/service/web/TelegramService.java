@@ -1,6 +1,5 @@
 package fr.ses10doigts.coursesCrawler.service.web;
 
-import fr.ses10doigts.coursesCrawler.service.scheduler.SchedulerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +18,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-@Profile({ "dev", "telegram" })
+@Profile({ "devWithTelegram", "telegram" })
 public class TelegramService {
     private static final Logger logger = LoggerFactory.getLogger(TelegramService.class);
-    private TelegramClient telegramClient = null;
+    private TelegramClient telegramClient;
 
     // Lien vers les emoji
     // https://emojicopy.com/
@@ -57,7 +56,7 @@ public class TelegramService {
                     try {
                         Thread.sleep(60*1000);
                     } catch (InterruptedException ignore) {
-                        ;
+                        //
                     }
                 }
             }

@@ -20,7 +20,7 @@ public class LaunchService {
 	private Thread t = null;
 
 	public Report manageLaunch() {
-		return crawl.manageLaunch();
+		return crawl.crawlFromConfig();
 	}
 
 	public Thread getCrawlThread() {
