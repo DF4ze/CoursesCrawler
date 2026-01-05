@@ -6,11 +6,10 @@ import fr.ses10doigts.coursesCrawler.service.web.tool.ReflectionTool;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +22,8 @@ import java.util.stream.Stream;
 public class ExcelStreamExtractorService {
     @Autowired
     private CourseCompleteRepository repository;
+    @Value("${fr.ses10doigts.crawler.export-dir}")
+    private String exportDir;
 
     private static final Logger logger  = LoggerFactory.getLogger(ExcelStreamExtractorService.class);
     private static final String SHEET_NAME = "Courses";
@@ -30,7 +31,8 @@ public class ExcelStreamExtractorService {
     @Transactional(readOnly = true) // important pour le streaming
     public void extractCourseCompletes()  {
         try {
-            logger.info("Starting generating Excel file");
+            String sFile = exportDir + "courses.xlsx";
+            logger.info("Starting generating Excel file to : {}", sFile);
             try (SXSSFWorkbook workbook = new SXSSFWorkbook(100)) { // buffer 100 lignes
 
                 Sheet sheet = workbook.createSheet(SHEET_NAME);
@@ -50,7 +52,7 @@ public class ExcelStreamExtractorService {
                     });
                 }
 
-                try (FileOutputStream out = new FileOutputStream("export.xlsx")) {
+                try (FileOutputStream out = new FileOutputStream( sFile )) {
                     workbook.write(out);
                 }
             }
@@ -85,7 +87,7 @@ public class ExcelStreamExtractorService {
         headerStyle.setFillForegroundColor(IndexedColors.AQUA.getIndex());
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-        XSSFFont font = workbook.getXSSFWorkbook().createFont();
+        Font font = workbook.createFont();
         font.setFontName("Arial");
         font.setFontHeightInPoints((short) 8);
         font.setBold(true);

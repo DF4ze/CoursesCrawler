@@ -8,7 +8,8 @@ server.port=9002
 #Log level configuration
 logging.level.fr.ses10doigts.coursesCrawler==INFO
 # In PROD, change 'static' location to access files for download
-#spring.web.resources.static-locations=file:/home/oklm/courses/files
+#spring.web.resources.static-locations=file:/Path/to/resources
+fr.ses10doigts.crawler.export-dir=/Path/to/export
   
 # Logs
 logging.file.name=courseCrawlerScheduler.log
