@@ -1,6 +1,5 @@
 package fr.ses10doigts.coursesCrawler.service.bet;
 
-import fr.ses10doigts.coursesCrawler.model.paris.GlobalBilanParis;
 import fr.ses10doigts.coursesCrawler.model.paris.Paris;
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.Course;
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.CourseComplete;
@@ -109,7 +108,4 @@ public class BetService {
         return parisRepository.findLastParis().orElse(null);
     }
 
-    public GlobalBilanParis generateBetReport(){
-        return null;
-    }
 }

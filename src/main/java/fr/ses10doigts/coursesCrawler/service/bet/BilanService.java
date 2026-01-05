@@ -2,11 +2,10 @@ package fr.ses10doigts.coursesCrawler.service.bet;
 
 import fr.ses10doigts.coursesCrawler.model.paris.BilanParis;
 import fr.ses10doigts.coursesCrawler.model.paris.GlobalBilanParis;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
+import fr.ses10doigts.coursesCrawler.repository.paris.ParisRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,8 +16,8 @@ import java.time.temporal.IsoFields;
 public class BilanService {
     private static final Logger logger = LoggerFactory.getLogger(BilanService.class);
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @Autowired
+    private ParisRepository parisRepository;
 
     public GlobalBilanParis getGlobalBilan() {
         LocalDate today = LocalDate.now();
@@ -51,22 +50,7 @@ public class BilanService {
     }
 
     private BilanParis computeBilan(String whereClause, Integer annee, Integer mois, Integer semaine) {
-        String query = "SELECT COUNT(p), " +
-                "SUM(CASE WHEN p.isWin = true THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN p.isWin = false THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN p.isWin = true THEN p.gain ELSE 0 END), " +
-                "SUM(CASE WHEN p.isWin = false THEN p.mise ELSE 0 END) " +
-                "FROM Paris p WHERE " + whereClause;
-
-        logger.info("Computing bilan, query: \n{}",query);
-        Query q = entityManager.createQuery(query);
-
-        if (annee != null) q.setParameter("annee", annee);
-        if (mois != null) q.setParameter("mois", mois);
-        if (semaine != null) q.setParameter("semaine", semaine);
-
-        Object[] result = (Object[]) q.getSingleResult();
-        logger.info("nb query result: {}", result.length);
+        Object[] result = parisRepository.computeBilan(annee, mois, semaine);
 
         BilanParis bilan = new BilanParis();
         bilan.setNbCourses(((Number) result[0]).intValue());
