@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>fr.ses10doigts</groupId>
 	<artifactId>CoursesCrawler</artifactId>
-	<version>1.6.13</version>
+	<version>1.6.14</version>
 	<name>CoursesCrawler</name>
 	<description>Change money concience</description>
 	<properties>

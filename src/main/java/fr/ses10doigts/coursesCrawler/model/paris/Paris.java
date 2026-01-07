@@ -30,6 +30,7 @@ public class Paris extends AbstractEntity {
     private Integer annee;
     private Integer mois;
     private Integer semaine;
+    private Integer jour;
 
 
     @Override

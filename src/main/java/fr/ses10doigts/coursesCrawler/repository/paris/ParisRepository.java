@@ -19,7 +19,7 @@ public interface ParisRepository extends JpaRepository<Paris, Long> {
 	""")
 	Optional<Paris> findLastParis();
 
-	@Query("""
+/*	@Query("""
         SELECT
             COUNT(p),
             SUM(CASE WHEN p.isWin = true THEN 1L ELSE 0L END),
@@ -36,4 +36,24 @@ public interface ParisRepository extends JpaRepository<Paris, Long> {
 			@Param("mois") Integer mois,
 			@Param("semaine") Integer semaine
 	);
+	*/
+@Query("""
+   SELECT
+     COUNT(p) as nbCourses,
+     SUM(CASE WHEN p.isWin = true THEN 1 ELSE 0 END) as nbWin,
+     SUM(CASE WHEN p.isWin = false THEN 1 ELSE 0 END) as nbLoose,
+     SUM(CASE WHEN p.isWin = true THEN p.gain ELSE 0 END) as amountWin,
+     SUM(CASE WHEN p.isWin = false THEN p.mise ELSE 0 END) as amountLoose
+   FROM Paris p
+   WHERE (:annee IS NULL OR p.annee = :annee)
+     AND (:mois IS NULL OR p.mois = :mois)
+     AND (:semaine IS NULL OR p.semaine = :semaine)
+     AND (:jour IS NULL OR p.jour = :jour)
+""")
+BilanProjection computeBilan(
+		@Param("annee") Integer annee,
+		@Param("mois") Integer mois,
+		@Param("semaine") Integer semaine,
+		@Param("jour") Integer jour
+);
 }

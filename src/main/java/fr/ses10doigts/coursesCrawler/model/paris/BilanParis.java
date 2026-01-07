@@ -6,9 +6,9 @@ import java.math.BigDecimal;
 
 @Data
 public class BilanParis {
-    private Integer nbCourses;
-    private Integer nbWin;
-    private Integer nbLoose;
+    private Long nbCourses;
+    private Long nbWin;
+    private Long nbLoose;
     private BigDecimal amountWin;
     private BigDecimal amountLoose;
     private BigDecimal benefits;

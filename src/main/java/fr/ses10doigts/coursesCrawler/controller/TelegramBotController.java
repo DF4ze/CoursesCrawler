@@ -1,18 +1,12 @@
 package fr.ses10doigts.coursesCrawler.controller;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.time.format.ResolverStyle;
-import java.util.ArrayList;
-import java.util.List;
-
 import fr.ses10doigts.coursesCrawler.model.paris.GlobalBilanParis;
 import fr.ses10doigts.coursesCrawler.model.schedule.ScheduledTask;
 import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
-import fr.ses10doigts.coursesCrawler.service.bet.BilanService;
+import fr.ses10doigts.coursesCrawler.service.bet.GlobalBilanAsyncService;
 import fr.ses10doigts.coursesCrawler.service.misc.LogAccessService;
-import fr.ses10doigts.coursesCrawler.service.scheduler.CrawlJobCheckerService;
+import fr.ses10doigts.coursesCrawler.service.scheduler.SchedulerService;
+import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +20,13 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import fr.ses10doigts.coursesCrawler.service.scheduler.SchedulerService;
-import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 @Profile({ "devWithTelegram", "telegram" })
@@ -42,7 +41,7 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 	@Autowired
 	private LogAccessService logService;
     @Autowired
-    private BilanService bilanService;
+    private GlobalBilanAsyncService bilanService;
 
 	private final List<Long> authorizedChat = new ArrayList<>();
 	{
@@ -278,8 +277,16 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 
 
 					}else if (userMessage.startsWith("/bilan")){
-                        GlobalBilanParis globalBilan = bilanService.getGlobalBilan();
-                        telegramService.sendMessage(message.getChatId(), globalBilan.toString());
+						CompletableFuture<GlobalBilanParis> future = bilanService.computeGlobalBilan();
+
+						future.thenAccept( bilan ->{
+                                    try {
+                                        telegramService.sendMessage(message.getChatId(), bilan.toString());
+                                    } catch (TelegramApiException e) {
+                                        logger.error("Telegram error : {}", e.getMessage());
+                                    }
+                                }
+						);
                     }
 
 					if(isValueChanged){

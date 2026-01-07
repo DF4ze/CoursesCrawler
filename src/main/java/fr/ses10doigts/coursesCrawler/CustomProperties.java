@@ -1,13 +1,12 @@
 package fr.ses10doigts.coursesCrawler;
 
-import java.util.Date;
-
+import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
-import lombok.Data;
+import java.util.Date;
 
 @Data
 @Configuration

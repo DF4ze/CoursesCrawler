@@ -35,6 +35,7 @@ public class BetService {
         paris.setAnnee(now.getYear());
         paris.setMois(now.getMonthValue());
         paris.setSemaine(now.get(WeekFields.ISO.weekOfWeekBasedYear()));
+        paris.setJour(now.getDayOfMonth());
 
         Paris lastParis = parisRepository.findLastParis().orElse(null);
         int coefBet = 1;
