@@ -48,9 +48,11 @@ public class BetNodeService {
             }
 
             int exitCode = process.waitFor();
-            logger.info("Node terminé avec le code : {}", exitCode);
 
             isOk = exitCode == 0;
+
+            if( isOk ) logger.info("Success action on site (code : {})", exitCode);
+            else logger.error("Error during action on site (code : {})", exitCode);
 
         } catch (Exception e) {
             isOk = false;

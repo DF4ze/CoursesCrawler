@@ -32,11 +32,10 @@ public class TelegramService {
         logger.info("Telegram service loaded");
     }
 
-    public void sendMessage(Long chatId, String text) throws TelegramApiException {
+    public void sendMessage(Long chatId, String text) {
         int maxTries = 3;
         boolean error = false;
         int count = 0;
-        TelegramApiException exception = null;
         do {
             try {
                 SendMessage sendMessage = new SendMessage(chatId + "", escapeMarkdownPreservingLinks(text));
@@ -49,7 +48,6 @@ public class TelegramService {
             }catch (TelegramApiException e){
                 error = true;
                 count++;
-                exception = e;
 
                 if( count < maxTries ){
                     logger.warn("Error sending Telegram message, sleep 1min then try again... Try {}", count);
@@ -64,7 +62,7 @@ public class TelegramService {
 
         if( error ){
             logger.error("Unable to send Telegram message after {} tries : \n{}", count, escapeMarkdownPreservingLinks(text));
-            throw exception;
+
         }
     }
 

@@ -23,7 +23,7 @@ public class BilanAsyncService {
     public CompletableFuture<BilanParis> computeBilanAsync(
             Integer annee, Integer mois, Integer semaine, Integer jour) {
 
-        logger.info("Start bilan Y: {}, M: {}, W: {}",annee, mois, semaine);
+        logger.debug("Start bilan Y: {}, M: {}, W: {}",annee, mois, semaine);
 
         BilanProjection bilanProjection = parisRepository.computeBilan(annee, mois, semaine, jour);
 
@@ -35,7 +35,7 @@ public class BilanAsyncService {
         bilan.setAmountLoose(bilanProjection.getAmountLoose() != null ? bilanProjection.getAmountLoose() : BigDecimal.ZERO);
         bilan.setBenefits(bilan.getAmountWin().subtract(bilan.getAmountLoose()));
 
-        logger.info("Query ended for Y: {}, M: {}, W: {}",annee, mois, semaine);
+        logger.debug("Query ended for Y: {}, M: {}, W: {}",annee, mois, semaine);
 
         return CompletableFuture.completedFuture(bilan);
     }

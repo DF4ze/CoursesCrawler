@@ -25,6 +25,7 @@ public class Paris extends AbstractEntity {
     private Integer numChevalMise;
     private BigDecimal mise;
     private Boolean isEnded;
+    private Boolean isWebActionOk;
 
     private LocalDate date;
     private Integer annee;
@@ -37,7 +38,6 @@ public class Paris extends AbstractEntity {
     public String toString() {
         return "Paris{" +
                 "courseID="+(course!=null?course.getCourseID(): "null") +
-                ", parisPrecedent="+(parisPrecedent!=null && parisPrecedent.getCourse()!=null?parisPrecedent.getCourse().getCourseID() : "null")+
                 ", isWin=" + isWin +
                 ", gain=" + gain +
                 ", numChevalMise=" + numChevalMise +

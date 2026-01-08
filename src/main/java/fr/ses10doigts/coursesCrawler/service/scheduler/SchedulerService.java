@@ -1,19 +1,19 @@
 package fr.ses10doigts.coursesCrawler.service.scheduler;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-
-
+import fr.ses10doigts.coursesCrawler.model.paris.GlobalBilanParis;
 import fr.ses10doigts.coursesCrawler.model.paris.Paris;
+import fr.ses10doigts.coursesCrawler.model.schedule.ScheduleStatus;
+import fr.ses10doigts.coursesCrawler.model.schedule.ScheduledTask;
+import fr.ses10doigts.coursesCrawler.model.scrap.entity.Course;
 import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
+import fr.ses10doigts.coursesCrawler.repository.ScheduledTaskRepository;
+import fr.ses10doigts.coursesCrawler.repository.course.CourseRepository;
 import fr.ses10doigts.coursesCrawler.service.bet.BetService;
+import fr.ses10doigts.coursesCrawler.service.bet.GlobalBilanAsyncService;
+import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
@@ -23,19 +23,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import fr.ses10doigts.coursesCrawler.model.scrap.entity.Course;
-import fr.ses10doigts.coursesCrawler.model.schedule.ScheduledTask;
-import fr.ses10doigts.coursesCrawler.model.schedule.ScheduleStatus;
-import fr.ses10doigts.coursesCrawler.repository.ScheduledTaskRepository;
-import fr.ses10doigts.coursesCrawler.repository.course.CourseRepository;
-import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
-import jakarta.annotation.PostConstruct;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Profile({ "devWithTelegram", "telegram" })
 public class SchedulerService {
+
+	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
+	private static final Long TELEGRAM_GROUP = -4706435457L;
+
 	@Getter
     private int timeBefore = 20;
 	public void setTimeBefore( int tb ){
@@ -54,7 +57,6 @@ public class SchedulerService {
 	@Getter  @Setter
 	private static int nbReunionMax = 5;
 
-	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 
 	@Autowired
 	private CrawlService crawlService;
@@ -71,6 +73,8 @@ public class SchedulerService {
 	private CourseRepository courseRepository;
 	@Autowired
 	private BetService betService;
+	@Autowired
+	private GlobalBilanAsyncService bilanService;
 
 
 	@Scheduled(cron = "${fr.ses10doigts.crawler.schedulerChecker}") // Toutes les minutes
@@ -142,15 +146,25 @@ public class SchedulerService {
 
 	}
 
-	@Scheduled(cron = "${fr.ses10doigts.crawler.dailyTask}") // Tous les jours à 9h00 du matin (en fonction de la property)
+	@Scheduled(cron = "${fr.ses10doigts.crawler.dailyMorningTask}") // Tous les jours à 9h00 du matin (en fonction de la property)
 	public void everyMorning() {
-		logger.info("Starting Daily Crawl");
+		logger.info("Starting Daily Morning Crawl");
 		String toDay = dayDate();
-		try {
-			launchMainScheduledCrawl(toDay, toDay, false, -4706435457L);
-		} catch (TelegramApiException e) {
-            logger.error("Error while launching daily crawl : {}", e.getMessage());
+		launchMainScheduledCrawl(toDay, toDay, false, TELEGRAM_GROUP);
+
+	}
+
+	@Scheduled(cron = "${fr.ses10doigts.crawler.dailyEveningTask}") // Tous les jours à 22h00 du matin (en fonction de la property)
+	public void everyEvening() {
+		logger.info("Starting Daily Evening task");
+
+		Paris lastBet = betService.getLastBet();
+		if( !lastBet.getIsEnded() ) {
+			checkerService.checkEnd(lastBet.getCourse().getCourseID(), TELEGRAM_GROUP);
 		}
+
+		CompletableFuture<GlobalBilanParis> bilanFuture = bilanService.computeGlobalBilan();
+		bilanFuture.thenAccept(bilan -> telegramService.sendMessage(TELEGRAM_GROUP, bilan.toString()) );
 	}
 
 	@PostConstruct
@@ -174,20 +188,14 @@ public class SchedulerService {
 		logger.debug("=======================================");
 	}
 
-	public void launchMainScheduledCrawl(String startDay, String endDay, boolean startAndStop, Long chatId)
-			throws TelegramApiException {
+	public void launchMainScheduledCrawl(String startDay, String endDay, boolean startAndStop, Long chatId){
 
 		crawlService.datesCrawl(startDay, endDay);
-
 		manageEndOfCrawl(crawlService.getTreatment(), chatId, startDay, endDay);
 
-		try {
-			if (configurationService.getConfiguration().getTelegramVerbose().equals(Verbose.HIGH)) {
-				telegramService.sendMessage(chatId, "Crawl du " + startDay + (startDay.equals(endDay) ? "" : " au " + endDay)
-						+ " lancé. Résultat dans env. 5-10 min.");
-			}
-		}catch (Exception e){
-			logger.warn("Error sending Telegram message... Daily crawl is done! {}", e.getMessage());
+		if (configurationService.getConfiguration().getTelegramVerbose().equals(Verbose.HIGH)) {
+			telegramService.sendMessage(chatId, "Crawl du " + startDay + (startDay.equals(endDay) ? "" : " au " + endDay)
+					+ " lancé. Résultat dans env. 5-10 min.");
 		}
 
 		if (startAndStop)

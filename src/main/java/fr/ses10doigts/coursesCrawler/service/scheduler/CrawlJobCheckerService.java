@@ -1,33 +1,32 @@
 package fr.ses10doigts.coursesCrawler.service.scheduler;
 
+import fr.ses10doigts.coursesCrawler.model.Configuration;
+import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
+import fr.ses10doigts.coursesCrawler.model.paris.Paris;
+import fr.ses10doigts.coursesCrawler.model.schedule.ScheduleStatus;
+import fr.ses10doigts.coursesCrawler.model.schedule.ScheduledTask;
+import fr.ses10doigts.coursesCrawler.model.scrap.entity.*;
+import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
+import fr.ses10doigts.coursesCrawler.repository.ScheduledTaskRepository;
+import fr.ses10doigts.coursesCrawler.repository.course.*;
+import fr.ses10doigts.coursesCrawler.service.bet.BetService;
+import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
+import fr.ses10doigts.coursesCrawler.service.scrap.tool.FieldTool;
+import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
+import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-
-import fr.ses10doigts.coursesCrawler.model.paris.Paris;
-import fr.ses10doigts.coursesCrawler.model.schedule.ScheduledTask;
-import fr.ses10doigts.coursesCrawler.model.scrap.entity.*;
-import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
-import fr.ses10doigts.coursesCrawler.repository.course.*;
-import fr.ses10doigts.coursesCrawler.service.bet.BetService;
-import fr.ses10doigts.coursesCrawler.service.scrap.tool.FieldTool;
-import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
-import fr.ses10doigts.coursesCrawler.model.Configuration;
-import fr.ses10doigts.coursesCrawler.model.schedule.ScheduleStatus;
-import fr.ses10doigts.coursesCrawler.repository.ScheduledTaskRepository;
-import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
-import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
 
 @Service
 @Profile({ "devWithTelegram", "telegram" })
@@ -152,8 +151,6 @@ public class CrawlJobCheckerService {
 					paris = betService.generateBet(c, new BigDecimal(INITIAL_BET), courseStats.getNumeroChlPremierAvant());
 				}
 
-
-				//@formatter:off
 				stats = ( isInStats ? "✅ Course dans les stats.\nMise de "+paris.getMise()+"e sur Cheval N°"+courseStats.getNumeroChlPremierAvant()
 									: "❌ Course hors stats...")+"\n\n"
 						+(isPartantsOK?"✅":"❌")+" nb Partant: "+courseStats.getNombrePartant()+"\n"
@@ -163,7 +160,10 @@ public class CrawlJobCheckerService {
 						+" = "+sumPercent+"\n"
 						+(isTypeOk?"✅":"❌")+" Type: "+courseStats.getTypeCourse()+"\n"
 						+(isNbReuMaxOk?"✅":"❌")+" N° Réunion: "+courseStats.getNumeroReunion();
-				//@formatter:on
+
+				if( isInStats && !paris.getIsWebActionOk() ){
+					stats += "\n\n⚠\uFE0F Vérifier si le paris s'est bien déroulé sur le site ⚠\uFE0F";
+				}
 
 			}else{
 				stats = "❌ Sans résultats...";

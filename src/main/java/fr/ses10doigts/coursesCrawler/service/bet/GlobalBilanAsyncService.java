@@ -42,7 +42,7 @@ public class GlobalBilanAsyncService {
         CompletableFuture<BilanParis> jourFuture =
                 bilanAsyncService.computeBilanAsync(annee, mois, null, jour);
 
-        logger.info("Queries launched, waiting for ...");
+        logger.debug("Queries launched, waiting for ...");
 
         return CompletableFuture
                 .allOf(anneeFuture, moisFuture, semaineFuture, jourFuture)
@@ -50,7 +50,7 @@ public class GlobalBilanAsyncService {
                     if (ex != null) {
                         logger.error("Erreur lors du calcul du bilan global", ex);
                     } else {
-                        logger.info("All futures completed successfully");
+                        logger.debug("All futures completed successfully");
                     }
                 })
                 .thenApply(v -> {

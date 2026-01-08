@@ -28,7 +28,7 @@ public class BetService {
     @Transactional
     public Paris generateBet(Course course, BigDecimal bet, int numCheval){
 
-        logger.info("Bet service Generate");
+        logger.debug("Bet service Generate");
         LocalDate now = LocalDate.now(ZoneId.of("Europe/Paris"));
         Paris paris = new Paris();
         paris.setDate(now);
@@ -43,13 +43,13 @@ public class BetService {
         if (lastParis != null){
             paris.setParisPrecedent(lastParis);
 
-            logger.info("Last bet on course : {}", lastParis.getCourse().getCourseID());
+            logger.debug("Last bet on course : {}", lastParis.getCourse().getCourseID());
 
             if( lastParis.getIsEnded()) {
                 Paris betCursor = lastParis;
                 while (betCursor.getIsEnded() && !betCursor.getIsWin()) {
-                    coefBet *= 2;
-                    if( coefBet > 4 )
+                    coefBet ++;
+                    if( coefBet > 3 )
                         coefBet = 1;
 
                     betCursor = betCursor.getParisPrecedent();
@@ -60,7 +60,7 @@ public class BetService {
                 logger.warn("!!! Last Paris not ended (cur: {}, last: {}) !!!!", course.getCourseID(), lastParis.getCourse().getCourseID());
             }
 
-            logger.info("Coef define on {}", coefBet);
+            logger.debug("Coef define on {}", coefBet);
         }
         paris.setMise(bet.multiply(new BigDecimal( coefBet )));
 
@@ -68,17 +68,19 @@ public class BetService {
         paris.setNumChevalMise(numCheval);
         paris.setCourse(course);
 
-        logger.info("New betObject on c{}, {}€ on N°{}", paris.getCourse().getCourseID(), paris.getMise(), numCheval);
-        parisRepository.save(paris);
-        logger.info("Bet saved");
+        logger.info("New bet on c{}, {}€ on N°{}", paris.getCourse().getCourseID(), paris.getMise(), numCheval);
 
         try {
-            logger.info("Launching webAction");
-            betNodeService.launchBetProcess(course.getCourseID(), paris.getMise(), numCheval);
+            logger.debug("Launching webAction");
+            boolean isActionOK = betNodeService.launchBetProcess(course.getCourseID(), paris.getMise(), numCheval);
+            paris.setIsWebActionOk(isActionOK);
+
             logger.info("Ended");
         }catch (Exception e){
             logger.error("Error occurred during WebAction : {}",e.getMessage());
         }
+
+        parisRepository.save(paris);
 
         return paris;
     }
