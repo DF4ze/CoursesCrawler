@@ -91,6 +91,11 @@ public class ExcelStreamExtractorService {
 
         List<String> fields = ReflectionTool.getDesirableCourseCompleteFields();
         int i = 0;
+        // Special Field : Date complete
+        Cell headerCellDate = row.createCell(i++);
+        headerCellDate.setCellValue(cc.getDateCourse()+" "+cc.getHeures()+":"+cc.getMinutes());
+        headerCellDate.setCellStyle(style);
+
         for (String fieldName : fields) {
             String value = ReflectionTool.getValueOfCourseCompleteField(cc, fieldName);
 
@@ -124,6 +129,11 @@ public class ExcelStreamExtractorService {
         }
 
         int i = 0;
+        // Special Field : Date complete
+        Cell headerCellDate = header.createCell(i++);
+        headerCellDate.setCellValue("Date complete");
+        headerCellDate.setCellStyle(headerStyle);
+
         for (String field : capFieldsName) {
             Cell headerCell = header.createCell(i++);
             headerCell.setCellValue(field);
