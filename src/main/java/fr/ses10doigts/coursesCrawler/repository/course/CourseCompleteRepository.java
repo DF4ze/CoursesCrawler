@@ -20,8 +20,8 @@ public interface CourseCompleteRepository extends JpaRepository<CourseComplete, 
     FROM CourseComplete e
     ORDER BY
         e.dateCourse ASC,
-        e.hour ASC,
-        e.minute ASC
+        e.heures ASC,
+        e.minutes ASC
 """)
     Stream<CourseComplete> streamAll();
 }

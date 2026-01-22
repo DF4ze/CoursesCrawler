@@ -124,7 +124,7 @@ public class CrawlJobCheckerService {
 			boolean isInStats = false;
 			String stats = "";
 			// Parfois pas de résultat de la course...
-			if( courseStats.getNombrePartant() != null ) {
+			if( courseStats!= null && courseStats.getNombrePartant() != null ) {
 				boolean isPartantsOK = courseStats.getNombrePartant() >= nbPartantMin
 						&& courseStats.getNombrePartant() <= nbPartantMax;
 
@@ -148,7 +148,7 @@ public class CrawlJobCheckerService {
 
 				Paris paris = null;
 				if( isInStats ){
-					paris = betService.generateBet(c, new BigDecimal(INITIAL_BET), courseStats.getNumeroChlPremierAvant());
+					paris = betService.generateBet(new BigDecimal(INITIAL_BET), courseStats, c);
 				}
 
 				stats = ( isInStats ? "✅ Course dans les stats.\nMise de "+paris.getMise()+"e sur Cheval N°"+courseStats.getNumeroChlPremierAvant()
@@ -161,7 +161,7 @@ public class CrawlJobCheckerService {
 						+(isTypeOk?"✅":"❌")+" Type: "+courseStats.getTypeCourse()+"\n"
 						+(isNbReuMaxOk?"✅":"❌")+" N° Réunion: "+courseStats.getNumeroReunion();
 
-				if( isInStats && !paris.getIsWebActionOk() ){
+				if( isInStats &&  !paris.getIsWebActionOk()) {
 					stats += "\n\n⚠\uFE0F Vérifier si le paris s'est bien déroulé sur le site ⚠\uFE0F";
 				}
 
@@ -328,6 +328,8 @@ public class CrawlJobCheckerService {
 		List<Course> byCourseID = courseRepository.findByCourseID(courseID);
 		if (byCourseID.size() == 1) {
 			course = byCourseID.get(0);
+		}else{
+			return null;
 		}
 
 		// Récupération des 3 plus gros "enjeuxAvant"
@@ -351,6 +353,7 @@ public class CrawlJobCheckerService {
 		cc.setTypeCourse( course.getType() );
 		cc.setNombrePartant( cotes.size() );
 		cc.setNumeroReunion( course.getReunion() );
+		cc.setCourseID(courseID);
 
 		return cc;
 	}

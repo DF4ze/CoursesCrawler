@@ -11,10 +11,9 @@ logging.level.fr.ses10doigts.coursesCrawler==INFO
 #spring.web.resources.static-locations=file:/Path/to/resources
 fr.ses10doigts.crawler.export-dir=/Path/to/export
   
-# Logs
-logging.file.name=courseCrawlerScheduler.log
-logging.pattern.file=%d %p %c{1.} [%t] %m%n
-logging.pattern.console=%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n
+# Logs // Injected in logback-spring.xml
+logging.path=logs
+logging.app.name=courseCrawler
   
 #Mysql Config
 spring.jpa.hibernate.ddl-auto=update

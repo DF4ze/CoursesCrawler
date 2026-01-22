@@ -34,4 +34,31 @@ WHERE r.courseid IS NULL
    OR co.courseid IS NULL;
 
 
-   
+   		SELECT * FROM course c
+		JOIN partant p ON c.courseid = p.courseid
+		WHERE c.date = "2026-01-20"
+		  AND c.type = "plat"
+		  AND c.reunion <= 5
+		GROUP BY c.id
+		HAVING COUNT(CASE WHEN p.probable_geny IS NOT NULL THEN 1 END) >= 10;
+        
+SELECT 
+    c.*,
+    COUNT(CASE WHEN p.probable_geny IS NOT NULL THEN 1 END) AS nb_probables
+FROM course c
+JOIN partant p ON c.courseid = p.courseid
+WHERE c.date = '2026-01-20'
+  AND c.type = 'plat'
+  AND c.reunion <= 5
+GROUP BY c.id
+HAVING nb_probables >= 10;
+
+SELECT 
+    c.*,
+    COUNT(CASE WHEN p.probable_geny IS NOT NULL THEN 1 END) AS nb_probables
+FROM course c
+JOIN partant p ON c.courseid = p.courseid
+WHERE c.date = '2026-01-20'
+  AND c.type = 'plat'
+  AND c.reunion <= 5
+GROUP BY c.id;

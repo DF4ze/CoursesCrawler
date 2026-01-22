@@ -1,25 +1,24 @@
 package fr.ses10doigts.coursesCrawler.service.crawl;
 
-import java.io.IOException;
-import java.lang.Thread.State;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import fr.ses10doigts.coursesCrawler.CustomProperties;
+import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.model.crawl.Report;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.FinalState;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.RunningState;
-import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.repository.web.WebCrawlingProxy;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
 import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.lang.Thread.State;
+import java.util.List;
 
 @Service
 public class CrawlService {
@@ -115,7 +114,7 @@ public class CrawlService {
         logger.debug("URLS : {}", urls);
 
 		Configuration conf = new Configuration();
-		conf.setAgressivity(Agressivity.MEDIUM_HARD);
+		conf.setAgressivity(Agressivity.MEDIUM);
 		conf.setAuthorized("partants-pmu\r\n");
 		conf.setLaunchCrawl(true);
 		conf.setLaunchRefacto(false);

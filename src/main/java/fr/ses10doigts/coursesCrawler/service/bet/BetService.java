@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.WeekFields;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,7 +27,7 @@ public class BetService {
     private BetNodeService betNodeService;
 
     @Transactional
-    public Paris generateBet(Course course, BigDecimal bet, int numCheval){
+    public Paris generateBet(BigDecimal bet, CourseComplete course, Course c){
 
         logger.debug("Bet service Generate");
         LocalDate now = LocalDate.now(ZoneId.of("Europe/Paris"));
@@ -38,35 +39,42 @@ public class BetService {
         paris.setJour(now.getDayOfMonth());
 
         Paris lastParis = parisRepository.findLastParis().orElse(null);
-        int coefBet = 1;
+        float coefBet = 1.0f;
 
         if (lastParis != null){
             paris.setParisPrecedent(lastParis);
 
             logger.debug("Last bet on course : {}", lastParis.getCourse().getCourseID());
 
+            List<Float> martingale = List.of(1.0f, 2.0f, 3.0f, 2.0f);
+
             if( lastParis.getIsEnded()) {
                 Paris betCursor = lastParis;
+                int count = 0;
                 while (betCursor.getIsEnded() && !betCursor.getIsWin()) {
-                    coefBet ++;
-                    if( coefBet > 3 )
-                        coefBet = 1;
+                    coefBet = martingale.get(count % martingale.size());
 
                     betCursor = betCursor.getParisPrecedent();
                     if( betCursor == null )
                         break;
+
+                    count++;
                 }
+                logger.info("{} looses, {} place of Martingale, Coef define on {}", count, count % martingale.size(), coefBet);
+
             }else{
                 logger.warn("!!! Last Paris not ended (cur: {}, last: {}) !!!!", course.getCourseID(), lastParis.getCourse().getCourseID());
             }
 
-            logger.debug("Coef define on {}", coefBet);
         }
+        // Gestion d'un ratio avec la cote du gagnant.
+
         paris.setMise(bet.multiply(new BigDecimal( coefBet )));
 
+        int numCheval = course.getNumeroChlPremierAvant();
         paris.setIsEnded(false);
         paris.setNumChevalMise(numCheval);
-        paris.setCourse(course);
+        paris.setCourse(c);
 
         logger.info("New bet on c{}, {}€ on N°{}", paris.getCourse().getCourseID(), paris.getMise(), numCheval);
 
@@ -78,6 +86,7 @@ public class BetService {
             logger.info("Ended");
         }catch (Exception e){
             logger.error("Error occurred during WebAction : {}",e.getMessage());
+            paris.setIsWebActionOk(false);
         }
 
         parisRepository.save(paris);
@@ -118,5 +127,9 @@ public class BetService {
 
     public Paris getLastBet() {
         return parisRepository.findLastParis().orElse(null);
+    }
+
+    public List<Paris> getUnendedBet(){
+        return parisRepository.findAllNotEnded();
     }
 }

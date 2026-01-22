@@ -158,10 +158,11 @@ public class SchedulerService {
 	public void everyEvening() {
 		logger.info("Starting Daily Evening task");
 
-		Paris lastBet = betService.getLastBet();
-		if( !lastBet.getIsEnded() ) {
-			checkerService.checkEnd(lastBet.getCourse().getCourseID(), TELEGRAM_GROUP);
+		List<Paris> unendedBet = betService.getUnendedBet();
+		for(Paris bet : unendedBet){
+			checkerService.checkEnd(bet.getCourse().getCourseID(), TELEGRAM_GROUP);
 		}
+
 
 		CompletableFuture<GlobalBilanParis> bilanFuture = bilanService.computeGlobalBilan();
 		bilanFuture.thenAccept(bilan -> telegramService.sendMessage(TELEGRAM_GROUP, bilan.toString()) );
@@ -206,7 +207,7 @@ public class SchedulerService {
 			String endDate) {
 
 		if (t == null) {
-			logger.warn("Crawl Thread is null...");
+			logger.error("Crawl Thread is null...");
 			return;
 		}
 
@@ -248,12 +249,25 @@ public class SchedulerService {
 								|| course.getHippodrome().contains(")")
 								|| course.getHippodrome().contains("[")
 								|| course.getHippodrome().contains("]")
+								|| course.getHippodrome().toLowerCase().contains("fontainebleau")
+								|| course.getHippodrome().toLowerCase().contains("marseille")
+								|| course.getHippodrome().toLowerCase().contains("longchamp")
+								|| course.getHippodrome().toLowerCase().contains("pau")
+								|| course.getHippodrome().toLowerCase().contains("strasbourg")
 							);
 					if( course.getHippodrome().contains("(")
 							|| course.getHippodrome().contains(")")
 							|| course.getHippodrome().contains("[")
 							|| course.getHippodrome().contains("]") ){
 						logger.warn("Current course remove because seems to not be in France : {}", course.getHippodrome());
+					}
+
+					if( course.getHippodrome().toLowerCase().contains("fontainebleau")
+							|| course.getHippodrome().toLowerCase().contains("marseille")
+							|| course.getHippodrome().toLowerCase().contains("longchamp")
+							|| course.getHippodrome().toLowerCase().contains("pau")
+							|| course.getHippodrome().toLowerCase().contains("strasbourg") ){
+						logger.warn("Current course remove because unwanted hippo : {}", course.getHippodrome());
 					}
 
 					if( !inStats ){
