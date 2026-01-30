@@ -28,6 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -236,6 +237,12 @@ public class SchedulerService {
 
 				List<Course> courses = courseRepository.findCoursesWithCriteria(
 						nbPartantMin, typeCourse, nbReunionMax, day
+				);
+
+				courses.sort(
+						Comparator
+								.comparingInt((Course c) -> Integer.parseInt(c.getHeures()))
+								.thenComparingInt(c -> Integer.parseInt(c.getMinutes()))
 				);
 
 				int nbScheduled = 0;

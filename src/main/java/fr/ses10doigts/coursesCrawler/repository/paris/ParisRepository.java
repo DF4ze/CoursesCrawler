@@ -26,7 +26,7 @@ public interface ParisRepository extends JpaRepository<Paris, Long> {
      COUNT(p) as nbCourses,
      SUM(CASE WHEN p.isWin = true THEN 1 ELSE 0 END) as nbWin,
      SUM(CASE WHEN p.isWin = false THEN 1 ELSE 0 END) as nbLoose,
-     SUM(CASE WHEN p.isWin = true THEN p.gain ELSE 0 END) as amountWin,
+     SUM(CASE WHEN p.isWin = true THEN (p.gain * p.mise) ELSE 0 END) as amountWin,
      SUM(CASE WHEN p.isWin = false THEN p.mise ELSE 0 END) as amountLoose
    FROM Paris p
    WHERE (:annee IS NULL OR p.annee = :annee)

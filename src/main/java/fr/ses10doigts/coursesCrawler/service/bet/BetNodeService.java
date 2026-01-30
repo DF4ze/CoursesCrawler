@@ -17,7 +17,7 @@ public class BetNodeService {
     @Autowired
     private CustomProperties props;
 
-    boolean launchBetProcess(long courseID, BigDecimal bet, int chvlNb){
+    public boolean launchBetProcess(long courseID, BigDecimal bet, int chvlNb){
         if( !props.getPuppeteerActivated().equals("true") )
             return false;
 
@@ -25,7 +25,7 @@ public class BetNodeService {
         String sBet =String.valueOf(bet);
         String sChvlNb = String.valueOf(chvlNb);
         ProcessBuilder pb = new ProcessBuilder(
-                "node", props.getPuppeteerPath(), sCourse, sBet, sChvlNb,
+                "/usr/bin/node", props.getPuppeteerPath(), sCourse, sBet, sChvlNb,
                 props.getPuppeteerUser(),
                 props.getPuppeteerPwd()
         );

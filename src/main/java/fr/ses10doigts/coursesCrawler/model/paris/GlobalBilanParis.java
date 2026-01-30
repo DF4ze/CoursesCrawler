@@ -3,6 +3,7 @@ package fr.ses10doigts.coursesCrawler.model.paris;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -43,15 +44,20 @@ public class GlobalBilanParis {
         sb.append("🔹 ").append(titre).append("\n");
         sb.append("Courses jouées : ").append(bilan.getNbCourses()).append("\n");
         sb.append("Gains : ").append(bilan.getNbWin())
-                .append(" (").append(bilan.getAmountWin()).append("e)\n");
+                .append(" (").append(fmt(bilan.getAmountWin())).append("e)\n");
         sb.append("Pertes : ").append(bilan.getNbLoose())
-                .append(" (").append(bilan.getAmountLoose()).append("e)\n");
+                .append(" (").append(fmt(bilan.getAmountLoose())).append("e)\n");
 
         // Emoji selon bénéfice positif ou négatif
         BigDecimal benefits = bilan.getBenefits();
         String emoji = benefits.signum() >= 0 ? "🎉" : "😢";
-        sb.append("⚖️ Bénéfices : ").append(benefits).append(" ").append(emoji).append("\n\n");
+        sb.append("⚖️ Bénéfices : ").append(fmt(benefits)).append(" ").append(emoji).append("\n\n");
 
         return sb.toString();
+    }
+
+    private static String fmt(BigDecimal v) {
+        return v == null ? "0.00" :
+                v.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 }

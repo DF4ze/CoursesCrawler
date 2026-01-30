@@ -3,6 +3,7 @@ package fr.ses10doigts.coursesCrawler.controller;
 import fr.ses10doigts.coursesCrawler.model.paris.GlobalBilanParis;
 import fr.ses10doigts.coursesCrawler.model.schedule.ScheduledTask;
 import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
+import fr.ses10doigts.coursesCrawler.service.bet.BetNodeService;
 import fr.ses10doigts.coursesCrawler.service.bet.GlobalBilanAsyncService;
 import fr.ses10doigts.coursesCrawler.service.misc.LogAccessService;
 import fr.ses10doigts.coursesCrawler.service.scheduler.SchedulerService;
@@ -19,6 +20,7 @@ import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateC
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -41,6 +43,8 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 	private LogAccessService logService;
     @Autowired
     private GlobalBilanAsyncService bilanService;
+	@Autowired
+	private BetNodeService betNodeService;
 
 	private final List<Long> authorizedChat = new ArrayList<>();
 	{
@@ -279,6 +283,31 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 					CompletableFuture<GlobalBilanParis> future = bilanService.computeGlobalBilan();
 
 					future.thenAccept( bilan ->telegramService.sendMessage(message.getChatId(), bilan.toString()) );
+				}else if (userMessage.startsWith("/bet")){
+					String[] param = userMessage.split(" ");
+					String msg = null;
+					if (param.length == 4) {
+						try {
+							long courseNb = Long.parseLong(param[1]);
+							int chvlNb = Integer.parseInt(param[2]);
+							BigDecimal bet = new BigDecimal(param[3]);
+
+							boolean ok = betNodeService.launchBetProcess(courseNb, bet, chvlNb);
+
+							if( ok ){
+								msg = "Le paris semble s'être correctement déroulé";
+							}else {
+								msg = "Le paris ne semble pas s'être déroulé correctement";
+							}
+						}catch (Exception e){
+							msg = "Un exception a eu lieu : "+e.getMessage();
+						}
+
+					}else{
+						msg = "Erreur dans le nombre de paramètres : NuméroDeCourse NumeroCheval mise";
+					}
+
+					telegramService.sendMessage(message.getChatId(), msg) ;
 				}
 
 				if(isValueChanged){
