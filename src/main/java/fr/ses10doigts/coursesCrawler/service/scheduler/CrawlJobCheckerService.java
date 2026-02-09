@@ -58,7 +58,7 @@ public class CrawlJobCheckerService {
 	private BetService betService;
 
 
-    public void checkStart(ScheduledTask task, float percent, String courseType, int nbPartantMin, int nbPartantMax, int nbReunionMax)  {
+    public void checkStart(ScheduledTask task, float percent, String courseType, List<Integer>nbPartants, int nbReunionMax)  {
 
 		if( task == null ){
 			logger.warn("/!\\ Given task is null");
@@ -79,6 +79,7 @@ public class CrawlJobCheckerService {
 			conf.setAuthorized("/cotes.*" + codeCourse + "\r\n");
 			conf.setLaunchCrawl(true);
 			conf.setLaunchRefacto(false);
+			conf.setLaunchExcel(false);
 			conf.setMaxHop(0);
 			conf.setMaxRetry(10);
 			conf.setWaitOnRetry(true);
@@ -113,7 +114,6 @@ public class CrawlJobCheckerService {
 				}
 			}
 
-
 			// Sinon récupération des cotes
 			Set<Cote> cotes = coteRepository.findByCourseID(codeCourse);
 
@@ -125,8 +125,7 @@ public class CrawlJobCheckerService {
 			String stats = "";
 			// Parfois pas de résultat de la course...
 			if( courseStats!= null && courseStats.getNombrePartant() != null ) {
-				boolean isPartantsOK = courseStats.getNombrePartant() >= nbPartantMin
-						&& courseStats.getNombrePartant() <= nbPartantMax;
+				boolean isPartantsOK = nbPartants.contains(courseStats.getNombrePartant());
 
 				boolean isPercentOk = true;
 				float sumPercent = 0;
@@ -207,6 +206,7 @@ public class CrawlJobCheckerService {
 			conf.setAuthorized("/arrivee-et-rapports-pmu.*" + courseID + "\r\n");
 			conf.setLaunchCrawl(true);
 			conf.setLaunchRefacto(false);
+			conf.setLaunchExcel(false);
 			conf.setMaxHop(0);
 			conf.setMaxRetry(10);
 			conf.setWaitOnRetry(true);

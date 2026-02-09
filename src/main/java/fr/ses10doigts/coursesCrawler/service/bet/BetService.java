@@ -1,5 +1,6 @@
 package fr.ses10doigts.coursesCrawler.service.bet;
 
+import fr.ses10doigts.coursesCrawler.CustomProperties;
 import fr.ses10doigts.coursesCrawler.model.paris.Paris;
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.Course;
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.CourseComplete;
@@ -25,6 +26,8 @@ public class BetService {
     private ParisRepository parisRepository;
     @Autowired
     private BetNodeService betNodeService;
+    @Autowired
+    private CustomProperties props;
 
     @Transactional
     public Paris generateBet(BigDecimal bet, CourseComplete course, Course c){
@@ -46,19 +49,18 @@ public class BetService {
 
             logger.debug("Last bet on course : {}", lastParis.getCourse().getCourseID());
 
-            List<Float> martingale = List.of(1.0f, 2.0f, 3.0f, 2.0f);
+            List<Float> martingale = props.getPuppeteerMartingale();//List.of(1.0f, 2.0f, 3.0f, 2.0f);
 
             if( lastParis.getIsEnded()) {
                 Paris betCursor = lastParis;
                 int count = 0;
                 while (betCursor.getIsEnded() && !betCursor.getIsWin()) {
+                    count++;
                     coefBet = martingale.get(count % martingale.size());
 
                     betCursor = betCursor.getParisPrecedent();
                     if( betCursor == null )
                         break;
-
-                    count++;
                 }
                 logger.info("{} looses, {} place of Martingale, Coef define on {}", count, count % martingale.size(), coefBet);
 
@@ -66,7 +68,10 @@ public class BetService {
                 logger.warn("!!! Last Paris not ended (cur: {}, last: {}) !!!!", course.getCourseID(), lastParis.getCourse().getCourseID());
             }
 
+        }else{
+            logger.warn("Last Paris is null!");
         }
+
         // Gestion d'un ratio avec la cote du gagnant.
 
         paris.setMise(bet.multiply(new BigDecimal( coefBet )));

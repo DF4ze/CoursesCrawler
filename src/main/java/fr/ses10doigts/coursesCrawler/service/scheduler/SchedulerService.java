@@ -15,7 +15,6 @@ import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -47,16 +47,6 @@ public class SchedulerService {
 		changeScheduledTaskTiming( tb );
 	}
 
-	@Getter  @Setter
-    private static int nbPartantMin = 14;
-	@Getter @Setter
-	private static int nbPartantMax = 16;
-	@Getter  @Setter
-    private static String typeCourse = "plat";
-	@Getter  @Setter
-	private static float pourcentFavoris = 41;
-	@Getter  @Setter
-	private static int nbReunionMax = 5;
 
 
 	@Autowired
@@ -100,7 +90,12 @@ public class SchedulerService {
 			}
 
 			try{
-				checkerService.checkStart(task, pourcentFavoris, typeCourse, nbPartantMin, nbPartantMax, nbReunionMax);
+
+				checkerService.checkStart(task,
+						configurationService.getProps().getFilterMinPourcent(),
+						configurationService.getProps().getFilterTypeCourse(),
+						configurationService.getProps().getFilterListNbPartants(),
+						configurationService.getProps().getFilterNbReunionMax());
 
 				if( task.getStatus() == ScheduleStatus.RESCHEDULED ){
 					logger.debug("RESCHEDULED task for course : {}", task.getIdCourse());
@@ -164,10 +159,11 @@ public class SchedulerService {
 			checkerService.checkEnd(bet.getCourse().getCourseID(), TELEGRAM_GROUP);
 		}
 
-
 		CompletableFuture<GlobalBilanParis> bilanFuture = bilanService.computeGlobalBilan();
 		bilanFuture.thenAccept(bilan -> telegramService.sendMessage(TELEGRAM_GROUP, bilan.toString()) );
 	}
+
+
 
 	@PostConstruct
 	public void runAtStartup() {
@@ -212,6 +208,14 @@ public class SchedulerService {
 			return;
 		}
 
+		logger.info("Props : \n- Min partants: {}\n- Type course: {}\n- Reu max: {}\n- Min %: {}\n- Nb Partants: {}\n- List nb partants: {}\n",
+				configurationService.getProps().getFilterMinPartants(),
+				configurationService.getProps().getFilterTypeCourse(),
+				configurationService.getProps().getFilterNbReunionMax(),
+				configurationService.getProps().getFilterMinPourcent(),
+				configurationService.getProps().getFilterNbPartants(),
+				configurationService.getProps().getFilterListNbPartants());
+
 		// Lancement async pour attendre la fin du crawl
 		CompletableFuture.runAsync(() -> {
 			try {
@@ -236,7 +240,10 @@ public class SchedulerService {
 				start = start.plusDays(1);
 
 				List<Course> courses = courseRepository.findCoursesWithCriteria(
-						nbPartantMin, typeCourse, nbReunionMax, day
+						configurationService.getProps().getFilterMinPartants(),
+						configurationService.getProps().getFilterTypeCourse(),
+						configurationService.getProps().getFilterNbReunionMax(),
+						day
 				);
 
 				courses.sort(
@@ -247,10 +254,11 @@ public class SchedulerService {
 
 				int nbScheduled = 0;
 				StringBuilder rep = new StringBuilder();
+				List<Course> retainedCourses = new ArrayList<>();
 				for (Course course : courses) {
 
-					boolean inStats = typeCourse.equalsIgnoreCase(course.getType())
-                            && course.getReunion() <= nbReunionMax
+					boolean inStats = configurationService.getProps().getFilterTypeCourse().equalsIgnoreCase(course.getType())
+                            && course.getReunion() <= configurationService.getProps().getFilterNbReunionMax()
 							&& !(
 								course.getHippodrome().contains("(")
 								|| course.getHippodrome().contains(")")
@@ -303,23 +311,27 @@ public class SchedulerService {
 
 					scheduleTask(targetTime, course, messageId, courseDescr);
 					nbScheduled++;
+					retainedCourses.add(course);
 				}
 
 				logger.debug("Après le crawl, {} courses trouvées en BDD avec nbPartant {}, type '{}', Reu max {}.",
-						nbScheduled, nbPartantMin, typeCourse, nbReunionMax
+						nbScheduled,
+						configurationService.getProps().getFilterNbPartants(),
+						configurationService.getProps().getFilterTypeCourse(),
+						configurationService.getProps().getFilterNbReunionMax()
 				);
 
 				StringBuilder finalRep = new StringBuilder();
 				finalRep.append("\uD83D\uDCC6").append( day ).append(" : \n");
-				if( courses.isEmpty() ){
+				if( retainedCourses.isEmpty() ){
 					finalRep.append( "❌ Pas de courses répondant aux critères aujourd'hui !" );
 				}else {
 					finalRep.append("✅ ").append( nbScheduled ).append(" course(s) aujourd'hui !" );
 				}
 				finalRep.append("\nCritères :\n" )
-						.append("✔️ Partants min : ").append( nbPartantMin ).append( "\n" )
-						.append("✔️ Type course : ").append( typeCourse ).append( "\n" )
-						.append("✔️ Réunion max : ").append( nbReunionMax ).append( "\n\n" )
+						.append("✔️ Partants min : ").append( configurationService.getProps().getFilterMinPartants() ).append( "\n" )
+						.append("✔️ Type course : ").append( configurationService.getProps().getFilterTypeCourse() ).append( "\n" )
+						.append("✔️ Réunion max : ").append( configurationService.getProps().getFilterNbReunionMax() ).append( "\n\n" )
 						.append(rep);
 				logger.info("{} New tasks scheduled.", nbScheduled);
 

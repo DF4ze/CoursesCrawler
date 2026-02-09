@@ -26,6 +26,8 @@ public class ExcelStreamExtractorService {
     private CourseCompleteRepository repository;
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    private ConfigurationService configurationService;
 
     @Value("${fr.ses10doigts.crawler.export-dir}")
     private String exportDir;
@@ -33,8 +35,28 @@ public class ExcelStreamExtractorService {
     private static final Logger logger  = LoggerFactory.getLogger(ExcelStreamExtractorService.class);
     private static final String SHEET_NAME = "Courses";
 
+
+    public void waitAndExtract(Thread crawlTreatment, Thread refactoThread) {
+        try {
+            if( crawlTreatment != null && crawlTreatment.isAlive()){
+                crawlTreatment.join();
+            }
+
+            if( refactoThread != null && refactoThread.isAlive() ){
+                refactoThread.join();
+            }
+
+            extractCourseCompletes(
+                    configurationService.getConfiguration().getStartGenDate(),
+                    configurationService.getConfiguration().getEndGenDate()
+            );
+        } catch (InterruptedException ignored) {
+            ;
+        }
+    }
+
     @Transactional(readOnly = true) // important pour le streaming
-    public void extractCourseCompletes()  {
+    public void extractCourseCompletes( String startDate, String endDate)  {
         try {
             String sFile = exportDir + "courses.xlsx";
             logger.info("Starting generating Excel file to : {}", sFile);
@@ -51,24 +73,50 @@ public class ExcelStreamExtractorService {
                 CellStyle style = workbook.createCellStyle();
                 style.setWrapText(true);
 
-                try (Stream<CourseComplete> stream = repository.streamAll()) {
-                    stream.forEach(entity -> {
-                        generateRowFromCourseComplete(entity, sheet, style, rowNum[0]++);
+                if( startDate == null && endDate == null ) {
+                    try (Stream<CourseComplete> stream = repository.streamAll()) {
+                        stream.forEach(entity -> {
+                            generateRowFromCourseComplete(entity, sheet, style, rowNum[0]++);
 
-                        entityManager.detach(entity);
-                        if( rowNum[0] % 50 == 0 ) {
-                            logger.debug("Clear buffer");
-                            entityManager.clear();
-                        }
-
-                        if (rowNum[0] % 100 == 0) {
-                            try {
-                                sheet.flushRows(100);
-                            } catch (IOException e) {
-                                logger.warn("Error occurred during flushRows");
+                            entityManager.detach(entity);
+                            if (rowNum[0] % 50 == 0) {
+                                logger.debug("Clear buffer");
+                                entityManager.clear();
                             }
-                        }
-                    });
+
+                            if (rowNum[0] % 100 == 0) {
+                                try {
+                                    sheet.flushRows(100);
+                                } catch (IOException e) {
+                                    logger.warn("Error occurred during flushRows");
+                                }
+                            }
+                        });
+                    }
+                    
+                } else if (startDate != null && endDate != null) {
+                    try (Stream<CourseComplete> stream = repository.streamAllBetweenDates(startDate, endDate)) {
+                        stream.forEach(entity -> {
+                            generateRowFromCourseComplete(entity, sheet, style, rowNum[0]++);
+
+                            entityManager.detach(entity);
+                            if (rowNum[0] % 50 == 0) {
+                                logger.debug("Clear buffer");
+                                entityManager.clear();
+                            }
+
+                            if (rowNum[0] % 100 == 0) {
+                                try {
+                                    sheet.flushRows(100);
+                                } catch (IOException e) {
+                                    logger.warn("Error occurred during flushRows");
+                                }
+                            }
+                        });
+                    }
+                }else{
+                    logger.error("startDate and endDate, both must be null or set...");
+                    return;
                 }
 
                 try (FileOutputStream out = new FileOutputStream( sFile )) {
@@ -84,6 +132,8 @@ public class ExcelStreamExtractorService {
             logger.error("Error extracting to Excel file : {}", e.getMessage());
         }
     }
+
+
 
     private void generateRowFromCourseComplete(CourseComplete cc, Sheet sheet, CellStyle style, int line) {
 

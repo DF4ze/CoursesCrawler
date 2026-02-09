@@ -6,10 +6,12 @@ import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Configuration
@@ -28,6 +30,7 @@ public class CustomProperties {
     private Agressivity	agressivity;
     private boolean	doCrawl;
     private boolean	doRefacto;
+    private boolean	doExcel;
 	private boolean waitOnRetry = false;
 	private Date startRefactoDate;
 	private Date endRefactoDate;
@@ -42,6 +45,18 @@ public class CustomProperties {
     private String puppeteerPwd;
     private String puppeteerPath;
     private String puppeteerInitialBet;
+    @Value("#{'${fr.ses10doigts.crawler.puppeteerMartingale}'.split(',')}")
+    private List<Float> puppeteerMartingale;
+
+    private Integer filterMinPartants;
+    private Float filterMinPourcent;
+    private String filterNbPartants;
+    private String filterTypeCourse;
+    private Integer filterNbReunionMax;
+    @Value("#{'${fr.ses10doigts.crawler.filterNbPartants}'.split(',')}")
+    private List<Integer> filterListNbPartants;
+
+
 
     @PostConstruct
     public void printProperties() {
@@ -54,6 +69,13 @@ public class CustomProperties {
         logger.info("puppeteerPwd = {}", "***");
         logger.info("puppeteerPath = {}", puppeteerPath);
         logger.info("puppeteerInitialBet = {}", puppeteerInitialBet);
+        logger.info("puppeteerMartingale = {}", puppeteerMartingale);
+        logger.info("filterMinPartants = {}", filterMinPartants);
+        logger.info("filterMinPourcent = {}", filterMinPourcent);
+        logger.info("filterNbPartants = {}", filterNbPartants);
+        logger.info("filterTypeCourse = {}", filterTypeCourse);
+        logger.info("filterNbReunionMax = {}", filterNbReunionMax);
+        logger.info("filterListNbPartants = {}", filterListNbPartants);
         logger.info("========================");
     }
 }

@@ -14,6 +14,7 @@ public class Configuration {
     private Agressivity	agressivity;
     private boolean	launchCrawl;
     private boolean	launchRefacto;
+    private boolean	launchExcel;
 	private boolean waitOnRetry;
 
     private String	startGenDate;

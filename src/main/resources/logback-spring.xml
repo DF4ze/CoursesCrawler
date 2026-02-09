@@ -6,6 +6,13 @@
     <springProperty name="LOG_FILE"
                     source="logging.file.name"/>
 
+    <!-- CONSOLE -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <!-- APP LOG -->
     <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}.log</file>
@@ -42,7 +49,8 @@
         </encoder>
     </appender>
 
-    <root level="INFO">
+    <root level="${logging.level.root:INFO}">
+        <appender-ref ref="CONSOLE"/>
         <appender-ref ref="APP_FILE"/>
         <appender-ref ref="ERROR_FILE"/>
     </root>

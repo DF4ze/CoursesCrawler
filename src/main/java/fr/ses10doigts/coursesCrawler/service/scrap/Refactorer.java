@@ -1,29 +1,19 @@
 package fr.ses10doigts.coursesCrawler.service.scrap;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
+import fr.ses10doigts.coursesCrawler.model.scrap.AbstractEntity;
+import fr.ses10doigts.coursesCrawler.model.scrap.entity.*;
+import fr.ses10doigts.coursesCrawler.repository.course.*;
+import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
+import fr.ses10doigts.coursesCrawler.service.scrap.tool.RefactorerReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import fr.ses10doigts.coursesCrawler.model.scrap.AbstractEntity;
-import fr.ses10doigts.coursesCrawler.model.scrap.entity.Arrivee;
-import fr.ses10doigts.coursesCrawler.model.scrap.entity.Cote;
-import fr.ses10doigts.coursesCrawler.model.scrap.entity.Course;
-import fr.ses10doigts.coursesCrawler.model.scrap.entity.CourseComplete;
-import fr.ses10doigts.coursesCrawler.model.scrap.entity.Partant;
-import fr.ses10doigts.coursesCrawler.model.scrap.entity.Rapport;
-import fr.ses10doigts.coursesCrawler.repository.course.ArriveeRepository;
-import fr.ses10doigts.coursesCrawler.repository.course.CoteRepository;
-import fr.ses10doigts.coursesCrawler.repository.course.CourseRepository;
-import fr.ses10doigts.coursesCrawler.repository.course.PartantRepository;
-import fr.ses10doigts.coursesCrawler.repository.course.RapportRepository;
-import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
-import fr.ses10doigts.coursesCrawler.service.scrap.tool.RefactorerReport;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 @Component
 public class Refactorer implements Runnable {
@@ -56,11 +46,6 @@ public class Refactorer implements Runnable {
 	public Refactorer() {
 	}
 
-	public void makeCourseComplete(Long fromCourseId) {
-		from = fromCourseId;
-		makeCourseComplete();
-	}
-
 	@Override
 	public void run() {
 		try {
@@ -83,7 +68,7 @@ public class Refactorer implements Runnable {
 			return;
 		}
 
-		logger.debug("************************* Refactorer start");
+		logger.info("Starting Refactorer");
 		report.startRefacto();
 
 		List<Course> coursesList = null;
@@ -96,7 +81,7 @@ public class Refactorer implements Runnable {
 
 		Collection<AbstractEntity> computedBuffer = new ArrayList<>();
 		if (from != null) {
-			logger.info("Starting from id " + from);
+            logger.info("Starting from id {}", from);
 			coursesList = courseRepository.findAllFrom(from);
 		} else {
 			coursesList = courseRepository.findAll();

@@ -159,42 +159,41 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 				} else if (userMessage.startsWith("/pourcent")) {
 					String[] param = userMessage.split(" ");
 					if (param.length == 2) {
-						String f = param[1].replace(",", ".");
+						/*String f = param[1].replace(",", ".");
 						SchedulerService.setPourcentFavoris(Float.parseFloat(f));
 						telegramService.sendMessage(message.getChatId(),
 								"Somme des 3 favoris définit >= " + param[1] + "%");
-						isValueChanged = true;
+						isValueChanged = true;*/
 					} else {
 						telegramService.sendMessage(message.getChatId(),
 								"Somme des 3 favoris actuellement définit à "
-										+ SchedulerService.getPourcentFavoris() + "%");
+										+ configurationService.getProps().getFilterMinPourcent() + "%");
 					}
 
 				} else if (userMessage.startsWith("/type")) {
 					String[] param = userMessage.split(" ");
 					if (param.length == 2) {
-						SchedulerService.setTypeCourse(param[1]);
+						/*SchedulerService.setTypeCourse(param[1]);
 						telegramService.sendMessage(message.getChatId(),
 								"Type de course définit à '" + param[1]+"'");
-						isValueChanged = true;
+						isValueChanged = true;*/
 					} else {
 						telegramService.sendMessage(message.getChatId(),
 								"Type de course actuellement définit à '"
-										+ SchedulerService.getTypeCourse()+"'");
+										+ configurationService.getProps().getFilterTypeCourse()+"'");
 					}
 
-				} else if (userMessage.startsWith("/nbpartantmin")) {
+				} else if (userMessage.startsWith("/nbpartant")) {
 					String[] param = userMessage.split(" ");
 					if (param.length == 2) {
-						SchedulerService.setNbPartantMin(Integer.parseInt(param[1]));
-						isValueChanged = true;
+						/*SchedulerService.setNbPartantMin(Integer.parseInt(param[1]));
+						isValueChanged = true;*/
 					}
 					telegramService.sendMessage(message.getChatId(),
-							"Check courses entre " + SchedulerService.getNbPartantMin()
-									+ " et " + SchedulerService.getNbPartantMax() + " partants");
+							"Check courses avec " + configurationService.getProps().getFilterNbPartants() + " partants");
 
 
-				} else if (userMessage.startsWith("/nbpartantmax")) {
+				} else /*if (userMessage.startsWith("/nbpartantmax")) {
 					String[] param = userMessage.split(" ");
 					if (param.length == 2) {
 						SchedulerService.setNbPartantMax(Integer.parseInt(param[1]));
@@ -204,14 +203,14 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 							"Check courses entre " + SchedulerService.getNbPartantMin()
 									+ " et " + SchedulerService.getNbPartantMax() + " partants");
 
-				} else if (userMessage.startsWith("/reunionmax")) {
+				} else */ if (userMessage.startsWith("/reunionmax")) {
 					String[] param = userMessage.split(" ");
 					if (param.length == 2) {
-						SchedulerService.setNbReunionMax(Integer.parseInt(param[1]));
-						isValueChanged = true;
+						/*SchedulerService.setNbReunionMax(Integer.parseInt(param[1]));
+						isValueChanged = true;*/
 					}
 					telegramService.sendMessage(message.getChatId(),
-							"Numéro de réunion max : " + SchedulerService.getNbReunionMax()
+							"Numéro de réunion max : " + configurationService.getProps().getFilterNbReunionMax()
 					);
 
 				} else if (userMessage.startsWith("/log")) {
@@ -283,6 +282,9 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 					CompletableFuture<GlobalBilanParis> future = bilanService.computeGlobalBilan();
 
 					future.thenAccept( bilan ->telegramService.sendMessage(message.getChatId(), bilan.toString()) );
+				}else if (userMessage.startsWith("/checkEnd")){
+					schedulerService.everyEvening();
+
 				}else if (userMessage.startsWith("/bet")){
 					String[] param = userMessage.split(" ");
 					String msg = null;

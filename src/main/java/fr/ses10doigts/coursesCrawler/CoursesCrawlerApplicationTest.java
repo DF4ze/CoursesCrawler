@@ -56,6 +56,7 @@ public class CoursesCrawlerApplicationTest {
 		conf.setAuthorized("partants-pmu\r\n");
 		conf.setLaunchCrawl(true);
 		conf.setLaunchRefacto(false);
+		conf.setLaunchExcel(false);
 		conf.setMaxRetry(10);
 		conf.setWaitOnRetry(true);
 		conf.setMaxHop(1);

@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -24,4 +25,18 @@ public interface CourseCompleteRepository extends JpaRepository<CourseComplete, 
         e.minutes ASC
 """)
     Stream<CourseComplete> streamAll();
+
+	@Query("""
+    SELECT e
+    FROM CourseComplete e
+    WHERE e.dateCourse BETWEEN :startDate AND :endDate
+    ORDER BY
+        e.dateCourse ASC,
+        e.heures ASC,
+        e.minutes ASC
+""")
+	Stream<CourseComplete> streamAllBetweenDates(
+			@Param("startDate") String startDate,
+			@Param("endDate") String endDate
+	);
 }

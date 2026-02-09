@@ -43,7 +43,7 @@ public class MainController {
 	@GetMapping("/generate")
 	public String generateXls(Model model) {
 
-		excelService.extractCourseCompletes();
+		excelService.extractCourseCompletes(null, null);
 
 		model.addAttribute("configuration", configurationService.getConfiguration());
 		model.addAttribute("crawlReport", crawlService.getReportCurrentCrawl());

@@ -1,5 +1,15 @@
 package fr.ses10doigts.coursesCrawler.service.web;
 
+import fr.ses10doigts.coursesCrawler.CustomProperties;
+import fr.ses10doigts.coursesCrawler.model.Configuration;
+import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
+import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineWriter;
+import lombok.Getter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -7,22 +17,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import fr.ses10doigts.coursesCrawler.CustomProperties;
-import fr.ses10doigts.coursesCrawler.model.Configuration;
-import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
-import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineWriter;
-
 @Component
 public class ConfigurationService {
     @Autowired
     private LineReader	     reader;
     @Autowired
     private LineWriter	     writer;
+	@Getter
     @Autowired
     private CustomProperties props;
 
@@ -39,6 +40,7 @@ public class ConfigurationService {
 		conf.setMaxRetry(props.getMaxRetry());
 		conf.setLaunchCrawl(props.isDoCrawl());
 		conf.setLaunchRefacto(props.isDoRefacto());
+		conf.setLaunchExcel(props.isDoExcel());
 		conf.setBotToken(props.getBotToken());
 		conf.setBotUsername(props.getBotUsername());
 		conf.setTelegramVerbose(props.getTelegramVerbose());
@@ -77,6 +79,7 @@ public class ConfigurationService {
 	    props.setMaxRetry(conf.getMaxRetry());
 	    props.setDoCrawl(conf.isLaunchCrawl());
 	    props.setDoRefacto(conf.isLaunchRefacto());
+		props.setDoExcel(conf.isLaunchExcel());
 		props.setWaitOnRetry(conf.isWaitOnRetry());
 
 	    writer.setFilePath(props.getSeedsFile());

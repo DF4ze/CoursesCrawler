@@ -11,14 +11,19 @@ import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
 import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
+import fr.ses10doigts.coursesCrawler.service.web.ExcelStreamExtractorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.lang.Thread.State;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Service
 public class CrawlService {
@@ -34,15 +39,20 @@ public class CrawlService {
 	private ConfigurationService configurationService;
 	@Autowired
 	private RefactorerService refactoService;
+	@Autowired
+	private ExcelStreamExtractorService excelService;
+	@Autowired
+	private TransactionTemplate transactionTemplate;
 
 
-    private static Thread	treatment = null;
+
+	private static Thread crawlTreatment = null;
 
     private static final Logger	logger = LoggerFactory.getLogger(CrawlService.class);
 
 
 	private Report startCrawl(boolean withException) throws IOException {
-		if (treatment == null || treatment.getState().equals(State.TERMINATED)) {
+		if (crawlTreatment == null || crawlTreatment.getState().equals(State.TERMINATED)) {
 			// Retrieve seeds
 			reader.setFilePath(props.getSeedsFile());
 			List<String> urls = reader.fileToSet();
@@ -66,8 +76,8 @@ public class CrawlService {
 			processorChain.setWithException(withException);
 			processorChain.setWaitOnRetry(props.isWaitOnRetry());
 			processorChain.initialize();
-			treatment = new Thread(processorChain);
-			treatment.start();
+			crawlTreatment = new Thread(processorChain);
+			crawlTreatment.start();
 			logger.info("Thread started");
 
 			// CrawlReport report = new CrawlReport();
@@ -94,10 +104,19 @@ public class CrawlService {
 			}
 
 			if (configuration.isLaunchRefacto()) {
-				// TODO rapport
-				refactoService.launchRefactorer(treatment);
-
+				refactoService.launchRefactorer(crawlTreatment);
 			}
+
+			if( configuration.isLaunchExcel() ){
+				ExecutorService executor = Executors.newSingleThreadExecutor();
+				Future<?> future = executor.submit(() -> {
+					transactionTemplate.execute(status -> {
+						excelService.waitAndExtract( crawlTreatment, refactoService.getThread() );
+						return null;
+					});
+				});
+			}
+
 		} catch (IOException e) {
 
 			cr.setFinalState(FinalState.ERROR);
@@ -131,8 +150,8 @@ public class CrawlService {
 	fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport crawlReport = processorChain.getReport();
 	Report report = new Report();
 
-	if (treatment != null) {
-	    State state = treatment.getState();
+	if (crawlTreatment != null) {
+	    State state = crawlTreatment.getState();
 	    // if thread is terminated ?
 	    if (state.equals(State.TERMINATED)) {
 			// has it (not) been stop by user ?
@@ -170,7 +189,7 @@ public class CrawlService {
 	}
 
     public Thread getTreatment() {
-		return treatment;
+		return crawlTreatment;
     }
 
 
