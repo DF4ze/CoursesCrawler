@@ -8,4 +8,5 @@ public interface BilanProjection {
     Long getNbLoose();
     BigDecimal getAmountWin();
     BigDecimal getAmountLoose();
+    BigDecimal getTotalMise();
 }

@@ -39,6 +39,9 @@ public class CustomProperties {
 	private String botUsername;
 
     private Verbose telegramVerbose;
+    @Value("#{'${fr.ses10doigts.crawler.telegramChatIds}'.split(',')}")
+    private List<Long> telegramChatIds;
+    private Long telegramChatId;
 
     private String puppeteerActivated;
     private String puppeteerUser;
@@ -55,6 +58,9 @@ public class CustomProperties {
     private Integer filterNbReunionMax;
     @Value("#{'${fr.ses10doigts.crawler.filterNbPartants}'.split(',')}")
     private List<Integer> filterListNbPartants;
+    @Value("#{'${fr.ses10doigts.crawler.filterListRejectedHippo}'.split(',')}")
+    private List<String> filterListRejectedHippo;
+
 
 
 
@@ -64,6 +70,7 @@ public class CustomProperties {
         logger.info("botToken = {}", "***");
         logger.info("botUsername = {}", botUsername);
         logger.info("telegramVerbose = {}", telegramVerbose);
+        logger.info("telegramChatIds = {}", telegramChatIds);
         logger.info("puppeteerActivated = {}", puppeteerActivated);
         logger.info("puppeteerUser = {}", puppeteerUser);
         logger.info("puppeteerPwd = {}", "***");
@@ -76,6 +83,7 @@ public class CustomProperties {
         logger.info("filterTypeCourse = {}", filterTypeCourse);
         logger.info("filterNbReunionMax = {}", filterNbReunionMax);
         logger.info("filterListNbPartants = {}", filterListNbPartants);
+        logger.info("filterListRejectedHippo = {}", filterListRejectedHippo);
         logger.info("========================");
     }
 }

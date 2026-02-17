@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 public class TelegramBotController implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
 	private static final Logger logger = LoggerFactory.getLogger(TelegramBotController.class);
 
+	@Autowired
 	private final ConfigurationService configurationService;
 	@Autowired
 	private SchedulerService schedulerService;
@@ -46,15 +46,12 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 	@Autowired
 	private BetNodeService betNodeService;
 
-	private final List<Long> authorizedChat = new ArrayList<>();
-	{
-		authorizedChat.add(1595302518L);
-		authorizedChat.add(-4706435457L);
-	}
+	private final List<Long> authorizedChat;
 
 
 	public TelegramBotController(ConfigurationService configurationService) {
 		this.configurationService = configurationService;
+		authorizedChat = configurationService.getProps().getTelegramChatIds();
 		logger.info("Telegram controller loaded");
     }
 
@@ -75,11 +72,15 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 			Message message = update.getMessage();
 			String userMessage = message.getText();
 			boolean startAndStop = false;
-			
-			logger.debug("Message id : " + message.getChatId());
 
+            logger.debug("Message id : {}", message.getChatId());
 
-			if (!authorizedChat.contains(message.getChatId())) {
+			if( authorizedChat.isEmpty() ){
+				logger.warn("!! Bot is open for everybody !! Limit it access by setting fr.ses10doigts.crawler.telegramChatIds in properties.");
+				telegramService.sendMessage(message.getChatId(),
+						"Ce bot est ouvert à tout le monde !! Définissez les chats autorisés avec fr.ses10doigts.crawler.telegramChatIds dans les propriétés");
+
+			}else if (!authorizedChat.contains(message.getChatId())) {
 				telegramService.sendMessage(message.getChatId(),
 						"Vous n'êtes pas authorisé à échanger avec ce bot");
 				return;

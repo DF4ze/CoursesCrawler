@@ -12,4 +12,5 @@ public class BilanParis {
     private BigDecimal amountWin;
     private BigDecimal amountLoose;
     private BigDecimal benefits;
+    private BigDecimal totalMise;
 }

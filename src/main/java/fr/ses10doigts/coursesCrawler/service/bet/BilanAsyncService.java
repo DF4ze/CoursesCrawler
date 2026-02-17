@@ -34,6 +34,7 @@ public class BilanAsyncService {
         bilan.setAmountWin(bilanProjection.getAmountWin() != null ? bilanProjection.getAmountWin() : BigDecimal.ZERO);
         bilan.setAmountLoose(bilanProjection.getAmountLoose() != null ? bilanProjection.getAmountLoose() : BigDecimal.ZERO);
         bilan.setBenefits(bilan.getAmountWin().subtract(bilan.getAmountLoose()));
+        bilan.setTotalMise(bilanProjection.getTotalMise() != null ? bilanProjection.getTotalMise() :  BigDecimal.ZERO);
 
         logger.debug("Query ended for Y: {}, M: {}, W: {}",annee, mois, semaine);
 

@@ -1,3 +1,4 @@
+spring.application.name=CoursesCrawler
 
 #False for dev mod only
 spring.thymeleaf.cache=true 
@@ -11,9 +12,10 @@ logging.level.fr.ses10doigts.coursesCrawler==INFO
 #spring.web.resources.static-locations=file:/Path/to/resources
 fr.ses10doigts.crawler.export-dir=/Path/to/export
   
-# Logs // Injected in logback-spring.xml
-logging.path=logs
-logging.app.name=courseCrawler
+#Log level configuration
+logging.level.root=INFO
+# output to a file  // Injected in logback-spring.xml that add .log
+logging.file.name=logs/${spring.application.name}
   
 #Mysql Config
 spring.jpa.hibernate.ddl-auto=update
@@ -24,6 +26,8 @@ spring.datasource.password=setYourDBPassword
 fr.ses10doigts.crawler.botToken=token...
 fr.ses10doigts.crawler.botUsername=botname...
 fr.ses10doigts.crawler.telegramVerbose=HIGH
+fr.ses10doigts.crawler.telegramChatIds=authorized,chats,ids
+fr.ses10doigts.crawler.telegramChatId=TheChatIdWhereYouSendAllMessage... whenYouDon'tKnowWhere!
 
 #Pupeteer via NodeJs
 fr.ses10doigts.crawler.puppeteerActivated=true
@@ -33,8 +37,23 @@ fr.ses10doigts.crawler.puppeteerPwd=password
 
 # Bet
 fr.ses10doigts.crawler.puppeteerInitialBet=1
+fr.ses10doigts.crawler.puppeteerMartingale=1,2,3,2
 
-#In app parameters    
+# Filters
+fr.ses10doigts.crawler.filterMinPartants=9
+fr.ses10doigts.crawler.filterMinPourcent=40.5
+fr.ses10doigts.crawler.filterTypeCourse=plat
+fr.ses10doigts.crawler.filterNbReunionMax=5
+fr.ses10doigts.crawler.filterNbPartants=9,10,14,15,16
+fr.ses10doigts.crawler.filterListRejectedHippo=(,),[,],fontainebleau, marseille, longchamp, pau, strasbourg, machecoul
+
+# Cron
+fr.ses10doigts.crawler.monthlyTask=0 10 0 1 * *
+fr.ses10doigts.crawler.dailyMorningTask=0 0 10 * * *
+fr.ses10doigts.crawler.dailyEveningTask=0 0 22 * * *
+fr.ses10doigts.crawler.schedulerChecker=20 * * * * ?
+
+#Crawl parameters
 fr.ses10doigts.crawler.maxHop=1
 fr.ses10doigts.crawler.seedsFile=seeds.txt
 fr.ses10doigts.crawler.authorizedFile=authorized.txt
@@ -43,6 +62,7 @@ fr.ses10doigts.crawler.maxRetry=1
 fr.ses10doigts.crawler.agressivity=MEDIUM_HARD
 fr.ses10doigts.crawler.doCrawl=true
 fr.ses10doigts.crawler.doRefacto=true
+fr.ses10doigts.crawler.doExcel=true
 
 
 

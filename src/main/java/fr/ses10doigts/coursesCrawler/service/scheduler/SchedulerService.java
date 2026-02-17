@@ -256,32 +256,20 @@ public class SchedulerService {
 				StringBuilder rep = new StringBuilder();
 				List<Course> retainedCourses = new ArrayList<>();
 				for (Course course : courses) {
+					// Filtering courses by hippodrome
+					String hippo = Optional.ofNullable(course.getHippodrome())
+							.orElse("")
+							.toLowerCase();
+
+					boolean hippoMatch = configurationService.getProps().getFilterListRejectedHippo().stream()
+							.map(String::toLowerCase)
+							.anyMatch(hippo::contains);
 
 					boolean inStats = configurationService.getProps().getFilterTypeCourse().equalsIgnoreCase(course.getType())
                             && course.getReunion() <= configurationService.getProps().getFilterNbReunionMax()
-							&& !(
-								course.getHippodrome().contains("(")
-								|| course.getHippodrome().contains(")")
-								|| course.getHippodrome().contains("[")
-								|| course.getHippodrome().contains("]")
-								|| course.getHippodrome().toLowerCase().contains("fontainebleau")
-								|| course.getHippodrome().toLowerCase().contains("marseille")
-								|| course.getHippodrome().toLowerCase().contains("longchamp")
-								|| course.getHippodrome().toLowerCase().contains("pau")
-								|| course.getHippodrome().toLowerCase().contains("strasbourg")
-							);
-					if( course.getHippodrome().contains("(")
-							|| course.getHippodrome().contains(")")
-							|| course.getHippodrome().contains("[")
-							|| course.getHippodrome().contains("]") ){
-						logger.warn("Current course remove because seems to not be in France : {}", course.getHippodrome());
-					}
+							&& !( hippoMatch );
 
-					if( course.getHippodrome().toLowerCase().contains("fontainebleau")
-							|| course.getHippodrome().toLowerCase().contains("marseille")
-							|| course.getHippodrome().toLowerCase().contains("longchamp")
-							|| course.getHippodrome().toLowerCase().contains("pau")
-							|| course.getHippodrome().toLowerCase().contains("strasbourg") ){
+					if( !hippoMatch ){
 						logger.warn("Current course remove because unwanted hippo : {}", course.getHippodrome());
 					}
 

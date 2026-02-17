@@ -42,7 +42,8 @@ public class GlobalBilanParis {
 
         StringBuilder sb = new StringBuilder();
         sb.append("🔹 ").append(titre).append("\n");
-        sb.append("Courses jouées : ").append(bilan.getNbCourses()).append("\n");
+        sb.append("Courses jouées : ").append(bilan.getNbCourses())
+                .append(" (").append(bilan.getTotalMise()).append("e)\n");
         sb.append("Gains : ").append(bilan.getNbWin())
                 .append(" (").append(fmt(bilan.getAmountWin())).append("e)\n");
         sb.append("Pertes : ").append(bilan.getNbLoose())

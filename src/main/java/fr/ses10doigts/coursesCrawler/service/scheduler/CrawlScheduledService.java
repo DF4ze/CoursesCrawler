@@ -4,6 +4,7 @@ import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
+import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ public class CrawlScheduledService {
     private ConfigurationService configurationService;
     @Autowired
     private CrawlService crawlService;
+    @Autowired
+    private TelegramService telegramService;
 
     @Scheduled(cron = "${fr.ses10doigts.crawler.monthlyTask}") // Tous les mois (en fonction de la property)
     public void everyFirstOfMonth(){
@@ -51,8 +54,13 @@ public class CrawlScheduledService {
         conf.setWaitOnRetry(false);
         conf.setTxtSeeds(urls);
         configurationService.saveConfiguration(conf);
+
         logger.debug("Starting scheduled crawl");
+        telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois lancé");
+
         crawlService.crawlFromConfig(false);
 
+        logger.debug("End scheduled crawl");
+        telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois lancé");
     }
 }

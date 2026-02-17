@@ -117,11 +117,11 @@ public class CrawlService {
 				});
 			}
 
-		} catch (IOException e) {
+		} catch (Exception e) {
 
 			cr.setFinalState(FinalState.ERROR);
 			cr.setRunningState(RunningState.ENDED);
-			cr.setMessage("Error reading seeds file");
+			cr.setMessage("Error during crawl process: "+e.getMessage());
 		}
 
 		return cr;
