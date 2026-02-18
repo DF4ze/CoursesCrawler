@@ -18,7 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-@Profile({ "devWithTelegram", "telegram" })
+@Profile({ "devWithTelegram", "telegram", "prod" })
 public class TelegramService {
     private static final Logger logger = LoggerFactory.getLogger(TelegramService.class);
     private TelegramClient telegramClient;

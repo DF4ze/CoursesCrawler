@@ -7,6 +7,7 @@ import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.FinalState;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.RunningState;
 import fr.ses10doigts.coursesCrawler.repository.web.WebCrawlingProxy;
+import fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
 import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
@@ -61,29 +62,25 @@ public class CrawlService {
 			reader.setFilePath(props.getAuthorizedFile());
 			List<String> urlAuthorised = reader.fileToSet();
 
-			logger.info("Following SEEDS will be crawled with a maxHop of " + props.getMaxHop());
+            logger.info("Following SEEDS will be crawled with a maxHop of {}", props.getMaxHop());
 			for (String string : urls) {
-				logger.info("   - " + string);
+                logger.info("   - {}", string);
 			}
 
-			// Creating and launching thread
-			// ProcessorChain pc = new ProcessorChain(urls, props.getMaxHop(),
-			// urlAuthorised, Agressivity.REALLY_SOFT);
+			// Creating and launching the crawling thread
+			processorChain.resetReport();
 			processorChain.setSeeds(urls);
 			processorChain.setMaxHop(props.getMaxHop());
 			processorChain.setAuthorised(urlAuthorised);
 			processorChain.setAgressivity(props.getAgressivity());
 			processorChain.setWithException(withException);
 			processorChain.setWaitOnRetry(props.isWaitOnRetry());
+			processorChain.setDoArchive(props.isDoArchive());
 			processorChain.initialize();
 			crawlTreatment = new Thread(processorChain);
 			crawlTreatment.start();
 			logger.info("Thread started");
 
-			// CrawlReport report = new CrawlReport();
-			// report.setRunningState(RunningState.PROCESSING);
-			// report.setFinalState(FinalState.SUCCESS);
-			// report.setMessage("Will run " + urls.size() + " urls");
 		} else {
 			logger.warn("Unable to launch a crawl, One is already running...");
 		}
@@ -147,14 +144,14 @@ public class CrawlService {
 	}
 
     public Report getReportCurrentCrawl() {
-	fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport crawlReport = processorChain.getReport();
+	CrawlReport crawlReport = processorChain.getReport();
 	Report report = new Report();
 
 	if (crawlTreatment != null) {
 	    State state = crawlTreatment.getState();
-	    // if thread is terminated ?
+	    // if the thread is terminated?
 	    if (state.equals(State.TERMINATED)) {
-			// has it (not) been stop by user ?
+			// has it (not) been stop by user?
 			if (processorChain.getRunning()) {
 				report.setFinalState(FinalState.SUCCESS);
 			} else {

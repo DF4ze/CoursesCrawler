@@ -1,12 +1,14 @@
 package fr.ses10doigts.coursesCrawler.service.crawl;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Random;
-
+import fr.ses10doigts.coursesCrawler.CustomProperties;
+import fr.ses10doigts.coursesCrawler.model.crawl.Page;
+import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
+import fr.ses10doigts.coursesCrawler.repository.web.WebCrawlingProxy;
+import fr.ses10doigts.coursesCrawler.service.archive.ArchiveService;
+import fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport;
+import fr.ses10doigts.coursesCrawler.service.crawl.tool.PageTool;
 import fr.ses10doigts.coursesCrawler.service.scrap.VisitorParseAndStore;
+import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -14,13 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import fr.ses10doigts.coursesCrawler.CustomProperties;
-import fr.ses10doigts.coursesCrawler.model.crawl.Page;
-import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
-import fr.ses10doigts.coursesCrawler.repository.web.WebCrawlingProxy;
-import fr.ses10doigts.coursesCrawler.service.crawl.tool.CrawlReport;
-import fr.ses10doigts.coursesCrawler.service.crawl.tool.PageTool;
-import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
+import java.util.*;
 
 @Service
 public class ProcessorChain implements Runnable {
@@ -34,6 +30,8 @@ public class ProcessorChain implements Runnable {
 	@Autowired
 	protected VisitorParseAndStore parseAndStore;
 	@Autowired
+	protected ArchiveService archiveService;
+	@Autowired
 	private CustomProperties props;
 
 	@Setter
@@ -44,6 +42,8 @@ public class ProcessorChain implements Runnable {
 	protected boolean withException = false;
 	@Setter
 	protected boolean waitOnRetry = true;
+	@Setter
+	protected boolean doArchive = false;
 	@Setter
 	protected Agressivity agressivity;
 	@Getter
@@ -121,6 +121,11 @@ public class ProcessorChain implements Runnable {
             logger.debug("Url downloaded : {}", page.getUrl());
 			report.lastCrawledUrl(page.getUrl());
 
+			if( doArchive ){
+				archiveService.archive(page.getUrl(), content);
+				logger.debug("Url archived : {}", page.getUrl());
+			}
+
 			// Parse content
 			parseAndStore.indexify(page, content);
 
@@ -152,7 +157,7 @@ public class ProcessorChain implements Runnable {
 
 			}
 		} catch (Exception /*| RestClientException*/ e) {
-            logger.error("RestClientException on page {}\n Message : {}", page.getUrl(), e.getMessage());
+            logger.error("Exception on page {}\n Message : {}", page.getUrl(), e.getMessage());
 			report.errorCrawl(page.getUrl());
 			setAsCrawlErrorPage(page);
 

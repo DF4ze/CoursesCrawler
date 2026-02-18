@@ -71,26 +71,25 @@ public class ConfigurationService {
     }
 
     public void saveConfiguration(Configuration conf) {
-	try {
+		try {
+			props.setAgressivity(conf.getAgressivity());
+			props.setMaxHop(conf.getMaxHop());
+			props.setMaxRetry(conf.getMaxRetry());
+			props.setDoCrawl(conf.isLaunchCrawl());
+			props.setDoRefacto(conf.isLaunchRefacto());
+			props.setDoExcel(conf.isLaunchExcel());
+			props.setDoArchive(conf.isLaunchArchive());
+			props.setWaitOnRetry(conf.isWaitOnRetry());
 
+			writer.setFilePath(props.getSeedsFile());
+			writer.StringToFile(conf.getTxtSeeds());
 
-	    props.setAgressivity(conf.getAgressivity());
-	    props.setMaxHop(conf.getMaxHop());
-	    props.setMaxRetry(conf.getMaxRetry());
-	    props.setDoCrawl(conf.isLaunchCrawl());
-	    props.setDoRefacto(conf.isLaunchRefacto());
-		props.setDoExcel(conf.isLaunchExcel());
-		props.setWaitOnRetry(conf.isWaitOnRetry());
+			writer.setFilePath(props.getAuthorizedFile());
+			writer.StringToFile(conf.getAuthorized());
 
-	    writer.setFilePath(props.getSeedsFile());
-	    writer.StringToFile(conf.getTxtSeeds());
-
-	    writer.setFilePath(props.getAuthorizedFile());
-	    writer.StringToFile(conf.getAuthorized());
-
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
     }
 

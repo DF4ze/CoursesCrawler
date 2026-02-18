@@ -64,6 +64,7 @@ public class MainController {
 	public ModelAndView launchCrawl(@ModelAttribute Configuration dto) {
 		logger.info("User ask to launch with config : " + dto);
 
+		dto.setLaunchArchive( true );
 		configurationService.saveConfiguration(dto);
 		Report crawlReport = crawlService.crawlFromConfig();
 

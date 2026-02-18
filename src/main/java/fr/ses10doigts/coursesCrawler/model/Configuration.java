@@ -15,6 +15,7 @@ public class Configuration {
     private boolean	launchCrawl;
     private boolean	launchRefacto;
     private boolean	launchExcel;
+    private boolean	launchArchive = false;
 	private boolean waitOnRetry;
 
     private String	startGenDate;

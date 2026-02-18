@@ -47,6 +47,7 @@ public class CrawlScheduledService {
         conf.setLaunchCrawl(true);
         conf.setLaunchRefacto(true);
         conf.setLaunchExcel(true);
+        conf.setLaunchArchive(true);
         conf.setStartGenDate(start);
         conf.setEndGenDate(end);
         conf.setMaxHop(1);
@@ -61,6 +62,6 @@ public class CrawlScheduledService {
         crawlService.crawlFromConfig(false);
 
         logger.debug("End scheduled crawl");
-        telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois lancé");
+        telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois terminé");
     }
 }

@@ -31,6 +31,7 @@ public class CustomProperties {
     private boolean	doCrawl;
     private boolean	doRefacto;
     private boolean	doExcel;
+    private boolean	doArchive = false;
 	private boolean waitOnRetry = false;
 	private Date startRefactoDate;
 	private Date endRefactoDate;
