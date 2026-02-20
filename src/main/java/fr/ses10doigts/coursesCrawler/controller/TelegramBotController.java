@@ -289,6 +289,7 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 				}else if (userMessage.startsWith("/bet")){
 					String[] param = userMessage.split(" ");
 					String msg = null;
+					String image = null;
 					if (param.length == 4) {
 						try {
 							long courseNb = Long.parseLong(param[1]);
@@ -301,15 +302,20 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 								msg = "Le paris semble s'être correctement déroulé";
 							}else {
 								msg = "Le paris ne semble pas s'être déroulé correctement";
+								image = "/home/oklm/courses/error.png";
 							}
 						}catch (Exception e){
-							msg = "Un exception a eu lieu : "+e.getMessage();
+							msg = "Une exception a eu lieu : "+e.getMessage();
+							image = "/home/oklm/courses/error.png";
 						}
 
 					}else{
 						msg = "Erreur dans le nombre de paramètres : NuméroDeCourse NumeroCheval mise";
 					}
 
+					if( image != null ){
+						telegramService.sendPhoto(message.getChatId(), image, msg);
+					}
 					telegramService.sendMessage(message.getChatId(), msg) ;
 				}
 

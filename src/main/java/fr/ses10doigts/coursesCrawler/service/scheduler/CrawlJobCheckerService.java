@@ -162,6 +162,7 @@ public class CrawlJobCheckerService {
 
 				if( isInStats &&  !paris.getIsWebActionOk()) {
 					stats += "\n\n⚠\uFE0F Vérifier si le paris s'est bien déroulé sur le site ⚠\uFE0F";
+					telegramService.sendPhoto(task.getTelegramMessageId(), "/home/oklm/courses/error.png");
 				}
 
 			}else{
@@ -171,14 +172,12 @@ public class CrawlJobCheckerService {
             logger.debug("Course checked : {}\n{}", task.getCourseDescription(), stats);
 
 			if( isInStats || configurationService.getConfiguration().getTelegramVerbose().equals(Verbose.HIGH) ) {
-				try {
-					telegramService.sendMessage(task.getTelegramMessageId(),
-							task.getCourseDescription()
-									+ "\uD83D\uDD17 [Lien Cotes](https://www.geny.com/cotes?id_course=" + codeCourse + ")\n\n"
-									+ stats);
-				}catch (Exception e){
-					logger.error("Error sending Telegram message !!! \n{}", stats);
-				}
+
+				telegramService.sendMessage(task.getTelegramMessageId(),
+						task.getCourseDescription()
+								+ "\uD83D\uDD17 [Lien Cotes](https://www.geny.com/cotes?id_course=" + codeCourse + ")\n\n"
+								+ stats);
+
 			}
 
 			// Update

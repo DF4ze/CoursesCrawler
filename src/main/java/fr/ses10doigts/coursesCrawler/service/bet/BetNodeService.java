@@ -45,11 +45,12 @@ public class BetNodeService {
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             while ((line = errorReader.readLine()) != null) {
                 logger.error(line);
+                isOk = false;
             }
 
             int exitCode = process.waitFor();
 
-            isOk = exitCode == 0;
+            isOk = isOk && exitCode == 0;
 
             if( isOk ) logger.info("Success action on site (code : {})", exitCode);
             else logger.error("Error during action on site (code : {})", exitCode);
