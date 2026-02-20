@@ -2,8 +2,7 @@ package fr.ses10doigts.coursesCrawler.service.misc;
 
 import fr.ses10doigts.coursesCrawler.service.scheduler.CrawlJobCheckerService;
 import org.apache.commons.io.input.ReversedLinesFileReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +14,8 @@ import java.util.Deque;
 import java.util.List;
 
 @Service
+@Slf4j
 public class LogAccessService {
-    private static final Logger logger = LoggerFactory.getLogger(LogAccessService.class);
-
     @Value("${logging.file.name}")
     private String logFilePath;
 
@@ -30,7 +28,7 @@ public class LogAccessService {
                 result.addFirst(line);
             }
         }catch (Exception e){
-            logger.error("Error during log retrieving...");
+            log.error("Error during log retrieving...");
         }
 
         return new ArrayList<>(result);

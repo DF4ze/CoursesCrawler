@@ -1,7 +1,6 @@
 package fr.ses10doigts.coursesCrawler.service.web;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -24,11 +23,10 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 @Service
 @Profile({ "devWithTelegram", "telegram", "prod" })
+@Slf4j
 public class TelegramService {
-    private static final Logger logger = LoggerFactory.getLogger(TelegramService.class);
     private final TelegramClient telegramClient;
 
     // Lien vers les emoji
@@ -41,7 +39,7 @@ public class TelegramService {
     @Autowired
     public TelegramService(ConfigurationService configurationService) {
         telegramClient = new OkHttpTelegramClient(configurationService.getConfiguration().getBotToken());
-        logger.info("Telegram service loaded");
+        log.info("Telegram service loaded");
     }
 
     public void sendMessage(Long chatId, String text) {
@@ -81,7 +79,7 @@ public class TelegramService {
             // Vérifie s'il y a une URL dans la réponse
             return response.toString().contains("\"url\":\"http");
         } catch (Exception e) {
-            logger.error("Erreur lors de la vérification du webhook : {}", e.getMessage());
+            log.error("Erreur lors de la vérification du webhook : {}", e.getMessage());
             return false;
         }
     }
@@ -89,7 +87,7 @@ public class TelegramService {
     private void send( Long chatId, String text, String filePath, SendType type ){
 
         if( filePath != null && !isExistingFile(filePath) ){
-            logger.warn("File {} not found, skipping message {}", filePath, text!=null?text:"");
+            log.warn("File {} not found, skipping message {}", filePath, text!=null?text:"");
             return;
         }
 
@@ -126,9 +124,8 @@ public class TelegramService {
                         break;
                 }
 
-
                 if( error )
-                    logger.info("Message well sent");
+                    log.info("Message well sent");
                 error = false;
 
             }catch (TelegramApiException e){
@@ -136,7 +133,7 @@ public class TelegramService {
                 count++;
 
                 if( count < maxTries ){
-                    logger.warn("Error sending Telegram message, sleep 1min then try again... Try {}", count);
+                    log.warn("Error sending Telegram message, sleep 1min then try again... Try {}", count);
                     try {
                         Thread.sleep(30*1000);
                     } catch (InterruptedException ignore) {
@@ -147,7 +144,7 @@ public class TelegramService {
         }while( error && count < maxTries );
 
         if( error ){
-            logger.error("Unable to send Telegram message after {} tries : \n{}", count, escapeMarkdownPreservingLinks(text));
+            log.error("Unable to send Telegram message after {} tries : \n{}", count, escapeMarkdownPreservingLinks(text));
 
         }
     }

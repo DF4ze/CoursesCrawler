@@ -9,8 +9,7 @@ import fr.ses10doigts.coursesCrawler.service.misc.LogAccessService;
 import fr.ses10doigts.coursesCrawler.service.scheduler.SchedulerService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -30,9 +29,8 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @Profile({ "devWithTelegram", "telegram" })
+@Slf4j
 public class TelegramBotController implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
-	private static final Logger logger = LoggerFactory.getLogger(TelegramBotController.class);
-
 	@Autowired
 	private final ConfigurationService configurationService;
 	@Autowired
@@ -48,11 +46,10 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 
 	private final List<Long> authorizedChat;
 
-
 	public TelegramBotController(ConfigurationService configurationService) {
 		this.configurationService = configurationService;
 		authorizedChat = configurationService.getProps().getTelegramChatIds();
-		logger.info("Telegram controller loaded");
+		log.info("Telegram controller loaded");
     }
 
     @Override
@@ -73,10 +70,10 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 			String userMessage = message.getText();
 			boolean startAndStop = false;
 
-            logger.debug("Message id : {}", message.getChatId());
+            log.debug("Message id : {}", message.getChatId());
 
 			if( authorizedChat.isEmpty() ){
-				logger.warn("!! Bot is open for everybody !! Limit it access by setting fr.ses10doigts.crawler.telegramChatIds in properties.");
+				log.warn("!! Bot is open for everybody !! Limit it access by setting fr.ses10doigts.crawler.telegramChatIds in properties.");
 				telegramService.sendMessage(message.getChatId(),
 						"Ce bot est ouvert à tout le monde !! Définissez les chats autorisés avec fr.ses10doigts.crawler.telegramChatIds dans les propriétés");
 
@@ -193,7 +190,6 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 					telegramService.sendMessage(message.getChatId(),
 							"Check courses avec " + configurationService.getProps().getFilterNbPartants() + " partants");
 
-
 				} else /*if (userMessage.startsWith("/nbpartantmax")) {
 					String[] param = userMessage.split(" ");
 					if (param.length == 2) {
@@ -215,7 +211,7 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 					);
 
 				} else if (userMessage.startsWith("/log")) {
-					logger.info("Received /log");
+					log.info("Received /log");
 					int nb = 50;
 					String[] param = userMessage.split(" ");
 					if (param.length == 2) {
@@ -278,7 +274,6 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 
 					schedulerService.launchMainScheduledCrawl(startDay, endDay, startAndStop, message.getChatId());
 
-
 				}else if (userMessage.startsWith("/bilan")){
 					CompletableFuture<GlobalBilanParis> future = bilanService.computeGlobalBilan();
 
@@ -320,7 +315,7 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 				}
 
 				if(isValueChanged){
-					logger.info("User changed value : {}", userMessage);
+					log.info("User changed value : {}", userMessage);
 				}
 			}
 
@@ -333,7 +328,6 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 		return day.format(formatter);
 	}
-
 
 	private boolean isValidDate(String dateStr) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);

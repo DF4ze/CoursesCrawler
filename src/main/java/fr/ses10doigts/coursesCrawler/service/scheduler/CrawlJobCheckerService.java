@@ -14,8 +14,7 @@ import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.FieldTool;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -30,9 +29,8 @@ import java.util.Set;
 
 @Service
 @Profile({ "devWithTelegram", "telegram" })
+@Slf4j
 public class CrawlJobCheckerService {
-	private static final Logger logger = LoggerFactory.getLogger(CrawlJobCheckerService.class);
-
 	@Value("${fr.ses10doigts.crawler.puppeteerInitialBet}")
 	private Long INITIAL_BET;
 
@@ -57,15 +55,14 @@ public class CrawlJobCheckerService {
 	@Autowired
 	private BetService betService;
 
-
     public void checkStart(ScheduledTask task, float percent, String courseType, List<Integer>nbPartants, int nbReunionMax)  {
 
 		if( task == null ){
-			logger.warn("/!\\ Given task is null");
+			log.warn("/!\\ Given task is null");
 			return;
 		}
 
-		logger.debug("Scheduled execution : taskId: " + task
+		log.debug("Scheduled execution : taskId: " + task
 				+ ", messageId: " + task.getTelegramMessageId()
 				+ ", courseUrl: "+ task.getCourseUrl()
 				+ ", courseDescr: " + task.getCourseDescription());
@@ -85,13 +82,13 @@ public class CrawlJobCheckerService {
 			conf.setWaitOnRetry(true);
 			conf.setTxtSeeds("https://www.geny.com/cotes?id_course="+codeCourse);
 			configurationService.saveConfiguration(conf);
-			logger.debug("Starting scheduled crawl");
+			log.debug("Starting scheduled crawl");
 			crawlService.crawlFromConfig(true);
 
 			// Attendre sa fin
 			Thread crawlThread = crawlService.getTreatment();
 			crawlThread.join();
-			logger.debug("Scheduled crawl ended");
+			log.debug("Scheduled crawl ended");
 
 			// Récup de la course
 			List<Course> courses = courseRepository.findByCourseID(codeCourse);
@@ -118,7 +115,7 @@ public class CrawlJobCheckerService {
 			Set<Cote> cotes = coteRepository.findByCourseID(codeCourse);
 
 			// Calcul stats
-			logger.debug("Retreive stats");
+			log.debug("Retreive stats");
 			CourseComplete courseStats = getCourseStats(codeCourse, cotes);
 
 			boolean isInStats = false;
@@ -169,7 +166,7 @@ public class CrawlJobCheckerService {
 				stats = "❌ Sans résultats...";
 			}
 
-            logger.debug("Course checked : {}\n{}", task.getCourseDescription(), stats);
+            log.debug("Course checked : {}\n{}", task.getCourseDescription(), stats);
 
 			if( isInStats || configurationService.getConfiguration().getTelegramVerbose().equals(Verbose.HIGH) ) {
 
@@ -196,7 +193,7 @@ public class CrawlJobCheckerService {
 
 	public void checkEnd( long courseID, long telegramMessageId ){
 
-		logger.info("Scheduled check end for {}", courseID );
+		log.info("Scheduled check end for {}", courseID );
 
 		try {
 			// Lancer un crawl de la page uniquement
@@ -211,13 +208,13 @@ public class CrawlJobCheckerService {
 			conf.setWaitOnRetry(true);
 			conf.setTxtSeeds("https://www.geny.com/arrivee-et-rapports-pmu?id_course="+courseID);
 			configurationService.saveConfiguration(conf);
-			logger.info("Starting crawl for ended course");
+			log.info("Starting crawl for ended course");
 			crawlService.crawlFromConfig(true);
 
 			// Attendre sa fin
 			Thread crawlThread = crawlService.getTreatment();
 			crawlThread.join();
-			logger.info("Crawl for ended course ended");
+			log.info("Crawl for ended course ended");
 
 			// Récup des infos
 			Set<Rapport> rapports = rapportRepository.findAllByCourseID(courseID);
@@ -228,14 +225,13 @@ public class CrawlJobCheckerService {
 			else
 				throw new RuntimeException("CourseID "+courseID+" undefined..." );
 
-
 			// Calcul stats
-			logger.info("Retrieve rapports...");
+			log.info("Retrieve rapports...");
 			CourseComplete courseStats = new CourseComplete();
 			if( !rapports.isEmpty() ) {
 				courseStats = getCourseStats(rapports);
 			}else{
-				logger.warn("Seems that trouble parsing Rapport, will use Arrivee to define 1st place...");
+				log.warn("Seems that trouble parsing Rapport, will use Arrivee to define 1st place...");
 				Set<Arrivee> arrivees = arriveeRepository.findByCourseID(courseID);
 				courseStats = getCourseResult(arrivees);
 			}
@@ -256,22 +252,17 @@ public class CrawlJobCheckerService {
 					);
 			//@formatter:on
 
-			logger.info("Course Arrivee checked : {}\n{}", paris, txt);
+			log.info("Course Arrivee checked : {}\n{}", paris, txt);
 
 			if( configurationService.getConfiguration().getTelegramVerbose().equals(Verbose.HIGH) ) {
 				telegramService.sendMessage(telegramMessageId, txt);
 			}
 
 		} catch (Exception e) {
-			logger.error("Error during CheckEnd : {}", e.getMessage());
+			log.error("Error during CheckEnd : {}", e.getMessage());
 			throw new RuntimeException(e); // TODO personal exception
 		}
 	}
-
-
-
-
-
 
 	private CourseComplete getCourseResult(Set<Arrivee> arrivees) {
 		CourseComplete cc = new CourseComplete();
@@ -288,10 +279,10 @@ public class CrawlJobCheckerService {
 		}
 
 		if( found ){
-			logger.info("Arrivée found: c{}, rap {}, N°{}",
+			log.info("Arrivée found: c{}, rap {}, N°{}",
 					cc.getCourseID(), cc.getRapGagnantPmu(), cc.getNumeroChvlPremier());
 		}else{
-			logger.warn("No first place in given Arrivée !!!!!!!!!");
+			log.warn("No first place in given Arrivée !!!!!!!!!");
 		}
 
 		return cc;
@@ -312,10 +303,10 @@ public class CrawlJobCheckerService {
 		}
 
         if( found ){
-            logger.info("Rapport found: c{}, rap {}, N°{}",
+            log.info("Rapport found: c{}, rap {}, N°{}",
                     cc.getCourseID(), cc.getRapGagnantPmu(), cc.getNumeroChvlPremier());
         }else{
-            logger.warn("No first place in given Rapports !!!!!!!!!");
+            log.warn("No first place in given Rapports !!!!!!!!!");
         }
 
 		return cc;

@@ -5,17 +5,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import fr.ses10doigts.coursesCrawler.model.crawl.Page;
 
 @Service
+@Slf4j
 public class PageTool {
-
-    private static final Logger logger = LoggerFactory.getLogger(PageTool.class);
-
 	public List<Page> url2Pages(List<String> urls) {
 		List<Page> pages = new ArrayList<>();
 
@@ -48,12 +45,12 @@ public class PageTool {
 		String baseUrl = getBaseUrl(seed.getUrl());
 		List<String> potentialUrls = new ArrayList<>();
 
-		if (logger.isDebugEnabled()) {
+		if (log.isDebugEnabled()) {
 			String auth = "";
 			for (String string : authorized) {
 				auth += string + ", ";
 			}
-			logger.debug("Searching urls in " + seed.getUrl() + " containing keys : " + auth);
+			log.debug("Searching urls in " + seed.getUrl() + " containing keys : " + auth);
 		}
 
 		while (matcher.find()) {
@@ -93,10 +90,9 @@ public class PageTool {
 			page.setHop(seed.getHop() + 1);
 			urlList += page.getUrl() + "\n";
 		}
-		logger.debug("Url added : \n" + urlList);
+		log.debug("Url added : \n" + urlList);
 
 		return newPages;
     }
-
 
 }

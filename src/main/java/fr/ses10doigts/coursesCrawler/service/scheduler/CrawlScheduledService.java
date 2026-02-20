@@ -5,8 +5,7 @@ import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,9 +16,8 @@ import java.time.format.DateTimeFormatter;
 
 @Service
 @Profile({ "prod" })
+@Slf4j
 public class CrawlScheduledService {
-    private static final Logger logger = LoggerFactory.getLogger(CrawlScheduledService.class);
-
     @Autowired
     private ConfigurationService configurationService;
     @Autowired
@@ -56,12 +54,12 @@ public class CrawlScheduledService {
         conf.setTxtSeeds(urls);
         configurationService.saveConfiguration(conf);
 
-        logger.debug("Starting scheduled crawl");
+        log.debug("Starting scheduled crawl");
         telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois lancé");
 
         crawlService.crawlFromConfig(false);
 
-        logger.debug("End scheduled crawl");
+        log.debug("End scheduled crawl");
         telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois terminé");
     }
 }

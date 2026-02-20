@@ -2,8 +2,7 @@ package fr.ses10doigts.coursesCrawler;
 
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -16,9 +15,8 @@ import java.net.URL;
 
 @EnableScheduling
 @SpringBootApplication
+@Slf4j
 public class CoursesCrawlerApplication {
-	private static final Logger logger = LoggerFactory.getLogger(CoursesCrawlerApplication.class);
-
 	private static Environment environment;
 
 	public static void main(String[] args) {
@@ -33,7 +31,7 @@ public class CoursesCrawlerApplication {
 			// Appel de la méthode
 			boolean webhookActif = TelegramService.isWebhookActive(confService.getConfiguration().getBotToken());
 			if (webhookActif) {
-				logger.error("Cannot launch App due to already opened Telegram Bot Webhook ");
+				log.error("Cannot launch App due to already opened Telegram Bot Webhook ");
 				System.exit(0);
 			}
 		}

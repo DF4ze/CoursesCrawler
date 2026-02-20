@@ -13,8 +13,7 @@ import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.ExcelStreamExtractorService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -27,6 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 @Service
+@Slf4j
 public class CrawlService {
     @Autowired
     private WebCrawlingProxy webService;
@@ -45,13 +45,7 @@ public class CrawlService {
 	@Autowired
 	private TransactionTemplate transactionTemplate;
 
-
-
 	private static Thread crawlTreatment = null;
-
-    private static final Logger	logger = LoggerFactory.getLogger(CrawlService.class);
-
-
 	private Report startCrawl(boolean withException) throws IOException {
 		if (crawlTreatment == null || crawlTreatment.getState().equals(State.TERMINATED)) {
 			// Retrieve seeds
@@ -62,9 +56,9 @@ public class CrawlService {
 			reader.setFilePath(props.getAuthorizedFile());
 			List<String> urlAuthorised = reader.fileToSet();
 
-            logger.info("Following SEEDS will be crawled with a maxHop of {}", props.getMaxHop());
+            log.info("Following SEEDS will be crawled with a maxHop of {}", props.getMaxHop());
 			for (String string : urls) {
-                logger.info("   - {}", string);
+                log.info("   - {}", string);
 			}
 
 			// Creating and launching the crawling thread
@@ -79,10 +73,10 @@ public class CrawlService {
 			processorChain.initialize();
 			crawlTreatment = new Thread(processorChain);
 			crawlTreatment.start();
-			logger.info("Thread started");
+			log.info("Thread started");
 
 		} else {
-			logger.warn("Unable to launch a crawl, One is already running...");
+			log.warn("Unable to launch a crawl, One is already running...");
 		}
 		return getReportCurrentCrawl();
 	}
@@ -125,9 +119,9 @@ public class CrawlService {
 	}
 
 	public void datesCrawl(String startDay, String endDay) {
-        logger.debug("DAYS : {} {}", startDay, endDay);
+        log.debug("DAYS : {} {}", startDay, endDay);
 		String urls = configurationService.generateUrlFromDates(startDay, endDay);
-        logger.debug("URLS : {}", urls);
+        log.debug("URLS : {}", urls);
 
 		Configuration conf = new Configuration();
 		conf.setAgressivity(Agressivity.MEDIUM);
@@ -175,7 +169,6 @@ public class CrawlService {
 		"- Time :   " + Chrono.longMillisToHour( crawlReport.getTime() )+ "\n";
 	//@formatter:on
 
-
 	report.setMessage(message);
 	return report;
     }
@@ -188,6 +181,5 @@ public class CrawlService {
     public Thread getTreatment() {
 		return crawlTreatment;
     }
-
 
 }

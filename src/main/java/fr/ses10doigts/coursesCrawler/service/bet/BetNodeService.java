@@ -1,8 +1,7 @@
 package fr.ses10doigts.coursesCrawler.service.bet;
 
 import fr.ses10doigts.coursesCrawler.CustomProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,9 +10,8 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 
 @Service
+@Slf4j
 public class BetNodeService {
-    private static final Logger logger = LoggerFactory.getLogger(BetNodeService.class);
-
     @Autowired
     private CustomProperties props;
 
@@ -38,13 +36,13 @@ public class BetNodeService {
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                logger.info(line);
+                log.info(line);
             }
 
             // Récupérer la sortie d'erreur
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             while ((line = errorReader.readLine()) != null) {
-                logger.error(line);
+                log.error(line);
                 isOk = false;
             }
 
@@ -52,12 +50,12 @@ public class BetNodeService {
 
             isOk = isOk && exitCode == 0;
 
-            if( isOk ) logger.info("Success action on site (code : {})", exitCode);
-            else logger.error("Error during action on site (code : {})", exitCode);
+            if( isOk ) log.info("Success action on site (code : {})", exitCode);
+            else log.error("Error during action on site (code : {})", exitCode);
 
         } catch (Exception e) {
             isOk = false;
-            logger.error("An error occurred during action on website : {}", e.getMessage());
+            log.error("An error occurred during action on website : {}", e.getMessage());
         }
 
         return isOk;

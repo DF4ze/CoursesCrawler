@@ -3,8 +3,7 @@ package fr.ses10doigts.coursesCrawler.service.bet;
 import fr.ses10doigts.coursesCrawler.model.paris.BilanParis;
 import fr.ses10doigts.coursesCrawler.repository.paris.BilanProjection;
 import fr.ses10doigts.coursesCrawler.repository.paris.ParisRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -13,9 +12,8 @@ import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
 
 @Service
+@Slf4j
 public class BilanAsyncService {
-    private static final Logger logger = LoggerFactory.getLogger(BilanAsyncService.class);
-
     @Autowired
     private ParisRepository parisRepository;
 
@@ -23,7 +21,7 @@ public class BilanAsyncService {
     public CompletableFuture<BilanParis> computeBilanAsync(
             Integer annee, Integer mois, Integer semaine, Integer jour) {
 
-        logger.debug("Start bilan Y: {}, M: {}, W: {}",annee, mois, semaine);
+        log.debug("Start bilan Y: {}, M: {}, W: {}",annee, mois, semaine);
 
         BilanProjection bilanProjection = parisRepository.computeBilan(annee, mois, semaine, jour);
 
@@ -36,7 +34,7 @@ public class BilanAsyncService {
         bilan.setBenefits(bilan.getAmountWin().subtract(bilan.getAmountLoose()));
         bilan.setTotalMise(bilanProjection.getTotalMise() != null ? bilanProjection.getTotalMise() :  BigDecimal.ZERO);
 
-        logger.debug("Query ended for Y: {}, M: {}, W: {}",annee, mois, semaine);
+        log.debug("Query ended for Y: {}, M: {}, W: {}",annee, mois, semaine);
 
         return CompletableFuture.completedFuture(bilan);
     }
