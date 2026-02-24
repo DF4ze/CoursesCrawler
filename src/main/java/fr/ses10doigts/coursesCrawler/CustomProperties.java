@@ -43,6 +43,7 @@ public class CustomProperties {
     @Value("#{'${fr.ses10doigts.crawler.telegramChatIds}'.split(',')}")
     private List<Long> telegramChatIds;
     private Long telegramChatId;
+    private Long telegramErrorChatId;
 
     private String puppeteerActivated;
     private String puppeteerUser;
@@ -50,7 +51,7 @@ public class CustomProperties {
     private String puppeteerPath;
     private String puppeteerInitialBet;
     @Value("#{'${fr.ses10doigts.crawler.puppeteerMartingale}'.split(',')}")
-    private List<Float> puppeteerMartingale;
+    private List<Integer> puppeteerMartingale;
 
     private Integer filterMinPartants;
     private Float filterMinPourcent;

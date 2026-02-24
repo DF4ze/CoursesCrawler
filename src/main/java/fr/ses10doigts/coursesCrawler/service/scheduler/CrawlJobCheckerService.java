@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
@@ -147,7 +148,7 @@ public class CrawlJobCheckerService {
 
 				Paris paris = null;
 				if( isInStats ){
-					paris = betService.generateBet(new BigDecimal(INITIAL_BET), courseStats, c);
+					paris = betService.generateBet(BigInteger.valueOf(INITIAL_BET), courseStats, c);
 				}
 
 				stats = ( isInStats ? "✅ Course dans les stats.\nMise de "+paris.getMise()+"e sur Cheval N°"+courseStats.getNumeroChlPremierAvant()
@@ -249,7 +250,7 @@ public class CrawlJobCheckerService {
 						"✅ Gagnée.\n" +
 						"Misé "+paris.getMise()+" sur N°"+paris.getNumChevalMise()+"\n"+
 						"- Gain: "+(paris.getGain() == null? "(Problème récup Gain...)":paris.getGain()+"x"+paris.getMise()+"="
-								+(paris.getMise().multiply( BigDecimal.valueOf(paris.getGain()) )))
+								+(new BigDecimal(paris.getMise()).multiply( BigDecimal.valueOf(paris.getGain()) )))
 					: "❌ Perdue.\n" +
 						"Misé "+paris.getMise()+" sur N°"+paris.getNumChevalMise()+"\n"+
 						"Est arrivé 1er le N°"+courseStats.getNumeroChvlPremier()

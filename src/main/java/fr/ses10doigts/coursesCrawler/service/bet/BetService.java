@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.WeekFields;
@@ -30,7 +30,7 @@ public class BetService {
     private CustomProperties props;
 
     @Transactional
-    public Paris generateBet(BigDecimal bet, CourseComplete course, Course c){
+    public Paris generateBet(BigInteger bet, CourseComplete course, Course c){
 
         logger.debug("Bet service Generate");
         LocalDate now = LocalDate.now(ZoneId.of("Europe/Paris"));
@@ -42,14 +42,14 @@ public class BetService {
         paris.setJour(now.getDayOfMonth());
 
         Paris lastParis = parisRepository.findLastParis().orElse(null);
-        float coefBet = 1.0f;
+        long coefBet = 1;
 
         if (lastParis != null){
             paris.setParisPrecedent(lastParis);
 
             logger.debug("Last bet on course : {}", lastParis.getCourse().getCourseID());
 
-            List<Float> martingale = props.getPuppeteerMartingale();//List.of(1.0f, 2.0f, 3.0f, 2.0f);
+            List<Integer> martingale = props.getPuppeteerMartingale();//List.of(1.0f, 2.0f, 3.0f, 2.0f);
 
             if( lastParis.getIsEnded()) {
                 Paris betCursor = lastParis;
@@ -73,8 +73,7 @@ public class BetService {
         }
 
         // Gestion d'un ratio avec la cote du gagnant.
-
-        paris.setMise(bet.multiply(new BigDecimal( coefBet )));
+        paris.setMise(BigInteger.valueOf( coefBet ).multiply(bet));
 
         int numCheval = course.getNumeroChlPremierAvant();
         paris.setIsEnded(false);

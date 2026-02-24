@@ -28,6 +28,7 @@ fr.ses10doigts.crawler.botUsername=botname...
 fr.ses10doigts.crawler.telegramVerbose=HIGH
 fr.ses10doigts.crawler.telegramChatIds=authorized,chats,ids
 fr.ses10doigts.crawler.telegramChatId=TheChatIdWhereYouSendAllMessage... whenYouDon'tKnowWhere!
+fr.ses10doigts.crawler.telegramErrorChatId=ChatIdWhereToSendErrorMessages
 
 #Pupeteer via NodeJs
 fr.ses10doigts.crawler.puppeteerActivated=true
