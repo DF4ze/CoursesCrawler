@@ -5,6 +5,7 @@ import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -12,6 +13,7 @@ import java.io.InputStreamReader;
 import java.math.BigInteger;
 
 @Service
+@Profile({ "devWithTelegram", "telegram" })
 public class BetNodeService {
     private static final Logger logger = LoggerFactory.getLogger(BetNodeService.class);
 

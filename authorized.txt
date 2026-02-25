@@ -1,1 +1,3 @@
+/cotes
+arrivee-et-rapports-pmu
 partants-pmu

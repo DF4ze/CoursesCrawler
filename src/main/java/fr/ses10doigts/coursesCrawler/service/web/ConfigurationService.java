@@ -44,6 +44,8 @@ public class ConfigurationService {
 		conf.setBotToken(props.getBotToken());
 		conf.setBotUsername(props.getBotUsername());
 		conf.setTelegramVerbose(props.getTelegramVerbose());
+		conf.setStartGenDate(props.getStartRefactoDate());
+		conf.setEndGenDate(props.getEndRefactoDate());
 
 		try {
 			// Retrieve seeds
@@ -80,6 +82,8 @@ public class ConfigurationService {
 			props.setDoExcel(conf.isLaunchExcel());
 			props.setDoArchive(conf.isLaunchArchive());
 			props.setWaitOnRetry(conf.isWaitOnRetry());
+			props.setStartRefactoDate(conf.getStartGenDate());
+			props.setEndRefactoDate(conf.getEndGenDate());
 
 			writer.setFilePath(props.getSeedsFile());
 			writer.StringToFile(conf.getTxtSeeds());

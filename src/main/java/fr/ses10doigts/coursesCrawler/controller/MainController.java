@@ -54,7 +54,7 @@ public class MainController {
 
 	@PostMapping(value = "/", params = "action=save")
 	public ModelAndView saveConfig(@ModelAttribute Configuration dto) {
-		logger.info("User ask to save config : " + dto);
+        logger.info("User ask to save config : {}", dto);
 
 		configurationService.saveConfiguration(dto);
 		return new ModelAndView("redirect:/");
@@ -62,9 +62,10 @@ public class MainController {
 
 	@PostMapping(value = "/", params = "action=launch")
 	public ModelAndView launchCrawl(@ModelAttribute Configuration dto) {
-		logger.info("User ask to launch with config : " + dto);
 
 		dto.setLaunchArchive( true );
+		logger.info("User ask to launch with config : {}", dto);
+
 		configurationService.saveConfiguration(dto);
 		Report crawlReport = crawlService.crawlFromConfig();
 

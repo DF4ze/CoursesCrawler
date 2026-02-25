@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -59,7 +61,7 @@ public class ExcelStreamExtractorService {
     public void extractCourseCompletes( String startDate, String endDate)  {
         try {
             String sFile = exportDir + "courses.xlsx";
-            logger.info("Starting generating Excel file to : {}", sFile);
+            logger.info("Starting generating Excel from {} to {}, into file: {}", startDate, endDate, sFile);
             try (SXSSFWorkbook workbook = new SXSSFWorkbook(50)) { // buffer 100 lignes
 
                 SXSSFSheet sheet = workbook.createSheet(SHEET_NAME);
@@ -95,6 +97,16 @@ public class ExcelStreamExtractorService {
                     }
                     
                 } else if (startDate != null && endDate != null) {
+                    // Convertir format date
+                    DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    DateTimeFormatter outputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                    LocalDate date = LocalDate.parse(startDate, inputFormat);
+                    startDate = date.format(outputFormat);
+
+                    date = LocalDate.parse(endDate, inputFormat);
+                    endDate = date.format(outputFormat);
+
                     try (Stream<CourseComplete> stream = repository.streamAllBetweenDates(startDate, endDate)) {
                         stream.forEach(entity -> {
                             generateRowFromCourseComplete(entity, sheet, style, rowNum[0]++);

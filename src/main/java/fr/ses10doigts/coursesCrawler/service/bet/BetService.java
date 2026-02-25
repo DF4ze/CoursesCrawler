@@ -8,6 +8,7 @@ import fr.ses10doigts.coursesCrawler.repository.paris.ParisRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Profile({ "devWithTelegram", "telegram" })
 public class BetService {
     private static final Logger logger = LoggerFactory.getLogger(BetService.class);
 

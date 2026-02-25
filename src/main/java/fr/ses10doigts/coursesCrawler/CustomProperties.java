@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -33,8 +32,8 @@ public class CustomProperties {
     private boolean	doExcel;
     private boolean	doArchive = false;
 	private boolean waitOnRetry = false;
-	private Date startRefactoDate;
-	private Date endRefactoDate;
+	private String startRefactoDate;
+	private String endRefactoDate;
 
 	private String botToken;
 	private String botUsername;

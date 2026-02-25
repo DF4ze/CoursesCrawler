@@ -34,7 +34,7 @@ public class CrawlScheduledService {
         LocalDate firstDayPrevMonth = now.minusMonths(1).withDayOfMonth(1);
         LocalDate lastDayPrevMonth  = now.withDayOfMonth(1).minusDays(1);
 
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");;
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         String start = firstDayPrevMonth.format(fmt);
         String end   = lastDayPrevMonth.format(fmt);
