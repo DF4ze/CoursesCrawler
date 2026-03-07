@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Profile({ "prod" })
@@ -61,7 +62,26 @@ public class CrawlScheduledService {
 
         crawlService.crawlFromConfig(false);
 
-        logger.debug("End scheduled crawl");
-        telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois terminé");
+        Thread crawlThread = crawlService.getTreatment();
+
+        CompletableFuture.runAsync(() -> {
+            if (crawlThread == null) {
+                logger.warn("Unable to send end notification: crawl thread is null");
+                return;
+            }
+
+            try {
+                logger.debug("Scheduled crawl launched, waiting for thread completion...");
+                crawlThread.join();
+
+                logger.debug("End scheduled crawl");
+                telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois terminé");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.error("Interrupted while waiting for scheduled crawl end", e);
+            } catch (Exception e) {
+                logger.error("Error while sending scheduled crawl end notification: {}", e.getMessage());
+            }
+        });
     }
 }
