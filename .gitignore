@@ -72,6 +72,6 @@ application-test.properties
 
 # On garde les fichiers suivants :
 # - application.properties (commun)
-# - application-profile.properties.template (modèle)
+# - application-yourProfile.properties (modèle)
 !application.properties
-!application-profile.properties.template
+!src/main/resources/application-yourProfile.properties

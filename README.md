@@ -1,6 +1,6 @@
 
 # CourseCrawler
-Crawl geny.fr and Auto Bet
+Crawl geny.fr and Auto Bet on genynet.fr
 
 ## Installation guide
 - Binaries
@@ -13,7 +13,7 @@ Crawl geny.fr and Auto Bet
 
 
 - Config
-    - ! Read [application-profile.properties.template](src/main/resources/application-profile.properties.template) for property info !
+    - ! Read [application-yourProfile.properties](src/main/resources/application-yourProfile.properties) for property info !
     - mkdir config
     - nano application.properties
     - it's here to write property overrides as DB config...

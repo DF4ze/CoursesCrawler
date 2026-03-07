@@ -102,6 +102,7 @@ public class TelegramService {
                     case TEXT:
                         SendMessage sendMessage = new SendMessage(chatId + "", escapeMarkdownPreservingLinks(text));
                         sendMessage.setParseMode("MarkdownV2");
+                        sendMessage.setDisableWebPagePreview(true);
                         telegramClient.execute(sendMessage);
                         break;
 

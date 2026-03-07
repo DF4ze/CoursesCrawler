@@ -59,8 +59,10 @@ public class CustomProperties {
     private Integer filterNbReunionMax;
     @Value("#{'${fr.ses10doigts.crawler.filterNbPartants}'.split(',')}")
     private List<Integer> filterListNbPartants;
-    @Value("#{'${fr.ses10doigts.crawler.filterListRejectedHippo}'.split(',')}")
-    private List<String> filterListRejectedHippo;
+    @Value("#{'${fr.ses10doigts.crawler.filterListAcceptedHippo}'.split(',')}")
+    private List<String> filterListAcceptedHippo;
+    @Value("#{'${fr.ses10doigts.crawler.filterListAuthorizedAges}'.split(',')}")
+    private List<String> filterListAuthorizedAges;
 
 
 
@@ -84,7 +86,8 @@ public class CustomProperties {
         logger.info("filterTypeCourse = {}", filterTypeCourse);
         logger.info("filterNbReunionMax = {}", filterNbReunionMax);
         logger.info("filterListNbPartants = {}", filterListNbPartants);
-        logger.info("filterListRejectedHippo = {}", filterListRejectedHippo);
+        logger.info("filterListAcceptedHippo = {}", filterListAcceptedHippo);
+        logger.info("filterListAuthorizedAges = {}", filterListAuthorizedAges);
         logger.info("========================");
     }
 }
