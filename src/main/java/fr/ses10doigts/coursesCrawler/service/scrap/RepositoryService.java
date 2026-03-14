@@ -5,8 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +26,7 @@ import fr.ses10doigts.coursesCrawler.repository.course.PartantRepository;
 import fr.ses10doigts.coursesCrawler.repository.course.RapportRepository;
 
 @Component
+@Slf4j
 public class RepositoryService {
 
 	@Autowired
@@ -41,9 +41,6 @@ public class RepositoryService {
 	private PartantRepository partantRepository;
 	@Autowired
 	private RapportRepository rapportRepository;
-
-	private static final Logger logger = LoggerFactory.getLogger(RepositoryService.class);
-
 	public void addAll(Collection<AbstractEntity> entities) {
 
 		Collection<Arrivee> arrivees = new ArrayList<>();
@@ -85,7 +82,7 @@ public class RepositoryService {
 			try {
 				arriveeRepository.save(arrivee);
 			} catch (/* DataIntegrityViolationException */ Exception e) {
-				logger.error(e.getMessage());
+				log.error(e.getMessage());
 			}
 		}
 
@@ -96,7 +93,7 @@ public class RepositoryService {
 
 				coteRepository.save(cote);
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				log.error(e.getMessage());
 			}
 		}
 
@@ -105,7 +102,7 @@ public class RepositoryService {
 				courseCompleteRepository.save(cc);
 
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				log.error(e.getMessage());
 			}
 		}
 
@@ -113,7 +110,7 @@ public class RepositoryService {
 			try {
 				courseRepository.save(course);
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				log.error(e.getMessage());
 			}
 		}
 
@@ -123,7 +120,7 @@ public class RepositoryService {
 				partantRepository.saveOrUpdate(partant);
 
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				log.error(e.getMessage());
 			}
 		}
 
@@ -131,7 +128,7 @@ public class RepositoryService {
 			try {
 				rapportRepository.save(rapport);
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				log.error(e.getMessage());
 			}
 		}
 	}

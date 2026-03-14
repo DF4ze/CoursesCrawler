@@ -11,18 +11,15 @@ import fr.ses10doigts.coursesCrawler.service.scrap.VisitorParseAndStore;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
 import lombok.Getter;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
+@Slf4j
 public class ProcessorChain implements Runnable {
-
-	private static final Logger logger = LoggerFactory.getLogger(ProcessorChain.class);
-
 	@Autowired
 	protected PageTool pageTool;
 	@Autowired
@@ -54,8 +51,6 @@ public class ProcessorChain implements Runnable {
 	protected Queue<Page> enQueued;
 	protected boolean isFirst = true;
 
-
-
 	@Override
 	public void run() {
         Chrono chrono = new Chrono();
@@ -74,7 +69,7 @@ public class ProcessorChain implements Runnable {
 			auth.append(string).append(", ");
 		}
 
-		logger.info("Crawl Start with parameters :\n - {} seed(s)\n- maxHop : {}\n- authorized : {}\n- agressivity : {}"
+		log.info("Crawl Start with parameters :\n - {} seed(s)\n- maxHop : {}\n- authorized : {}\n- agressivity : {}"
 				,enQueued.size(),maxHop,auth,agressivity);
 
 		do {
@@ -88,9 +83,9 @@ public class ProcessorChain implements Runnable {
 
 		// Report
 
-		logger.info("=========================");
-		logger.info("Crawl ended");
-        logger.info("Crawled {}/{} pages in {}", report.getSuccessCrawled(), report.size(), chrono.compareToHour());
+		log.info("=========================");
+		log.info("Crawl ended");
+        log.info("Crawled {}/{} pages in {}", report.getSuccessCrawled(), report.size(), chrono.compareToHour());
 		report.setTime(chrono.compare());
 
 	}
@@ -109,7 +104,7 @@ public class ProcessorChain implements Runnable {
 
 		// soft way to stop thread
 		if (!running) {
-			logger.debug("running is false : stopping crawl thread");
+			log.debug("running is false : stopping crawl thread");
 			return;
 		}
 
@@ -118,12 +113,12 @@ public class ProcessorChain implements Runnable {
 			String content = webRepo.getRawPage(page.getUrl());
 			// String content = webRepo.getUrlContents(page.getUrl());
 
-            logger.debug("Url downloaded : {}", page.getUrl());
+            log.debug("Url downloaded : {}", page.getUrl());
 			report.lastCrawledUrl(page.getUrl());
 
 			if( doArchive ){
 				archiveService.archive(page.getUrl(), content);
-				logger.debug("Url archived : {}", page.getUrl());
+				log.debug("Url archived : {}", page.getUrl());
 			}
 
 			// Parse content
@@ -148,16 +143,16 @@ public class ProcessorChain implements Runnable {
 
 					// soft way to stop thread
 					if (!running) {
-						logger.debug("running is false : stopping crawl thread");
+						log.debug("running is false : stopping crawl thread");
 						break;
 					}
 				}
 			} else {
-				logger.debug("Max hop reached, no more research of inner URL  ");
+				log.debug("Max hop reached, no more research of inner URL  ");
 
 			}
 		} catch (Exception /*| RestClientException*/ e) {
-            logger.error("Exception on page {}\n Message : {}", page.getUrl(), e.getMessage());
+            log.error("Exception on page {}\n Message : {}", page.getUrl(), e.getMessage());
 			report.errorCrawl(page.getUrl());
 			setAsCrawlErrorPage(page);
 
@@ -170,19 +165,19 @@ public class ProcessorChain implements Runnable {
 
 	void setAsCrawlErrorPage(Page page) {
 
-        logger.warn("Error crawling : {}", page.getUrl());
+        log.warn("Error crawling : {}", page.getUrl());
 		if (page.getNbRetry() < props.getMaxRetry()) {
-            logger.warn("Page is set to retry (nb retry: {}/max retry {})", page.getNbRetry(), props.getMaxRetry());
+            log.warn("Page is set to retry (nb retry: {}/max retry {})", page.getNbRetry(), props.getMaxRetry());
 			page.setNbRetry(page.getNbRetry() + 1);
 			enQueued.add(page);
 
 			if (waitOnRetry) {
-				logger.debug("waitOnRetry is set");
+				log.debug("waitOnRetry is set");
 				sleep(agressivity);
 			}
 
 		} else {
-            logger.warn("Reach max retry : {}/{}", page.getNbRetry(), props.getMaxRetry());
+            log.warn("Reach max retry : {}/{}", page.getNbRetry(), props.getMaxRetry());
 			if (withException) {
 				throw new RuntimeException("Max retry reached on page " + page.getUrl());
 			}
@@ -193,11 +188,11 @@ public class ProcessorChain implements Runnable {
 		try {
 			int range = getRandomNumberInRange(ag.getMin(), ag.getMax());
 			range = range * 1000;
-            logger.debug("Thread will sleep {}ms", range);
+            log.debug("Thread will sleep {}ms", range);
 			Thread.sleep(range);
 
 		} catch (InterruptedException e) {
-			logger.warn("Thread sleep caused an Exception");
+			log.warn("Thread sleep caused an Exception");
 		}
 	}
 
@@ -220,7 +215,6 @@ public class ProcessorChain implements Runnable {
 		isFirst = true;
 		report = CrawlReport.getInstance();
 	}
-
 
     public void setAuthorised(List<String> authorised) {
 		this.authorized = authorised;

@@ -5,8 +5,7 @@ import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,9 +17,8 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 @Profile({ "prod" })
+@Slf4j
 public class CrawlScheduledService {
-    private static final Logger logger = LoggerFactory.getLogger(CrawlScheduledService.class);
-
     @Autowired
     private ConfigurationService configurationService;
     @Autowired
@@ -57,7 +55,7 @@ public class CrawlScheduledService {
         conf.setTxtSeeds(urls);
         configurationService.saveConfiguration(conf);
 
-        logger.debug("Starting scheduled crawl");
+        log.debug("Starting scheduled crawl");
         telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois lancé");
 
         crawlService.crawlFromConfig(false);
@@ -66,21 +64,21 @@ public class CrawlScheduledService {
 
         CompletableFuture.runAsync(() -> {
             if (crawlThread == null) {
-                logger.warn("Unable to send end notification: crawl thread is null");
+                log.warn("Unable to send end notification: crawl thread is null");
                 return;
             }
 
             try {
-                logger.debug("Scheduled crawl launched, waiting for thread completion...");
+                log.debug("Scheduled crawl launched, waiting for thread completion...");
                 crawlThread.join();
 
-                logger.debug("End scheduled crawl");
+                log.debug("End scheduled crawl");
                 telegramService.sendMessage(configurationService.getProps().getTelegramChatId(), "Crawl du mois terminé");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                logger.error("Interrupted while waiting for scheduled crawl end", e);
+                log.error("Interrupted while waiting for scheduled crawl end", e);
             } catch (Exception e) {
-                logger.error("Error while sending scheduled crawl end notification: {}", e.getMessage());
+                log.error("Error while sending scheduled crawl end notification: {}", e.getMessage());
             }
         });
     }

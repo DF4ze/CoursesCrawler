@@ -5,8 +5,7 @@ import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineReader;
 import fr.ses10doigts.coursesCrawler.service.crawl.tool.LineWriter;
 import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 @Component
+@Slf4j
 public class ConfigurationService {
     @Autowired
     private LineReader	     reader;
@@ -26,11 +26,8 @@ public class ConfigurationService {
 	@Getter
     @Autowired
     private CustomProperties props;
-
-    private static final Logger	logger = LoggerFactory.getLogger(ConfigurationService.class);
     private static final DateFormat urlDateFormat    = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat writenDateFormat = new SimpleDateFormat("dd/MM/yyyy");
-
 
     public Configuration getConfiguration() {
 		Configuration conf = new Configuration();
@@ -67,7 +64,7 @@ public class ConfigurationService {
 			conf.setAuthorized(txtAuth);
 
 		} catch (Exception e) {
-			logger.warn("Seeds or/and Authorised file(s) not found ");
+			log.warn("Seeds or/and Authorised file(s) not found ");
 		}
 		return conf;
     }
@@ -114,7 +111,7 @@ public class ConfigurationService {
 		// || startDate.after(comp)
 		// || endDate.after(comp)
 		) {
-			logger.error("Troubles with dates...");
+			log.error("Troubles with dates...");
 			return null;
 		}
 		// convert date to calendar

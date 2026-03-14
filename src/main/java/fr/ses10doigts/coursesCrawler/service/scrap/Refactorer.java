@@ -5,8 +5,7 @@ import fr.ses10doigts.coursesCrawler.model.scrap.entity.*;
 import fr.ses10doigts.coursesCrawler.repository.course.*;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.Chrono;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.RefactorerReport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 @Component
+@Slf4j
 public class Refactorer implements Runnable {
 
 	@Autowired
@@ -30,8 +30,6 @@ public class Refactorer implements Runnable {
 	private transient CourseRepository courseRepository;
 	@Autowired
 	private transient RepositoryService repository;
-
-	private static final Logger logger = LoggerFactory.getLogger(Refactorer.class);
 	private transient final int cycleStep = 50;
 	private static Long from = null;
 	private static boolean running = true;
@@ -50,7 +48,7 @@ public class Refactorer implements Runnable {
 	public void run() {
 		try {
 			if (friend != null) {
-				logger.debug("Refactorer waiting for crawl to end");
+				log.debug("Refactorer waiting for crawl to end");
 				friend.join();
 			}
 			chrono = new Chrono();
@@ -58,7 +56,7 @@ public class Refactorer implements Runnable {
 			makeCourseComplete();
 
 		} catch (InterruptedException e) {
-			logger.error("Refactorer thread failed to wait for Crawler. Refactoring won't be done");
+			log.error("Refactorer thread failed to wait for Crawler. Refactoring won't be done");
 		}
 
 	}
@@ -68,7 +66,7 @@ public class Refactorer implements Runnable {
 			return;
 		}
 
-		logger.info("Starting Refactorer");
+		log.info("Starting Refactorer");
 		report.startRefacto();
 
 		List<Course> coursesList = null;
@@ -81,7 +79,7 @@ public class Refactorer implements Runnable {
 
 		Collection<AbstractEntity> computedBuffer = new ArrayList<>();
 		if (from != null) {
-            logger.info("Starting from id {}", from);
+            log.info("Starting from id {}", from);
 			coursesList = courseRepository.findAllFrom(from);
 		} else {
 			coursesList = courseRepository.findAll();
@@ -114,7 +112,7 @@ public class Refactorer implements Runnable {
 			Set<Rapport> rapportsList = rapportRepository.findAllByCourseID(course.getCourseID());
 
 			if (rapportsList.size() == 0) {
-				logger.debug("Skip => Missing rapport for " + course.getCourseID());
+				log.debug("Skip => Missing rapport for " + course.getCourseID());
 				report.addSkipped(1);
 				continue;
 			}
@@ -168,7 +166,7 @@ public class Refactorer implements Runnable {
 			Set<Cote> cotesList = coteRepository.findByCourseID(course.getCourseID());
 
 			if (cotesList.size() == 0) {
-				logger.debug("Skip => Missing cote for " + course.getCourseID());
+				log.debug("Skip => Missing cote for " + course.getCourseID());
 				report.addSkipped(1);
 				continue;
 			}
@@ -297,7 +295,6 @@ public class Refactorer implements Runnable {
 			if (cvxArrivees.contains(cc.getNumeroChlTroisiemeDepart()))
 				cc.setNombreChvlFavoriPlaceDepart(cc.getNombreChvlFavoriPlaceDepart() + 1);
 
-
 			cotesList.clear();
 			cotesList = null;
 
@@ -312,7 +309,7 @@ public class Refactorer implements Runnable {
 			Set<Arrivee> arrivees = arriveeRepository.findByCourseID(course.getCourseID());
 
 			if (arrivees.isEmpty()) {
-				logger.debug("Skip => Missing arrivee for " + course.getCourseID());
+				log.debug("Skip => Missing arrivee for " + course.getCourseID());
 				report.addSkipped(1);
 				continue;
 			}
@@ -322,7 +319,6 @@ public class Refactorer implements Runnable {
 			Arrivee uneArrivee = (Arrivee) array[0];
 			cc.setUrl(uneArrivee.getUrl());
 
-
 			//////////////////////////////
 			// Info partant
 			int ageMin = 30;
@@ -331,7 +327,7 @@ public class Refactorer implements Runnable {
 			Set<Partant> partantsListe = partantRepository.findByCourseID(course.getCourseID());
 
 			if (partantsListe.isEmpty()) {
-				logger.debug("Skip => Missing partant for " + course.getCourseID());
+				log.debug("Skip => Missing partant for " + course.getCourseID());
 				report.addSkipped(1);
 				continue;
 			}
@@ -395,7 +391,6 @@ public class Refactorer implements Runnable {
 						}
 					}
 
-
 					// Organisation meilleurs Probables PMU
 					if (unPart.getProbablePMU() != null) {
 						if (unPart.getProbablePMU() < cc.getRapportPremierProbablePMU()) {
@@ -439,7 +434,7 @@ public class Refactorer implements Runnable {
 					} catch (Exception e) {
 						String texte = "Pb parse Age (" + unPart.getAgeSexe() + "), course " + course.getCourseID()
 								+ " : " + e.getMessage();
-						logger.error(texte);
+						log.error(texte);
 
 					}
 
@@ -478,8 +473,6 @@ public class Refactorer implements Runnable {
 			partantsListe.clear();
 			partantsListe = null;
 
-
-
 			// Nombre Favoris Probable Geny placés
 			cc.setNombreChvlFavoriPlaceProbableGeny(0);
 
@@ -504,7 +497,7 @@ public class Refactorer implements Runnable {
 			// envoi BDD
 			// repository.add(cc);
 			computedBuffer.add(cc);
-			logger.debug("Computed ok for courseID : " + course.getCourseID());
+			log.debug("Computed ok for courseID : " + course.getCourseID());
 
 			cc = null;
 
@@ -523,10 +516,10 @@ public class Refactorer implements Runnable {
 		repository.addAll(computedBuffer);
 		computedBuffer.clear();
 
-		logger.info("Computed saved");
+		log.info("Computed saved");
 		long time = stepChrono.compare();
 
-		logger.info(stepDone + " records in " + (time / cycleStep) + "ms / step");
+		log.info(stepDone + " records in " + (time / cycleStep) + "ms / step");
 		report.setTime(time);
 		report.stopRefacto();
 

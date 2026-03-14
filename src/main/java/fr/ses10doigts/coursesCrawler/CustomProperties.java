@@ -4,8 +4,7 @@ import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -15,10 +14,8 @@ import java.util.List;
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "fr.ses10doigts.crawler")
+@Slf4j
 public class CustomProperties {
-
-    private static final Logger logger = LoggerFactory.getLogger(CustomProperties.class);
-
     // @Value("#{'${fr.ses10doigts.webapp.urls}'.split(',')}")
     // private List<String> urls;
 
@@ -64,30 +61,27 @@ public class CustomProperties {
     @Value("#{'${fr.ses10doigts.crawler.filterListAuthorizedAges}'.split(',')}")
     private List<String> filterListAuthorizedAges;
 
-
-
-
     @PostConstruct
     public void printProperties() {
-        logger.info("=== CustomProperties ===");
-        logger.info("botToken = {}", "***");
-        logger.info("botUsername = {}", botUsername);
-        logger.info("telegramVerbose = {}", telegramVerbose);
-        logger.info("telegramChatIds = {}", telegramChatIds);
-        logger.info("puppeteerActivated = {}", puppeteerActivated);
-        logger.info("puppeteerUser = {}", puppeteerUser);
-        logger.info("puppeteerPwd = {}", "***");
-        logger.info("puppeteerPath = {}", puppeteerPath);
-        logger.info("puppeteerInitialBet = {}", puppeteerInitialBet);
-        logger.info("puppeteerMartingale = {}", puppeteerMartingale);
-        logger.info("filterMinPartants = {}", filterMinPartants);
-        logger.info("filterMinPourcent = {}", filterMinPourcent);
-        logger.info("filterNbPartants = {}", filterNbPartants);
-        logger.info("filterTypeCourse = {}", filterTypeCourse);
-        logger.info("filterNbReunionMax = {}", filterNbReunionMax);
-        logger.info("filterListNbPartants = {}", filterListNbPartants);
-        logger.info("filterListAcceptedHippo = {}", filterListAcceptedHippo);
-        logger.info("filterListAuthorizedAges = {}", filterListAuthorizedAges);
-        logger.info("========================");
+        log.info("=== CustomProperties ===");
+        log.info("botToken = {}", "***");
+        log.info("botUsername = {}", botUsername);
+        log.info("telegramVerbose = {}", telegramVerbose);
+        log.info("telegramChatIds = {}", telegramChatIds);
+        log.info("puppeteerActivated = {}", puppeteerActivated);
+        log.info("puppeteerUser = {}", puppeteerUser);
+        log.info("puppeteerPwd = {}", "***");
+        log.info("puppeteerPath = {}", puppeteerPath);
+        log.info("puppeteerInitialBet = {}", puppeteerInitialBet);
+        log.info("puppeteerMartingale = {}", puppeteerMartingale);
+        log.info("filterMinPartants = {}", filterMinPartants);
+        log.info("filterMinPourcent = {}", filterMinPourcent);
+        log.info("filterNbPartants = {}", filterNbPartants);
+        log.info("filterTypeCourse = {}", filterTypeCourse);
+        log.info("filterNbReunionMax = {}", filterNbReunionMax);
+        log.info("filterListNbPartants = {}", filterListNbPartants);
+        log.info("filterListAcceptedHippo = {}", filterListAcceptedHippo);
+        log.info("filterListAuthorizedAges = {}", filterListAuthorizedAges);
+        log.info("========================");
     }
 }

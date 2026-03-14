@@ -1,8 +1,7 @@
 package fr.ses10doigts.coursesCrawler.controller;
 
 import fr.ses10doigts.coursesCrawler.service.web.ExcelStreamExtractorService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +17,7 @@ import fr.ses10doigts.coursesCrawler.service.scrap.RefactorerService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 
 @Controller
+@Slf4j
 public class MainController {
 
 	@Autowired
@@ -28,9 +28,6 @@ public class MainController {
 	private RefactorerService refactoService;
 	@Autowired
 	private ExcelStreamExtractorService excelService;
-
-	private static final Logger logger = LoggerFactory.getLogger(MainController.class);
-
 	@GetMapping("/")
 	public String home(Model model) {
 		model.addAttribute("configuration", configurationService.getConfiguration());
@@ -54,7 +51,7 @@ public class MainController {
 
 	@PostMapping(value = "/", params = "action=save")
 	public ModelAndView saveConfig(@ModelAttribute Configuration dto) {
-        logger.info("User ask to save config : {}", dto);
+        log.info("User ask to save config : {}", dto);
 
 		configurationService.saveConfiguration(dto);
 		return new ModelAndView("redirect:/");
@@ -62,10 +59,9 @@ public class MainController {
 
 	@PostMapping(value = "/", params = "action=launch")
 	public ModelAndView launchCrawl(@ModelAttribute Configuration dto) {
+        log.info("User ask to launch with config : {}", dto);
 
 		dto.setLaunchArchive( true );
-		logger.info("User ask to launch with config : {}", dto);
-
 		configurationService.saveConfiguration(dto);
 		Report crawlReport = crawlService.crawlFromConfig();
 
@@ -79,7 +75,7 @@ public class MainController {
 
 	@PostMapping(value = "/", params = "action=stop")
 	public ModelAndView stop() {
-		logger.info("User ask to stop ");
+		log.info("User ask to stop ");
 
 		crawlService.stopCurrentCrawl();
 		refactoService.stopRefactorer();
@@ -92,10 +88,9 @@ public class MainController {
 		return mav;
 	}
 
-
 	@PostMapping(value = "/", params = "action=generate")
 	public ModelAndView generate(@ModelAttribute Configuration dto) {
-		logger.info("User ask to generate ");
+		log.info("User ask to generate ");
 
 		String urls = configurationService.generateUrlFromDates(dto.getStartGenDate(), dto.getEndGenDate());
 

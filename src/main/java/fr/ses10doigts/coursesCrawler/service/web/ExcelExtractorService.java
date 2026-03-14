@@ -15,8 +15,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
@@ -26,13 +25,11 @@ import fr.ses10doigts.coursesCrawler.repository.course.CourseCompleteRepository;
 import fr.ses10doigts.coursesCrawler.service.web.tool.ReflectionTool;
 
 @Component
+@Slf4j
 public class ExcelExtractorService {
 
     private static final String	     COURSES = "Courses";
     //    private static final SimpleDateFormat sdf	  = new SimpleDateFormat("yyyyMMdd_HHmmss.SSS");
-
-    private static final Logger	     logger  = LoggerFactory.getLogger(ExcelExtractorService.class);
-
     @Autowired
 	private CourseCompleteRepository ccRepo;
 
@@ -42,7 +39,7 @@ public class ExcelExtractorService {
 	 * @return String with the path of the file
 	 */
 	public String extractCourseCompletes() {
-		logger.info("Start generating Excel file");
+		log.info("Start generating Excel file");
 		Workbook workbook = prepareExcelWorkBook();
 
 		workbook = feedFromDB(workbook);
@@ -51,7 +48,7 @@ public class ExcelExtractorService {
 		if (!writeToFile(workbook, fileName)) {
 			fileName = null;
 		} else {
-			logger.info("Excel file successfully generated");
+			log.info("Excel file successfully generated");
 		}
 
 		return fileName;
@@ -150,12 +147,12 @@ public class ExcelExtractorService {
 		try {
 			outputStream = new FileOutputStream(fileLocation);
 		} catch (IOException e) {
-			logger.error("Error writing Excel file : " + e.getMessage());
+			log.error("Error writing Excel file : " + e.getMessage());
 		}
 		try {
 			outputStream2 = new FileOutputStream(fileLocation2);
 		} catch (IOException e) {
-			logger.error("Error writing Excel file : " + e.getMessage());
+			log.error("Error writing Excel file : " + e.getMessage());
 		}
 
 		if( outputStream != null ) {

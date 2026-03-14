@@ -7,8 +7,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +15,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 @Component
+@Slf4j
 public class WebCrawlingProxy {
-
-	private static final Logger logger = LoggerFactory.getLogger(WebCrawlingProxy.class);
-
 	private static final RestTemplate restTemplate = new RestTemplate();
-
 
 	public String getRawPage(String url) {
 		try{
@@ -65,7 +61,7 @@ public class WebCrawlingProxy {
 		Boolean connectivityTest = connectivityTest(0);
 		// if no connexion, sleep 1 min and test again
 		if (!connectivityTest) {
-			logger.warn("Internet connexion lost");
+			log.warn("Internet connexion lost");
 
 		}
 
@@ -77,7 +73,7 @@ public class WebCrawlingProxy {
 			connectivityTest = connectivityTest(0);
 		}
 		if (connectivityTest) {
-			logger.info("Internet connexion is up");
+			log.info("Internet connexion is up");
 
 		}
 
@@ -97,10 +93,10 @@ public class WebCrawlingProxy {
 		String urlContents = getUrlContents(url);
 		boolean connected = false;
 		if (!urlContents.isBlank()) {
-			logger.debug("connexion vérifiée via " + url);
+			log.debug("connexion vérifiée via " + url);
 			connected = true;
 		} else {
-			// logger.warn("non connecté à internet via " + url);
+			// log.warn("non connecté à internet via " + url);
 			if (already < urls.size()) {
 				connected = connectivityTest(++already);
 			}

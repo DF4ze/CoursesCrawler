@@ -10,15 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.CourseComplete;
 
+@Slf4j
 public class ReflectionTool {
-
-    private static final Logger logger = LoggerFactory.getLogger(ReflectionTool.class);
-
     /**
      * Return a list of all fields of a given Class
      *
@@ -99,7 +96,7 @@ public class ReflectionTool {
 			sReturn = (value == null ? "" : value) + "";
 
 		} catch (Exception e) {
-			logger.warn("Error during Reflection reading of CourseComplete field : " + e.getMessage());
+			log.warn("Error during Reflection reading of CourseComplete field : " + e.getMessage());
 		}
 
 		return sReturn;

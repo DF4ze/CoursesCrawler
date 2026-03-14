@@ -7,8 +7,7 @@ import jakarta.persistence.EntityManager;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @Service
+@Slf4j
 public class ExcelStreamExtractorService {
     @Autowired
     private CourseCompleteRepository repository;
@@ -33,10 +33,7 @@ public class ExcelStreamExtractorService {
 
     @Value("${fr.ses10doigts.crawler.export-dir}")
     private String exportDir;
-
-    private static final Logger logger  = LoggerFactory.getLogger(ExcelStreamExtractorService.class);
     private static final String SHEET_NAME = "Courses";
-
 
     public void waitAndExtract(Thread crawlTreatment, Thread refactoThread) {
         try {
@@ -61,7 +58,7 @@ public class ExcelStreamExtractorService {
     public void extractCourseCompletes( String startDate, String endDate)  {
         try {
             String sFile = exportDir + "courses.xlsx";
-            logger.info("Starting generating Excel from {} to {}, into file: {}", startDate, endDate, sFile);
+            log.info("Starting generating Excel from {} to {}, into file: {}", startDate, endDate, sFile);
             try (SXSSFWorkbook workbook = new SXSSFWorkbook(50)) { // buffer 100 lignes
 
                 SXSSFSheet sheet = workbook.createSheet(SHEET_NAME);
@@ -82,7 +79,7 @@ public class ExcelStreamExtractorService {
 
                             entityManager.detach(entity);
                             if (rowNum[0] % 50 == 0) {
-                                logger.debug("Clear buffer");
+                                log.debug("Clear buffer");
                                 entityManager.clear();
                             }
 
@@ -90,7 +87,7 @@ public class ExcelStreamExtractorService {
                                 try {
                                     sheet.flushRows(100);
                                 } catch (IOException e) {
-                                    logger.warn("Error occurred during flushRows");
+                                    log.warn("Error occurred during flushRows");
                                 }
                             }
                         });
@@ -113,7 +110,7 @@ public class ExcelStreamExtractorService {
 
                             entityManager.detach(entity);
                             if (rowNum[0] % 50 == 0) {
-                                logger.debug("Clear buffer");
+                                log.debug("Clear buffer");
                                 entityManager.clear();
                             }
 
@@ -121,13 +118,13 @@ public class ExcelStreamExtractorService {
                                 try {
                                     sheet.flushRows(100);
                                 } catch (IOException e) {
-                                    logger.warn("Error occurred during flushRows");
+                                    log.warn("Error occurred during flushRows");
                                 }
                             }
                         });
                     }
                 }else{
-                    logger.error("startDate and endDate, both must be null or set...");
+                    log.error("startDate and endDate, both must be null or set...");
                     return;
                 }
 
@@ -135,17 +132,15 @@ public class ExcelStreamExtractorService {
                     workbook.write(out);
                 }
 
-                logger.debug("End Clear buffer");
+                log.debug("End Clear buffer");
                 entityManager.clear();
             }
-            logger.info("Generation successful");
+            log.info("Generation successful");
 
         }catch (Exception e){
-            logger.error("Error extracting to Excel file : {}", e.getMessage());
+            log.error("Error extracting to Excel file : {}", e.getMessage());
         }
     }
-
-
 
     private void generateRowFromCourseComplete(CourseComplete cc, Sheet sheet, CellStyle style, int line) {
 
@@ -202,6 +197,5 @@ public class ExcelStreamExtractorService {
             headerCell.setCellStyle(headerStyle);
         }
     }
-
 
 }

@@ -4,8 +4,7 @@ import fr.ses10doigts.coursesCrawler.model.Configuration;
 import fr.ses10doigts.coursesCrawler.model.crawl.enumerate.Agressivity;
 import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
@@ -13,10 +12,8 @@ import org.springframework.core.env.Environment;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-
+@Slf4j
 public class CoursesCrawlerApplicationTest {
-	private static final Logger logger = LoggerFactory.getLogger(CoursesCrawlerApplicationTest.class);
-
 	private static Environment environment;
 	private static CrawlService crawlService;
 	private static ConfigurationService configurationService;
@@ -28,7 +25,6 @@ public class CoursesCrawlerApplicationTest {
 		crawlService = context.getBean(CrawlService.class);
 		configurationService = context.getBean(ConfigurationService.class);
 		environment = context.getBean(Environment.class);
-
 
 		manageLaunch();
 
@@ -47,9 +43,9 @@ public class CoursesCrawlerApplicationTest {
 		String startDay = dayDate();
 		String endDay = dayDate();
 
-		logger.debug("DAYS : {} {}", startDay, endDay);
+		log.debug("DAYS : {} {}", startDay, endDay);
 		String urls = "https://www.geny.com/partants-pmu?id_course=1582808&info=2025-07-09-Senonnes-Pouanc%c3%a9-pmu-Prix+Radio+Oxyg%c3%a8ne";//configurationService.generateUrlFromDates(startDay, endDay);
-		logger.debug("URLS : {}", urls);
+		log.debug("URLS : {}", urls);
 
 		Configuration conf = new Configuration();
 		conf.setAgressivity(Agressivity.MEDIUM_HARD);
