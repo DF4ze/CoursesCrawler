@@ -16,8 +16,7 @@ import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,9 +34,8 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 @Profile({ "devWithTelegram", "telegram" })
+@Slf4j
 public class SchedulerService {
-
-	private static final Logger logger = LoggerFactory.getLogger(SchedulerService.class);
 	private static final Long TELEGRAM_GROUP = -4706435457L;
 
 	@Getter
@@ -46,8 +44,6 @@ public class SchedulerService {
 		timeBefore = tb;
 		changeScheduledTaskTiming( tb );
 	}
-
-
 
 	@Autowired
 	private CrawlService crawlService;
@@ -67,12 +63,11 @@ public class SchedulerService {
 	@Autowired
 	private GlobalBilanAsyncService bilanService;
 
-
 	@Scheduled(cron = "${fr.ses10doigts.crawler.schedulerChecker}") // Toutes les minutes
 	public void everyMinutes() {
 		// recup en db si job scheduledDate avant maintenant et status SCHEDULED
 		List<ScheduledTask> scheduledTasks = getScheduledTasks();
-		logger.debug("Founded {} task(s) to execute.", scheduledTasks.size());
+		log.debug("Founded {} task(s) to execute.", scheduledTasks.size());
 
 		boolean once = true;
 
@@ -85,7 +80,7 @@ public class SchedulerService {
 					if (paris != null && !paris.getIsEnded())
 						checkerService.checkEnd(paris.getCourse().getCourseID(), task.getTelegramMessageId());
 				} catch (Exception e) {
-					logger.error("Error during ScheduledTask : {}", e.getMessage());
+					log.error("Error during ScheduledTask : {}", e.getMessage());
 				}
 			}
 
@@ -98,13 +93,13 @@ public class SchedulerService {
 						configurationService.getProps().getFilterNbReunionMax());
 
 				if( task.getStatus() == ScheduleStatus.RESCHEDULED ){
-					logger.debug("RESCHEDULED task for course : {}", task.getIdCourse());
+					log.debug("RESCHEDULED task for course : {}", task.getIdCourse());
 					List<Course> byCourseID = courseRepository.findByCourseID(task.getIdCourse());
 					if( !byCourseID.isEmpty() ){
 						Course c = byCourseID.get(0);
 						LocalDateTime target = getTargetFromCourse(c, timeBefore);
 
-						logger.debug("new target : {}", target);
+						log.debug("new target : {}", target);
 
 						task.setStatus(ScheduleStatus.SCHEDULED);
 						task.setPlannedExecution(target);
@@ -115,11 +110,11 @@ public class SchedulerService {
 						taskRepository.save(task);
 
 					}else{
-						logger.warn("No course founded for id : {}", task.getIdCourse());
+						log.warn("No course founded for id : {}", task.getIdCourse());
 					}
 				}
 			}catch (Exception e){
-                logger.error("Error during task execution : {}", e.getMessage());
+                log.error("Error during task execution : {}", e.getMessage());
 				task.setStatus(ScheduleStatus.ERROR);
 				task.setErrorMessage(e.getMessage());
 				taskRepository.save(task);
@@ -132,19 +127,18 @@ public class SchedulerService {
 			task.setStatus(ScheduleStatus.MISSED);
 		}
 		if( !oldScheduledTasks.isEmpty() )
-			logger.debug("Founded {} missed task(s)", oldScheduledTasks.size());
+			log.debug("Founded {} missed task(s)", oldScheduledTasks.size());
 
 		scheduledTasks.addAll(oldScheduledTasks);
 		for (ScheduledTask task : scheduledTasks){
 			taskRepository.updateStatus(task.getId(), task.getStatus(), task.getLastExecution(), task.getErrorMessage());
 		}
 
-
 	}
 
 	@Scheduled(cron = "${fr.ses10doigts.crawler.dailyMorningTask}") // Tous les jours à 9h00 du matin (en fonction de la property)
 	public void everyMorning() {
-		logger.info("Starting Daily Morning Crawl");
+		log.info("Starting Daily Morning Crawl");
 		String toDay = dayDate();
 		launchMainScheduledCrawl(toDay, toDay, false, TELEGRAM_GROUP);
 
@@ -152,7 +146,7 @@ public class SchedulerService {
 
 	@Scheduled(cron = "${fr.ses10doigts.crawler.dailyEveningTask}") // Tous les jours à 22h00 du matin (en fonction de la property)
 	public void everyEvening() {
-		logger.info("Starting Daily Evening task");
+		log.info("Starting Daily Evening task");
 
 		List<Paris> unendedBet = betService.getUnendedBet();
 		for(Paris bet : unendedBet){
@@ -163,27 +157,25 @@ public class SchedulerService {
 		bilanFuture.thenAccept(bilan -> telegramService.sendMessage(TELEGRAM_GROUP, bilan.toString()) );
 	}
 
-
-
 	@PostConstruct
 	public void runAtStartup() {
-		logger.debug("======================= ScheduledJobs");
+		log.debug("======================= ScheduledJobs");
 		List<ScheduledTask> scheduled = taskRepository.findScheduledTasksFromNow(ScheduleStatus.SCHEDULED, LocalDateTime.now());
 
 		for ( ScheduledTask task : scheduled ){
-			logger.debug(" - "+task.getPlannedExecution()+" : "+task.getCourseUrl());
+			log.debug(" - "+task.getPlannedExecution()+" : "+task.getCourseUrl());
 		}
 
 		List<ScheduledTask> oldScheduledTasks = taskRepository.findOldScheduledTasks(ScheduleStatus.SCHEDULED, LocalDateTime.now());
 		if( !oldScheduledTasks.isEmpty() ) {
-			logger.debug("/!\\ Missed tasks : ");
+			log.debug("/!\\ Missed tasks : ");
 			for (ScheduledTask task : oldScheduledTasks) {
-				logger.debug(" - " + task.getPlannedExecution() + " : " + task.getCourseUrl());
+				log.debug(" - " + task.getPlannedExecution() + " : " + task.getCourseUrl());
 				taskRepository.updateStatus(task.getId(), ScheduleStatus.MISSED, null, "Too late");
 			}
 		}
 
-		logger.debug("=======================================");
+		log.debug("=======================================");
 	}
 
 	public void launchMainScheduledCrawl(String startDay, String endDay, boolean startAndStop, Long chatId){
@@ -204,11 +196,11 @@ public class SchedulerService {
 			String endDate) {
 
 		if (t == null) {
-			logger.error("Crawl Thread is null...");
+			log.error("Crawl Thread is null...");
 			return;
 		}
 
-		logger.info("Props : \n- Min partants: {}\n- Type course: {}\n- Reu max: {}\n- Min %: {}\n- Nb Partants: {}\n- List nb partants: {}\n",
+		log.info("Props : \n- Min partants: {}\n- Type course: {}\n- Reu max: {}\n- Min %: {}\n- Nb Partants: {}\n- List nb partants: {}\n",
 				configurationService.getProps().getFilterMinPartants(),
 				configurationService.getProps().getFilterTypeCourse(),
 				configurationService.getProps().getFilterNbReunionMax(),
@@ -222,7 +214,7 @@ public class SchedulerService {
 				t.join();
 
 			} catch (Exception e) {
-				logger.error("Error during Crawl waiting... Stopping main Survey...");
+				log.error("Error during Crawl waiting... Stopping main Survey...");
 				// TODO see for relaunch? Scheduled
 				return;
 			}
@@ -270,7 +262,7 @@ public class SchedulerService {
 							&& !( hippoMatch );
 
 					if( !hippoMatch ){
-						logger.warn("Current course remove because unwanted hippo : {}", course.getHippodrome());
+						log.warn("Current course remove because unwanted hippo : {}", course.getHippodrome());
 					}
 
 					if( !inStats ){
@@ -285,7 +277,7 @@ public class SchedulerService {
 
 					// Si l'heure de la course est déjà passée aujourd'hui, Passe à la course suivante
 					if (targetTime.plusMinutes(timeBefore).isBefore(LocalDateTime.now())) {
-                        logger.debug("Course {} déjà passée...", course.getUrl());
+                        log.debug("Course {} déjà passée...", course.getUrl());
 						courseDescr += "❌ Déjà passée...\n";
 						rep.append( courseDescr ).append( "\n" );
 						continue;
@@ -302,7 +294,7 @@ public class SchedulerService {
 					retainedCourses.add(course);
 				}
 
-				logger.debug("Après le crawl, {} courses trouvées en BDD avec nbPartant {}, type '{}', Reu max {}.",
+				log.debug("Après le crawl, {} courses trouvées en BDD avec nbPartant {}, type '{}', Reu max {}.",
 						nbScheduled,
 						configurationService.getProps().getFilterNbPartants(),
 						configurationService.getProps().getFilterTypeCourse(),
@@ -321,19 +313,18 @@ public class SchedulerService {
 						.append("✔️ Type course : ").append( configurationService.getProps().getFilterTypeCourse() ).append( "\n" )
 						.append("✔️ Réunion max : ").append( configurationService.getProps().getFilterNbReunionMax() ).append( "\n\n" )
 						.append(rep);
-				logger.info("{} New tasks scheduled.", nbScheduled);
+				log.info("{} New tasks scheduled.", nbScheduled);
 
 				try {
-                    logger.debug("Send message : {}", finalRep);
+                    log.debug("Send message : {}", finalRep);
 					telegramService.sendMessage(messageId, finalRep.toString());
 
 				} catch (Exception e) {
-                    logger.error("Error sending Telegram : {}\n-------------\nException message : {}", finalRep, e.getMessage());
+                    log.error("Error sending Telegram : {}\n-------------\nException message : {}", finalRep, e.getMessage());
 				}
 			}
 
-
-			logger.info("✅ Main Crawl is Done! Now waiting for task scheduling execution");
+			log.info("✅ Main Crawl is Done! Now waiting for task scheduling execution");
 		});
 	}
 
@@ -357,10 +348,10 @@ public class SchedulerService {
 
 		Optional<ScheduledTask> byCourseUrl = taskRepository.findByCourseUrl(course.getUrl());
 		if (byCourseUrl.isPresent()) {
-            logger.debug("Modifying already planned task: {}", course.getUrl());
+            log.debug("Modifying already planned task: {}", course.getUrl());
 			task.setId(byCourseUrl.get().getId());
 		}else{
-			logger.debug("Planning task for {}", course.getUrl());
+			log.debug("Planning task for {}", course.getUrl());
 		}
 
 		task.setName(course.getUrl());
@@ -375,8 +366,8 @@ public class SchedulerService {
 		task.setTelegramMessageId(telegramMessageId);
 		task.setCourseDescription(courseDescription);
 
-		logger.debug("Saving it to DB");
-		logger.debug(task.toString());
+		log.debug("Saving it to DB");
+		log.debug(task.toString());
 		// Sauvegarder en base
 		ScheduledTask savedTask = taskRepository.save(task);
 
@@ -394,7 +385,7 @@ public class SchedulerService {
 			task.setPlannedExecution( task.getCourseStart().minusMinutes(tb) );
 			taskRepository.save(task);
 		}
-		logger.info("{} Scheduled task updated", scheduledTasksFromNow.size());
+		log.info("{} Scheduled task updated", scheduledTasksFromNow.size());
 	}
 
 	private List<ScheduledTask> getOldScheduledTasks() {

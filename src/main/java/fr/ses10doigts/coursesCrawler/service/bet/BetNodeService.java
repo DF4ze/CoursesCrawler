@@ -1,9 +1,9 @@
 package fr.ses10doigts.coursesCrawler.service.bet;
 
 import fr.ses10doigts.coursesCrawler.CustomProperties;
+
+import lombok.extern.slf4j.Slf4j;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +12,8 @@ import java.io.InputStreamReader;
 import java.math.BigInteger;
 
 @Service
+@Slf4j
 public class BetNodeService {
-    private static final Logger logger = LoggerFactory.getLogger(BetNodeService.class);
-
     @Autowired
     private CustomProperties props;
     @Autowired
@@ -48,14 +47,14 @@ public class BetNodeService {
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                logger.info(line);
+                log.info(line);
             }
 
             // Récupérer la sortie d'erreur
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             StringBuilder error = new StringBuilder();
             while ((line = errorReader.readLine()) != null) {
-                logger.error(line);
+                log.error(line);
                 error.append(line).append("\n");
                 isOk = false;
             }
@@ -66,13 +65,13 @@ public class BetNodeService {
 
             if( isOk ) logger.info("Success action on site (code : {})", exitCode);
             else{
-                logger.error("Error during action on site (code : {})", exitCode);
+                log.error("Error during action on site (code : {})", exitCode);
                 telegramService.sendMessage(props.getTelegramErrorChatId(), "Erreur lors du paris :\n"+error.toString());
             }
 
         } catch (Exception e) {
             isOk = false;
-            logger.error("An error occurred during action on website : {}", e.getMessage());
+            log.error("An error occurred during action on website : {}", e.getMessage());
         }
 
         return isOk;

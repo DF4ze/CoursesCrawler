@@ -15,8 +15,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +30,7 @@ import fr.ses10doigts.coursesCrawler.repository.course.CourseRepository;
 import fr.ses10doigts.coursesCrawler.service.scrap.tool.XPathTool;
 
 @Component
+@Slf4j
 public class GenyParser implements HtmlParser {
 
 	private String url;
@@ -40,9 +40,6 @@ public class GenyParser implements HtmlParser {
 
 	@Autowired
 	private CourseRepository courseRepository;
-
-	private static final Logger logger = LoggerFactory.getLogger(GenyParser.class);
-
 	GenyParser() {
 	}
 
@@ -117,7 +114,7 @@ public class GenyParser implements HtmlParser {
 			try {
 				longCourse = Long.parseLong(numCourse);
 			} catch (Exception e) {
-				logger.debug("Unable to parse num course : " + e.getMessage());
+				log.debug("Unable to parse num course : " + e.getMessage());
 
 			}
 		}
@@ -126,8 +123,8 @@ public class GenyParser implements HtmlParser {
 	}
 
 	private EntitiesList parse_course() {
-		logger.debug("=================================== Course infos");
-		logger.info(url);
+		log.debug("=================================== Course infos");
+		log.info(url);
 
 		Long longCourse = parse_numCourse();
 		EntitiesList bl = null;
@@ -159,12 +156,12 @@ public class GenyParser implements HtmlParser {
 						Date parse = sdf2DYear.parse(date);
 						date = sdf4DYear.format(parse);
 					} catch (ParseException e) {
-						logger.error("Error parsing date : " + date);
+						log.error("Error parsing date : " + date);
 					}
 				}
 			}
 		}
-		logger.debug("Date : " + date);
+		log.debug("Date : " + date);
 
 		// extraction de la reunion
 		String hippodrome = null;
@@ -173,7 +170,7 @@ public class GenyParser implements HtmlParser {
 		Elements elements = xPathTool.getElements(doc, "/div[@class='nomReunion']");
 		if (elements != null && elements.size() > 0) {
 			String txt = elements.get(0).text();
-			logger.debug("nomReunion : " + txt);
+			log.debug("nomReunion : " + txt);
 
 			// hippodrome
 			p = Pattern.compile(".*:(.*)\\(R[0-9]+\\)");
@@ -183,7 +180,7 @@ public class GenyParser implements HtmlParser {
 				hippodrome = m.group(1);
 				hippodrome = hippodrome.trim();
 			}
-			logger.debug("hippodrome : " + hippodrome);
+			log.debug("hippodrome : " + hippodrome);
 
 			// N� reunion
 			p = Pattern.compile(".*:.*\\(R([0-9]+)\\)");
@@ -194,10 +191,10 @@ public class GenyParser implements HtmlParser {
 				try {
 					intReunion = Integer.parseInt(reunion);
 				} catch (Exception e) {
-					logger.debug(e.getMessage());
+					log.debug(e.getMessage());
 				}
 			}
-			logger.debug("reunion : " + intReunion);
+			log.debug("reunion : " + intReunion);
 
 		}
 
@@ -216,10 +213,10 @@ public class GenyParser implements HtmlParser {
 				try {
 					numCourse = Integer.parseInt(sNumCourse);
 				} catch (Exception e) {
-					logger.error("!!!!!!!! error parsing numCourse : " + e.getMessage());
+					log.error("!!!!!!!! error parsing numCourse : " + e.getMessage());
 				}
 			}
-			logger.debug("numCourse : " + numCourse);
+			log.debug("numCourse : " + numCourse);
 
 			p = Pattern.compile("[0-9]+.*- (.*)");
 			m = p.matcher(txt);
@@ -228,7 +225,7 @@ public class GenyParser implements HtmlParser {
 				prix = m.group(1);
 				prix = prix.trim();
 			}
-			logger.debug("prix : " + prix);
+			log.debug("prix : " + prix);
 
 		}
 
@@ -241,7 +238,7 @@ public class GenyParser implements HtmlParser {
 		elements = xPathTool.getElements(doc, "/span[@class='infoCourse']");
 		if (elements != null && elements.size() > 0) {
 			String txt = elements.get(0).text();
-			logger.debug("infoCourse : " + txt);
+			log.debug("infoCourse : " + txt);
 
 			p = Pattern.compile(".*(Monté|Steeple-chase|Attelé|Plat).*");
 			m = p.matcher(txt);
@@ -250,7 +247,7 @@ public class GenyParser implements HtmlParser {
 				type = m.group(1);
 				type = type.trim();
 			}
-			logger.debug("type : " + type);
+			log.debug("type : " + type);
 
 			// somme des enjeux
 			p = Pattern.compile(".*-.(([0-9]+.)*[0-9]{3})€.*");
@@ -263,10 +260,10 @@ public class GenyParser implements HtmlParser {
 				// intReunion = Integer.parseInt(prime);
 				// }catch(Exception e){}
 			} else {
-				logger.debug("prime no match ");
+				log.debug("prime no match ");
 
 			}
-			logger.debug("prime : " + prime);
+			log.debug("prime : " + prime);
 
 			// AutoStart
 			p = Pattern.compile(".*autostart.*", Pattern.CASE_INSENSITIVE);
@@ -275,7 +272,7 @@ public class GenyParser implements HtmlParser {
 			if (b) {
 				depart = "oui";
 			}
-			logger.debug("Autostart : " + depart);
+			log.debug("Autostart : " + depart);
 
 			// Heure
 			p = Pattern.compile("Départ\\s+(\\d{1,2})h(\\d{2})");
@@ -284,7 +281,7 @@ public class GenyParser implements HtmlParser {
 				heures = m.group(1);
 				minutes = m.group(2);
 			}
-			logger.debug("heure : " + heures + ":" + minutes);
+			log.debug("heure : " + heures + ":" + minutes);
 
 		}
 
@@ -326,7 +323,7 @@ public class GenyParser implements HtmlParser {
 		if (course != null) {
 			bl = new EntitiesList();
 			bl.add(course);
-			logger.info("Adding course : " + course);
+			log.info("Adding course : " + course);
 		}
 
 		return bl;
@@ -337,8 +334,8 @@ public class GenyParser implements HtmlParser {
 
 		EntitiesList listeRapports = null;
 		if (url.indexOf("arrivee-et-rapports") != -1 && longCourse != null) {
-			logger.debug("=================================== Rapports");
-			logger.info(url);
+			log.debug("=================================== Rapports");
+			log.info(url);
 
 			listeRapports = new EntitiesList();
 
@@ -439,7 +436,7 @@ public class GenyParser implements HtmlParser {
 							rapport.setPlacePmu(gain);
 
 							listeRapports.add(rapport);
-							logger.debug("PMU : 1er => N" + rapport.getNumCheval() + " G:" + rapport.getGagnantPmu()
+							log.debug("PMU : 1er => N" + rapport.getNumCheval() + " G:" + rapport.getGagnantPmu()
 									+ " P:" + rapport.getPlacePmu());
 
 						} else {
@@ -451,12 +448,12 @@ public class GenyParser implements HtmlParser {
 							rapport.setPlacePmu(gain);
 
 							listeRapports.add(rapport);
-							logger.debug("PMU : " + rapport.getArrivee() + "eme => N" + rapport.getNumCheval() + " P:"
+							log.debug("PMU : " + rapport.getArrivee() + "eme => N" + rapport.getNumCheval() + " P:"
 									+ rapport.getPlacePmu());
 						}
 
 					} catch (Exception e) { // pour les Parses Exceptions
-						logger.error("Erreur RAPPORT : " + e.getMessage());
+						log.error("Erreur RAPPORT : " + e.getMessage());
 					}
 
 				} // for lignes
@@ -499,9 +496,9 @@ public class GenyParser implements HtmlParser {
 			}
 
 			if (listeRapports.size() == 0) {
-				logger.warn("!!!!!!!!!!!!!!!!!!!! Page sans rapports parsés : " + url);
+				log.warn("!!!!!!!!!!!!!!!!!!!! Page sans rapports parsés : " + url);
 			} else {
-				logger.info("Added " + listeRapports.size() + " rapports");
+				log.info("Added " + listeRapports.size() + " rapports");
 			}
 		}
 
@@ -585,7 +582,7 @@ public class GenyParser implements HtmlParser {
 						listeRapports.add(clone);
 						rapport.setGagnantGeny(null);
 
-						logger.debug("Geny : 1er => N" + clone.getNumCheval() + " G:" + clone.getGagnantGeny() + " P:"
+						log.debug("Geny : 1er => N" + clone.getNumCheval() + " G:" + clone.getGagnantGeny() + " P:"
 								+ clone.getPlaceGeny());
 
 					} else if (iTable == 2) {
@@ -597,23 +594,23 @@ public class GenyParser implements HtmlParser {
 						rapport.setArrivee(iLigne + 1);
 						rapport.setPlaceGeny(gain);
 
-						logger.debug("Geny : " + rapport.getArrivee() + "eme => N" + rapport.getNumCheval() + " P:"
+						log.debug("Geny : " + rapport.getArrivee() + "eme => N" + rapport.getNumCheval() + " P:"
 								+ rapport.getPlaceGeny());
 
 						listeRapports.add(rapport);
 					}
 
 				} catch (Exception e) { // pour les Parses Exceptions
-					logger.error("Erreur RAPPORT : " + e.getMessage());
+					log.error("Erreur RAPPORT : " + e.getMessage());
 				}
 
 			} // for lignes
 		} // for Tables
 
 		if (listeRapports.size() == 0) {
-			logger.warn("!!!!!!!!!!!!!!!!!!!!!! page sans rapport eGeny : " + url);
+			log.warn("!!!!!!!!!!!!!!!!!!!!!! page sans rapport eGeny : " + url);
 		} else {
-			logger.info("Geny Added " + listeRapports.size() + " rapports");
+			log.info("Geny Added " + listeRapports.size() + " rapports");
 		}
 
 		return listeRapports;
@@ -624,8 +621,8 @@ public class GenyParser implements HtmlParser {
 
 		EntitiesList listeArrivees = null;
 		if (url.indexOf("arrivee-et-rapports") != -1 && longCourse != null) {
-			logger.debug("=================================== Arrivee");
-			logger.info(url);
+			log.debug("=================================== Arrivee");
+			log.info(url);
 			Elements nbTableaux = xPathTool.getElements(doc, "/table[@id='arrivees']/tbody");
 
 			Elements lignes = null;
@@ -667,23 +664,23 @@ public class GenyParser implements HtmlParser {
 								if (listeArrivees == null) {
 									listeArrivees = new EntitiesList();
 								}
-								logger.debug("Course : " + longCourse + " Place : " + placeCheval + " Numero : "
+								log.debug("Course : " + longCourse + " Place : " + placeCheval + " Numero : "
 										+ numCheval + " Nom : " + nomCheval);
 
 								listeArrivees.add(new Arrivee(url, longCourse, placeCheval, numCheval, nomCheval));
 							}
 						}
 					} catch (Exception e) {
-						// logger.debug("Ligne N " + i + " Error: " + e.getMessage());
+						// log.debug("Ligne N " + i + " Error: " + e.getMessage());
 
 					}
 				}
 
 			}
 			if (listeArrivees.size() == 0) {
-				logger.warn("!!!!!!!!!!!!!!!!!!!! Page sans arrivées : " + url);
+				log.warn("!!!!!!!!!!!!!!!!!!!! Page sans arrivées : " + url);
 			} else {
-				logger.info("Adding " + listeArrivees.size() + " arrivees");
+				log.info("Adding " + listeArrivees.size() + " arrivees");
 			}
 		}
 
@@ -696,8 +693,8 @@ public class GenyParser implements HtmlParser {
 		EntitiesList cotesCourse = new EntitiesList();
 
 		if (url.contains("/cotes") && longCourse != null) {
-			logger.debug("=================================== Cote");
-			logger.info(url);
+			log.debug("=================================== Cote");
+			log.info(url);
 
 			Elements lignes = xPathTool.getElements(doc, "/div[@id='div_tableau_cotes']/table/tbody/tr");
 
@@ -706,7 +703,7 @@ public class GenyParser implements HtmlParser {
                 for (Element uneLigne : lignes) {
                     Elements cellules = uneLigne.select("td");
 
-                    // logger.debug("Line N°" + i + " content : " + cellules.text());
+                    // log.debug("Line N°" + i + " content : " + cellules.text());
 
                     Integer numCheval = null;
                     Float enjeuxDepart = null;
@@ -717,7 +714,7 @@ public class GenyParser implements HtmlParser {
                         for (int j = 0; j < cellules.size(); j++) {
                             Element uneCellule = cellules.get(j);
 
-                            // logger.debug("Treating cell N°" + j + " content : " + uneCellule.text());
+                            // log.debug("Treating cell N°" + j + " content : " + uneCellule.text());
                             try {
                                 switch (j) {
                                     case 0:
@@ -757,7 +754,7 @@ public class GenyParser implements HtmlParser {
 
                             } catch (Exception e) {
                                 // Trop de spam si affiché
-                                // logger.error("Erreur sur la ligne 'cote' : " + uneLigne.text() + " Message :"
+                                // log.error("Erreur sur la ligne 'cote' : " + uneLigne.text() + " Message :"
                                 // + e.getMessage());
 
                             }
@@ -765,7 +762,7 @@ public class GenyParser implements HtmlParser {
                         } // fin for cellules
 
                         if (numCheval != null) {
-                            logger.debug("Cvl : {} cote : {} enjeux av: {}", numCheval, coteDepart, enjeuxAvant);
+                            log.debug("Cvl : {} cote : {} enjeux av: {}", numCheval, coteDepart, enjeuxAvant);
                         }
 
                         if (numCheval != null && coteDepart != null && enjeuxDepart != null) {
@@ -786,9 +783,9 @@ public class GenyParser implements HtmlParser {
 
                 if (cotesCourse.get().isEmpty()) {
 					cotesCourse.add(buildCoteForInvalid());
-                    logger.warn("!!!!!!!!!!!!!!!!!!!!!!!!! Page sans Cote : {}", url);
+                    log.warn("!!!!!!!!!!!!!!!!!!!!!!!!! Page sans Cote : {}", url);
 				} else {
-                    logger.info("Adding {} cotes", cotesCourse.size());
+                    log.info("Adding {} cotes", cotesCourse.size());
 				}
 
 			}else if( body.contains("Il n'y a pas de cotes pour cette course") ) {
@@ -808,15 +805,14 @@ public class GenyParser implements HtmlParser {
 		return cote;
 	}
 
-
 	private EntitiesList parse_partant() {
 		Long longCourse = parse_numCourse();
 
 		EntitiesList partantsCourse = null;
 
 		if (url.indexOf("/partants-pmu") != -1 && longCourse != null) {
-			logger.debug("=================================== Partants");
-			logger.info(url);
+			log.debug("=================================== Partants");
+			log.info(url);
 
 			Elements celz = xPathTool.getElements(doc, "/div[@id='dt_partants']/table/thead/tr/th");
 			int colMusique = 6;
@@ -903,7 +899,7 @@ public class GenyParser implements HtmlParser {
 										try {
 											probPMU = Float.parseFloat(sProbPMU);
 										} catch (Exception e2) {
-											logger.debug("Error parsing probPMU : " + sProbPMU);
+											log.debug("Error parsing probPMU : " + sProbPMU);
 										}
 									}
 
@@ -916,19 +912,19 @@ public class GenyParser implements HtmlParser {
 										try {
 											probGeny = Float.parseFloat(sProbGeny);
 										} catch (Exception e2) {
-											logger.debug("Error parsing probGeny : " + sProbGeny);
+											log.debug("Error parsing probGeny : " + sProbGeny);
 										}
 									}
 
 								}
 							} catch (Exception e) {
-								// logger.error("Erreur sur une ligne 'Partant' : " + e.getMessage());
+								// log.error("Erreur sur une ligne 'Partant' : " + e.getMessage());
 
 							}
 
 						} // fin for cellules
 
-						logger.debug("Cvl : " + nom + " Num : " + numCheval + " ageSexe : " + ageSexe + " musique : "
+						log.debug("Cvl : " + nom + " Num : " + numCheval + " ageSexe : " + ageSexe + " musique : "
 								+ musique + " musique : " + musique + " gains : " + gains);
 
 						if (numCheval != null) {
@@ -954,9 +950,9 @@ public class GenyParser implements HtmlParser {
 
 			}
 			if (partantsCourse.size() == 0) {
-				logger.warn("!!!!!!!!!!!!!!!!!!! Page sans partants : " + url);
+				log.warn("!!!!!!!!!!!!!!!!!!! Page sans partants : " + url);
 			} else {
-				logger.info("Adding " + partantsCourse.size() + " partants");
+				log.info("Adding " + partantsCourse.size() + " partants");
 			}
 		}
 
