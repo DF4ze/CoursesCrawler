@@ -1,0 +1,9 @@
+[
+  {
+	"pseudo":"yourPseudoAsInJavaApp",
+    "user": "yourGenyBetMail",
+    "pwd": "yourPassword",
+    "maxBet": 30,
+	"enable": true
+  }
+]

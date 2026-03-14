@@ -8,7 +8,7 @@ import jakarta.persistence.ManyToOne;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 
 @EqualsAndHashCode(callSuper = true)
@@ -23,7 +23,7 @@ public class Paris extends AbstractEntity {
     private Boolean isWin;
     private Double gain;
     private Integer numChevalMise;
-    private BigDecimal mise;
+    private BigInteger mise;
     private Boolean isEnded;
     private Boolean isWebActionOk;
 

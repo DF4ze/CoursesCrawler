@@ -19,7 +19,7 @@ import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateC
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -289,7 +289,7 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 						try {
 							long courseNb = Long.parseLong(param[1]);
 							int chvlNb = Integer.parseInt(param[2]);
-							BigDecimal bet = new BigDecimal(param[3]);
+							BigInteger bet = BigInteger.valueOf(Integer.parseInt(param[3]));
 
 							boolean ok = betNodeService.launchBetProcess(courseNb, bet, chvlNb);
 
@@ -310,8 +310,9 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 
 					if( image != null ){
 						telegramService.sendPhoto(message.getChatId(), image, msg);
+					}else {
+						telegramService.sendMessage(message.getChatId(), msg);
 					}
-					telegramService.sendMessage(message.getChatId(), msg) ;
 				}
 
 				if(isValueChanged){
