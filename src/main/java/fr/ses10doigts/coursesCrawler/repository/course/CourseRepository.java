@@ -11,6 +11,7 @@ import fr.ses10doigts.coursesCrawler.model.scrap.entity.Course;
 public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findByCourseID( Long courseID );
+    List<Course> findByDate(String date);
 
     @Query("from Course where ?1 <= courseID ")
     List<Course> findAllFrom( Long courseID );

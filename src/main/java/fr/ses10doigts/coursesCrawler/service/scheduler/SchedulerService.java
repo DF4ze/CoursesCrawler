@@ -5,11 +5,9 @@ import fr.ses10doigts.coursesCrawler.model.paris.Paris;
 import fr.ses10doigts.coursesCrawler.model.schedule.ScheduleStatus;
 import fr.ses10doigts.coursesCrawler.model.schedule.ScheduledTask;
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.Course;
-import fr.ses10doigts.coursesCrawler.model.scrap.entity.Partant;
 import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
 import fr.ses10doigts.coursesCrawler.repository.ScheduledTaskRepository;
 import fr.ses10doigts.coursesCrawler.repository.course.CourseRepository;
-import fr.ses10doigts.coursesCrawler.repository.course.PartantRepository;
 import fr.ses10doigts.coursesCrawler.service.bet.BetService;
 import fr.ses10doigts.coursesCrawler.service.bet.GlobalBilanAsyncService;
 import fr.ses10doigts.coursesCrawler.service.crawl.CrawlService;
@@ -31,16 +29,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @Profile({ "devWithTelegram", "telegram" })
 @Slf4j
 public class SchedulerService {
 	private static final Long TELEGRAM_GROUP = -4706435457L;
-	private static final Pattern AGE_PATTERN = Pattern.compile("(\\d+)");
-	private static final Pattern AGE_RANGE_PATTERN = Pattern.compile("\\s*(\\d+)\\s*-\\s*(\\d+)\\s*");
 
 	@Getter
 	@Value("${fr.ses10doigts.crawler.checkTimeBefore}")
@@ -64,7 +58,7 @@ public class SchedulerService {
 	@Autowired
 	private CourseRepository courseRepository;
 	@Autowired
-	private PartantRepository partantRepository;
+	private CourseFilterService courseFilterService;
 	@Autowired
 	private BetService betService;
 	@Autowired
@@ -242,12 +236,7 @@ public class SchedulerService {
 				String day = start.format(outputFormat);
 				start = start.plusDays(1);
 
-				List<Course> courses = courseRepository.findCoursesWithCriteria(
-						configurationService.getProps().getFilterMinPartants(),
-						configurationService.getProps().getFilterTypeCourse(),
-						configurationService.getProps().getFilterNbReunionMax(),
-						day
-				);
+				List<Course> courses = courseRepository.findByDate(day);
 
 				courses.sort(
 						Comparator
@@ -259,35 +248,7 @@ public class SchedulerService {
 				StringBuilder rep = new StringBuilder();
 				List<Course> retainedCourses = new ArrayList<>();
 				for (Course course : courses) {
-					// Filtering courses by hippodrome
-					String hippo = Optional.ofNullable(course.getHippodrome())
-							.orElse("")
-							.toLowerCase();
-
-					List<String> acceptedHippos = Optional.ofNullable(configurationService.getProps().getFilterListAcceptedHippo())
-							.orElse(List.of());
-
-					boolean hippoMatch = acceptedHippos.isEmpty() || acceptedHippos.stream()
-							.map(String::trim)
-							.map(String::toLowerCase)
-							.filter(s -> !s.isEmpty())
-							.anyMatch(hippo::contains);
-
-					boolean ageMatch = isCourseMatchingAuthorizedAges(course);
-
-					boolean inStats = configurationService.getProps().getFilterTypeCourse().equalsIgnoreCase(course.getType())
-                            && course.getReunion() <= configurationService.getProps().getFilterNbReunionMax()
-							&& hippoMatch
-							&& ageMatch;
-
-					if( !hippoMatch ){
-						log.warn("Current course({}, {}) removed because hippo is not whitelisted", course.getUrl(), course.getHippodrome());
-					}
-					if (!ageMatch) {
-						log.warn("Current course({}, {}) removed because horse ages are not in authorized ranges", course.getUrl(), course.getHippodrome());
-					}
-
-					if( !inStats ){
+					if (!courseFilterService.matches(course, configurationService.getProps())) {
 						continue;
 					}
 
@@ -349,87 +310,6 @@ public class SchedulerService {
 			log.info("✅ Main Crawl is Done! Now waiting for task scheduling execution");
 		});
 	}
-
-	private boolean isCourseMatchingAuthorizedAges(Course course) {
-		List<String> configuredRanges = Optional.ofNullable(configurationService.getProps().getFilterListAuthorizedAges())
-				.orElse(List.of());
-
-		List<AgeRange> authorizedRanges = configuredRanges.stream()
-				.map(String::trim)
-				.filter(s -> !s.isEmpty())
-				.map(this::parseAgeRange)
-				.filter(Objects::nonNull)
-				.toList();
-
-		if (authorizedRanges.isEmpty()) {
-			return true;
-		}
-
-		Set<Partant> partants = partantRepository.findByCourseID(course.getCourseID());
-		if (partants == null || partants.isEmpty()) {
-			log.warn("No partants found for course {}, age filter rejects it", course.getUrl());
-			return false;
-		}
-
-		for (Partant partant : partants) {
-			Integer age = extractAge(partant.getAgeSexe());
-			if (age == null) {
-				log.warn("Unable to extract age for horse {} on course {}, value='{}'",
-						partant.getNomCheval(), course.getUrl(), partant.getAgeSexe());
-				return false;
-			}
-
-			boolean ageInRange = authorizedRanges.stream()
-					.anyMatch(range -> range.contains(age));
-
-			if (!ageInRange) {
-				log.debug("Horse {} age {} is out of authorized ranges for course {}",
-						partant.getNomCheval(), age, course.getUrl());
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	private Integer extractAge(String ageSexe) {
-		if (ageSexe == null || ageSexe.isBlank()) {
-			return null;
-		}
-
-		Matcher matcher = AGE_PATTERN.matcher(ageSexe);
-		if (!matcher.find()) {
-			return null;
-		}
-
-		return Integer.parseInt(matcher.group(1));
-	}
-
-	private AgeRange parseAgeRange(String rawRange) {
-		Matcher matcher = AGE_RANGE_PATTERN.matcher(rawRange);
-		if (!matcher.matches()) {
-			log.warn("Ignoring invalid age range configuration: {}", rawRange);
-			return null;
-		}
-
-		int min = Integer.parseInt(matcher.group(1));
-		int max = Integer.parseInt(matcher.group(2));
-
-		if (min > max) {
-			log.warn("Ignoring invalid age range configuration (min > max): {}", rawRange);
-			return null;
-		}
-
-		return new AgeRange(min, max);
-	}
-
-	private record AgeRange(int min, int max) {
-		private boolean contains(int age) {
-			return age >= min && age <= max;
-		}
-	}
-
-
 
 	@NotNull
 	private LocalDateTime getTargetFromCourse( Course course, int minusMinute ) {
