@@ -1,12 +1,12 @@
 package fr.ses10doigts.coursesCrawler.model.scrap.entity;
 
-import java.util.Objects;
-
 import fr.ses10doigts.coursesCrawler.model.scrap.AbstractCourseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Data;
+
+import java.util.Objects;
 
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = { "courseID", "numCheval" }))
@@ -42,8 +42,8 @@ public class Partant extends AbstractCourseEntity implements Cloneable {
 	}
 
 	@Override
-	public Partant clone() {
-		Partant o = new Partant();
+	public Partant clone() throws CloneNotSupportedException {
+        Partant o = (Partant) super.clone();
 
 		o.ageSexe = ageSexe;
 		o.setCourseID(this.getCourseID());

@@ -65,7 +65,7 @@ public class BetNodeService {
 
             isOk = isOk && exitCode == 0;
 
-            if( isOk ) logger.info("Success action on site (code : {})", exitCode);
+            if( isOk ) log.info("Success action on site (code : {})", exitCode);
             else{
                 log.error("Error during action on site (code : {})", exitCode);
                 telegramService.sendMessage(props.getTelegramErrorChatId(), "Erreur lors du paris :\n"+error.toString());

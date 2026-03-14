@@ -439,15 +439,20 @@ public class Refactorer implements Runnable {
 					}
 
 					// musique du cheval qui a le plus gros gain
-					if (ChvBestGains == null && unPart.getIGains() != null) {
-						ChvBestGains = unPart.clone();
-					} else if (unPart.getIGains() != null) {
-						if (unPart.getIGains() > ChvBestGains.getIGains()) {
-							ChvBestGains = unPart.clone();
-						}
-					}
 
-				}
+                    try {
+                        if (ChvBestGains == null && unPart.getIGains() != null) {
+                            ChvBestGains = unPart.clone();
+                        } else if (unPart.getIGains() != null) {
+                            if (unPart.getIGains() > ChvBestGains.getIGains()) {
+                                ChvBestGains = unPart.clone();
+                            }
+                        }
+                    } catch (CloneNotSupportedException e) {
+                        log.error("Error cloning Partant... : {}", e.getMessage());
+                    }
+
+                }
 				cc.setAgeSexChvlPremier(ageMin + "-" + ageMax);
 				if (ChvBestGains != null) {
 					cc.setMusiqueMeilleurGains(ChvBestGains.getMusique());

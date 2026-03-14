@@ -14,7 +14,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
-@Slf4j
 public class BilanAsyncService {
     @Autowired
     private ParisRepository parisRepository;
