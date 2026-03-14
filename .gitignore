@@ -75,3 +75,5 @@ application-test.properties
 # - application-yourProfile.properties (modèle)
 !application.properties
 !src/main/resources/application-yourProfile.properties
+
+/aa_Tasks/

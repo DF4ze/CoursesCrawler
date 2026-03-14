@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -44,7 +45,8 @@ public class SchedulerService {
 	private static final Pattern AGE_RANGE_PATTERN = Pattern.compile("\\s*(\\d+)\\s*-\\s*(\\d+)\\s*");
 
 	@Getter
-    private int timeBefore = 20;
+	@Value("${fr.ses10doigts.crawler.checkTimeBefore}")
+    private int timeBefore;
 	public void setTimeBefore( int tb ){
 		timeBefore = tb;
 		changeScheduledTaskTiming( tb );
@@ -100,7 +102,8 @@ public class SchedulerService {
 						configurationService.getProps().getFilterMinPourcent(),
 						configurationService.getProps().getFilterTypeCourse(),
 						configurationService.getProps().getFilterListNbPartants(),
-						configurationService.getProps().getFilterNbReunionMax());
+						configurationService.getProps().getFilterNbReunionMax()
+				);
 
 				if( task.getStatus() == ScheduleStatus.RESCHEDULED ){
 					logger.debug("RESCHEDULED task for course : {}", task.getIdCourse());
