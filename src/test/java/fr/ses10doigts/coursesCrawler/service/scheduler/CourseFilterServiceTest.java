@@ -21,10 +21,17 @@ class CourseFilterServiceTest {
         Course course = new Course();
         course.setUrl("test://course");
 
-        Set<Partant> partants = Set.of(partant("5 M"), partant("7 F"));
 
-        assertFalse(service.matchesAuthorizedAges(course, partants, List.of("5-10")));
-        assertTrue(service.matchesAuthorizedAges(course, Set.of(partant("5 M"), partant("10 F")), List.of("5-10")));
+        assertFalse(
+                service.matchesAuthorizedAges(course,
+                        Set.of(partant("5M"), partant("7F")),
+                        List.of("5-10"))
+        );
+        assertTrue(
+                service.matchesAuthorizedAges(course,
+                        Set.of(partant("5M"), partant("10F")),
+                        List.of("5-10"))
+        );
     }
 
     @Test
@@ -32,9 +39,18 @@ class CourseFilterServiceTest {
         Course course = new Course();
         course.setUrl("test://course");
 
-        assertTrue(service.matchesAuthorizedAges(course, Set.of(partant("5 M"), partant("7 F")), List.of("5~10")));
-        assertFalse(service.matchesAuthorizedAges(course, Set.of(partant("6 M"), partant("7 F")), List.of("5~10")));
-        assertFalse(service.matchesAuthorizedAges(course, Set.of(partant("5 M"), partant("11 F")), List.of("5~10")));
+        assertTrue(service.matchesAuthorizedAges(course,
+                Set.of(partant("5M"), partant("7F")),
+                List.of("5~10"))
+        );
+        assertFalse(service.matchesAuthorizedAges(course,
+                Set.of(partant("6M"), partant("7F")),
+                List.of("5~10"))
+        );
+        assertFalse(service.matchesAuthorizedAges(course,
+                Set.of(partant("5M"), partant("11F")),
+                List.of("5~10"))
+        );
     }
 
     @Test
@@ -42,14 +58,48 @@ class CourseFilterServiceTest {
         Course course = new Course();
         course.setUrl("test://course");
 
-        Set<Partant> partants = Set.of(partant("5 M"), partant("11 F"));
-        assertTrue(service.matchesAuthorizedAges(course, partants, List.of("5-*")));
-        assertTrue(service.matchesAuthorizedAges(course, Set.of(partant("3 M"), partant("5 F")), List.of("*~5")));
-        assertFalse(service.matchesAuthorizedAges(course, Set.of(partant("6 M"), partant("11 F")), List.of("5-*")));
+        assertTrue(service.matchesAuthorizedAges(course,
+                Set.of(partant("5M"), partant("11F")),
+                List.of("5-*"))
+        );
+        assertTrue(service.matchesAuthorizedAges(course,
+                Set.of(partant("5M"), partant("11F")),
+                List.of("*-11"))
+        );
+        assertFalse(service.matchesAuthorizedAges(course,
+                Set.of(partant("6M"), partant("11F")),
+                List.of("5-*"))
+        );
+        assertFalse(service.matchesAuthorizedAges(course,
+                Set.of(partant("5M"), partant("10F")),
+                List.of("*-11"))
+        );
+
+
+        assertTrue(service.matchesAuthorizedAges(course,
+                Set.of(partant("5M"), partant("6F")),
+                List.of("5~*"))
+        );
+        assertTrue(service.matchesAuthorizedAges(course,
+                Set.of(partant("6M"), partant("10F")),
+                List.of("*~11"))
+        );
+        assertFalse(service.matchesAuthorizedAges(course,
+                Set.of(partant("6M"), partant("11F")),
+                List.of("5~*"))
+        );
+        assertFalse(service.matchesAuthorizedAges(course,
+                Set.of(partant("6M"), partant("11F")),
+                List.of("*~10"))
+        );
     }
 
+    private static int numCheval = 0;
+    private static long courseId = 0;
     private Partant partant(String ageSexe) {
         Partant partant = new Partant();
+        partant.setNumCheval(numCheval++);
+        partant.setCourseID(courseId++);
         partant.setAgeSexe(ageSexe);
         return partant;
     }
