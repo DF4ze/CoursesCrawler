@@ -297,11 +297,11 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 								msg = "Le paris semble s'être correctement déroulé";
 							}else {
 								msg = "Le paris ne semble pas s'être déroulé correctement";
-								image = "/home/oklm/courses/error.png";
+								image = "/home/oklm/courses/lastAction.png";
 							}
 						}catch (Exception e){
 							msg = "Une exception a eu lieu : "+e.getMessage();
-							image = "/home/oklm/courses/error.png";
+							image = "/home/oklm/courses/lastAction.png";
 						}
 
 					}else{

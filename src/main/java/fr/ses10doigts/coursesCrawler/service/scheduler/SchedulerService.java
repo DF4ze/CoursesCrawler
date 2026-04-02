@@ -294,7 +294,8 @@ public class SchedulerService {
 				finalRep.append("\nCritères :\n" )
 						.append("✔️ Partants min : ").append( configurationService.getProps().getFilterMinPartants() ).append( "\n" )
 						.append("✔️ Type course : ").append( configurationService.getProps().getFilterTypeCourse() ).append( "\n" )
-						.append("✔️ Réunion max : ").append( configurationService.getProps().getFilterNbReunionMax() ).append( "\n\n" )
+						.append("✔️ Réunion max : ").append( configurationService.getProps().getFilterNbReunionMax() ).append( "\n" )
+						.append("✔️ Ages : ").append( configurationService.getProps().getFilterListAuthorizedAges() ).append( "\n\n" )
 						.append(rep);
 				log.info("{} New tasks scheduled.", nbScheduled);
 
