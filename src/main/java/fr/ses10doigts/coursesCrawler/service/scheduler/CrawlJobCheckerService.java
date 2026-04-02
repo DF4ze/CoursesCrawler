@@ -55,6 +55,8 @@ public class CrawlJobCheckerService {
 	private TelegramService telegramService;
 	@Autowired
 	private BetService betService;
+	@Autowired
+	private CourseFilterService courseFilterService;
 
     public void checkStart(ScheduledTask task, float percent, String courseType, List<Integer>nbPartants, int nbReunionMax)  {
 
@@ -123,8 +125,10 @@ public class CrawlJobCheckerService {
 			String stats = "";
 			// Parfois pas de résultat de la course...
 			if( courseStats!= null && courseStats.getNombrePartant() != null ) {
+				// Nb Partants
 				boolean isPartantsOK = nbPartants.contains(courseStats.getNombrePartant());
 
+				// Percents
 				boolean isPercentOk = true;
 				float sumPercent = 0;
 				if (courseStats.getPourcentPremierAvant() != null && courseStats.getPourcentDeuxiemeAvant() != null &&
@@ -137,11 +141,22 @@ public class CrawlJobCheckerService {
 					isPercentOk = false;
 				}
 
+				// Type
 				boolean isTypeOk = courseType.equalsIgnoreCase(courseStats.getTypeCourse());
 
+				// Nb Reunion
 				boolean isNbReuMaxOk = courseStats.getNumeroReunion() <= nbReunionMax;
 
-				isInStats = isTypeOk && isPercentOk && isPartantsOK && isNbReuMaxOk;
+				// Age
+				Course course = courseRepository.findByCourseID(courseStats.getCourseID()).get(0);
+				CourseFilterService.AgeCheckResult ageCheck = courseFilterService.evaluateAuthorizedAges(
+						course,
+						configurationService.getProps().getFilterListAuthorizedAges()
+				);
+				String ageLine = formatAgeCheckLine(ageCheck, configurationService.getProps().getFilterListAuthorizedAges());
+
+				// Total
+				isInStats = isTypeOk && isPercentOk && isPartantsOK && isNbReuMaxOk && ageCheck.matches();
 
 				Paris paris = null;
 				if( isInStats ){
@@ -156,7 +171,8 @@ public class CrawlJobCheckerService {
 						+" + "+ courseStats.getPourcentTroisiemeAvant()
 						+" = "+sumPercent+"\n"
 						+(isTypeOk?"✅":"❌")+" Type: "+courseStats.getTypeCourse()+"\n"
-						+(isNbReuMaxOk?"✅":"❌")+" N° Réunion: "+courseStats.getNumeroReunion();
+						+(isNbReuMaxOk?"✅":"❌")+" N° Réunion: "+courseStats.getNumeroReunion()+"\n"
+						+(ageCheck.matches()?"✅":"❌")+" Age: "+ageLine;
 
 				if( isInStats &&  !paris.getIsWebActionOk()) {
 					stats += "\n\n⚠\uFE0F Vérifier si le paris s'est bien déroulé sur le site ⚠\uFE0F";
@@ -239,7 +255,6 @@ public class CrawlJobCheckerService {
 			courseStats.setCourseID(courseID); // parfois problème de parsing des rapport et donc ils sont vides... TODO
 			Paris paris = betService.updateBetResult(courseStats);
 
-			//@formatter:off
 			String txt = "\uD83C\uDFC1 Résultat course: \n"+course.getHippodrome()+", R"+course.getReunion()+", C"+course.getCourse()+" à "+course.getHeures()+"h"+course.getMinutes()
 					+ "\n\uD83D\uDD17 [Lien Arrivées](https://www.geny.com/arrivee-et-rapports-pmu?id_course=" + courseID + ")\n\n"
 					+( paris.getIsWin() ?
@@ -251,7 +266,6 @@ public class CrawlJobCheckerService {
 						"Misé "+paris.getMise()+" sur N°"+paris.getNumChevalMise()+"\n"+
 						"Est arrivé 1er le N°"+courseStats.getNumeroChvlPremier()
 					);
-			//@formatter:on
 
 			log.info("Course Arrivee checked : {}\n{}", paris, txt);
 
@@ -261,8 +275,25 @@ public class CrawlJobCheckerService {
 
 		} catch (Exception e) {
 			log.error("Error during CheckEnd : {}", e.getMessage());
-			throw new RuntimeException(e); // TODO personal exception
+			throw new RuntimeException(e);
 		}
+	}
+
+	private String formatAgeCheckLine(CourseFilterService.AgeCheckResult ageCheck, List<String> configuredRanges) {
+		String configured = (configuredRanges == null || configuredRanges.isEmpty())
+				? "aucun filtre"
+				: String.join(", ", configuredRanges);
+
+		if (!ageCheck.filterEnabled()) {
+			return "Ages: (non filtre) - config: " + configured;
+		}
+
+		String status = ageCheck.matches() ? "OK" : "KO";
+		if (ageCheck.ageMin() == null || ageCheck.ageMax() == null) {
+			return "Ages: " + status + " " + ageCheck.reason() + " - config: " + configured;
+		}
+
+		return "Ages: " + status + " " + ageCheck.ageMin() + "-" + ageCheck.ageMax() + " - config: " + configured;
 	}
 
 	private CourseComplete getCourseResult(Set<Arrivee> arrivees) {
@@ -350,3 +381,6 @@ public class CrawlJobCheckerService {
 	}
 
 }
+
+
+

@@ -248,7 +248,7 @@ public class SchedulerService {
 				StringBuilder rep = new StringBuilder();
 				List<Course> retainedCourses = new ArrayList<>();
 				for (Course course : courses) {
-					if (!courseFilterService.matches(course, configurationService.getProps())) {
+					if (!courseFilterService.matchesWithoutAges(course, configurationService.getProps())) {
 						continue;
 					}
 
@@ -295,7 +295,7 @@ public class SchedulerService {
 						.append("✔️ Partants min : ").append( configurationService.getProps().getFilterMinPartants() ).append( "\n" )
 						.append("✔️ Type course : ").append( configurationService.getProps().getFilterTypeCourse() ).append( "\n" )
 						.append("✔️ Réunion max : ").append( configurationService.getProps().getFilterNbReunionMax() ).append( "\n" )
-						.append("✔️ Ages : ").append( configurationService.getProps().getFilterListAuthorizedAges() ).append( "\n\n" )
+						.append("✔️ Ages (verif. a l'execution) : ").append( configurationService.getProps().getFilterListAuthorizedAges() ).append( "\n\n" )
 						.append(rep);
 				log.info("{} New tasks scheduled.", nbScheduled);
 

@@ -26,6 +26,15 @@ public class CourseFilterService {
     private final PartantRepository partantRepository;
 
     public boolean matches(Course course, CustomProperties props) {
+        if (!matchesWithoutAges(course, props)) {
+            return false;
+        }
+
+        Set<Partant> partants = partantRepository.findByCourseID(course.getCourseID());
+        return matchesAuthorizedAges(course, partants, props.getFilterListAuthorizedAges());
+    }
+
+    public boolean matchesWithoutAges(Course course, CustomProperties props) {
         if (!matchesCourseType(course, props.getFilterTypeCourse())) {
             return false;
         }
@@ -39,12 +48,7 @@ public class CourseFilterService {
         }
 
         Set<Partant> partants = partantRepository.findByCourseID(course.getCourseID());
-
-        if (!matchesMinPartants(course, partants, props.getFilterMinPartants())) {
-            return false;
-        }
-
-        return matchesAuthorizedAges(course, partants, props.getFilterListAuthorizedAges());
+        return matchesMinPartants(course, partants, props.getFilterMinPartants());
     }
 
     private boolean matchesCourseType(Course course, String expectedType) {
@@ -108,6 +112,16 @@ public class CourseFilterService {
     }
 
     boolean matchesAuthorizedAges(Course course, Set<Partant> partants, List<String> configuredRanges) {
+        AgeCheckResult result = evaluateAuthorizedAges(course, partants, configuredRanges);
+        return result.matches();
+    }
+
+    public AgeCheckResult evaluateAuthorizedAges(Course course, List<String> configuredRanges) {
+        Set<Partant> partants = partantRepository.findByCourseID(course.getCourseID());
+        return evaluateAuthorizedAges(course, partants, configuredRanges);
+    }
+
+    private AgeCheckResult evaluateAuthorizedAges(Course course, Set<Partant> partants, List<String> configuredRanges) {
         List<AgeRangeFilter> authorizedRanges = Optional.ofNullable(configuredRanges).orElse(List.of()).stream()
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
@@ -116,15 +130,16 @@ public class CourseFilterService {
                 .toList();
 
         if (authorizedRanges.isEmpty()) {
-            return true;
+            return new AgeCheckResult(false, true, null, null, "Aucun filtre d'age");
         }
 
         if (partants == null || partants.isEmpty()) {
             log.warn("No partants found for course {}, age filter rejects it", course.getUrl());
-            return false;
+            return new AgeCheckResult(true, false, null, null, "Ages indisponibles (partants manquants)");
         }
 
         List<Integer> ages = partants.stream()
+                .filter(p -> p.getProbableGeny() != null || p.getProbablePMU() != null)
                 .map(Partant::getAgeSexe)
                 .map(this::extractAge)
                 .filter(Objects::nonNull)
@@ -132,7 +147,7 @@ public class CourseFilterService {
 
         if (ages.size() != partants.size()) {
             log.warn("Unable to extract all horse ages for course {}, age filter rejects it", course.getUrl());
-            return false;
+            return new AgeCheckResult(true, false, null, null, "Ages incomplets");
         }
 
         int ageMin = ages.stream().min(Comparator.naturalOrder()).orElseThrow();
@@ -144,7 +159,7 @@ public class CourseFilterService {
                     course.getUrl(), course.getHippodrome(), ageMin, ageMax, configuredRanges);
         }
 
-        return ok;
+        return new AgeCheckResult(true, ok, ageMin, ageMax, ok ? "Ages autorises" : "Ages hors plage");
     }
 
     private Integer extractAge(String ageSexe) {
@@ -201,4 +216,6 @@ public class CourseFilterService {
             return minMatch && maxMatch;
         }
     }
+
+    public record AgeCheckResult(boolean filterEnabled, boolean matches, Integer ageMin, Integer ageMax, String reason) {}
 }

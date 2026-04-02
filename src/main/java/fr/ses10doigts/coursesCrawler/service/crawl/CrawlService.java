@@ -21,6 +21,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.io.IOException;
 import java.lang.Thread.State;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -46,6 +47,8 @@ public class CrawlService {
 	private TransactionTemplate transactionTemplate;
 
 	private static Thread crawlTreatment = null;
+	private Future<?> excelFuture = null;
+
 	private Report startCrawl(boolean withException) throws IOException {
 		if (crawlTreatment == null || crawlTreatment.getState().equals(State.TERMINATED)) {
 			// Retrieve seeds
@@ -99,13 +102,17 @@ public class CrawlService {
 			}
 
 			if( configuration.isLaunchExcel() ){
+				excelFuture = null;
 				ExecutorService executor = Executors.newSingleThreadExecutor();
-				Future<?> future = executor.submit(() -> {
+				excelFuture = executor.submit(() -> {
 					transactionTemplate.execute(status -> {
 						excelService.waitAndExtract( crawlTreatment, refactoService.getThread() );
 						return null;
 					});
 				});
+				executor.shutdown();
+			} else {
+				excelFuture = null;
 			}
 
 		} catch (Exception e) {
@@ -116,6 +123,26 @@ public class CrawlService {
 		}
 
 		return cr;
+	}
+
+	public void waitForPipelineCompletion() throws InterruptedException {
+		Thread crawlThread = crawlTreatment;
+		if (crawlThread != null && crawlThread.isAlive()) {
+			crawlThread.join();
+		}
+
+		Thread refactoThread = refactoService.getThread();
+		if (refactoThread != null && refactoThread.isAlive()) {
+			refactoThread.join();
+		}
+
+		if (excelFuture != null) {
+			try {
+				excelFuture.get();
+			} catch (ExecutionException e) {
+				log.error("Error during Excel extraction", e);
+			}
+		}
 	}
 
 	public void datesCrawl(String startDay, String endDay) {

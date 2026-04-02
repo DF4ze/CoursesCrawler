@@ -6,6 +6,7 @@ import fr.ses10doigts.coursesCrawler.model.telegram.Verbose;
 import fr.ses10doigts.coursesCrawler.service.bet.BetNodeService;
 import fr.ses10doigts.coursesCrawler.service.bet.GlobalBilanAsyncService;
 import fr.ses10doigts.coursesCrawler.service.misc.LogAccessService;
+import fr.ses10doigts.coursesCrawler.service.scheduler.MonthlyCrawlService;
 import fr.ses10doigts.coursesCrawler.service.scheduler.SchedulerService;
 import fr.ses10doigts.coursesCrawler.service.web.ConfigurationService;
 import fr.ses10doigts.coursesCrawler.service.web.TelegramService;
@@ -35,6 +36,8 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 	private final ConfigurationService configurationService;
 	@Autowired
 	private SchedulerService schedulerService;
+	@Autowired
+	private MonthlyCrawlService monthlyCrawlService;
 	@Autowired
 	private TelegramService telegramService;
 	@Autowired
@@ -118,7 +121,9 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 											"➡\uFE0F Force le lancement de la vérification des courses pour la journée si pas de paramètre.\n" +
 											"➡\uFE0F Pour le jour donné si 1 paramètre.\n" +
 											"➡\uFE0F Pour toutes les dates comprises entre les 2 dates données\n\n" +
-										"/log [X]\n" +
+										"/monthlyCheck\n" +
+								"➡\uFE0F Lance un crawl mensuel (mois précédent)\n\n" +
+								"/log [X]\n" +
 										"➡\uFE0F Affiche les logs (C'est technique, pour moi)");
 
 				} else if (userMessage.startsWith("/timebefore")) {
@@ -274,6 +279,9 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 
 					schedulerService.launchMainScheduledCrawl(startDay, endDay, startAndStop, message.getChatId());
 
+				}else if (userMessage.startsWith("/monthlyCheck")){
+					monthlyCrawlService.runMonthlyCrawl(message.getChatId());
+
 				}else if (userMessage.startsWith("/bilan")){
 					CompletableFuture<GlobalBilanParis> future = bilanService.computeGlobalBilan();
 
@@ -340,3 +348,4 @@ public class TelegramBotController implements SpringLongPollingBot, LongPollingS
 		}
 	}
 }
+
