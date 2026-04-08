@@ -172,11 +172,14 @@ public class CrawlJobCheckerService {
 						+" = "+sumPercent+"\n"
 						+(isTypeOk?"✅":"❌")+" Type: "+courseStats.getTypeCourse()+"\n"
 						+(isNbReuMaxOk?"✅":"❌")+" N° Réunion: "+courseStats.getNumeroReunion()+"\n"
-						+(ageCheck.matches()?"✅":"❌")+" Age: "+ageLine;
+						+(ageCheck.matches()?"✅":"❌")+ageLine;
 
 				if( isInStats &&  !paris.getIsWebActionOk()) {
+					String url = "https://www.genybet.fr/courses/partants-pronostics/"+courseStats.getCourseID();
+
 					stats += "\n\n⚠\uFE0F Vérifier si le paris s'est bien déroulé sur le site ⚠\uFE0F";
-					telegramService.sendPhoto(task.getTelegramMessageId(), "/home/oklm/courses/error.png");
+					stats += "\uD83D\uDD17 [Lien Genybet]("+ url + ")";
+					telegramService.sendPhoto(task.getTelegramMessageId(), "/home/oklm/courses/lastAction.png");
 				}
 
 			}else{
