@@ -1,8 +1,10 @@
 package fr.ses10doigts.coursesCrawler.service.scheduler;
 
 import fr.ses10doigts.coursesCrawler.CustomProperties;
+import fr.ses10doigts.coursesCrawler.model.scrap.entity.Cote;
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.Course;
 import fr.ses10doigts.coursesCrawler.model.scrap.entity.Partant;
+import fr.ses10doigts.coursesCrawler.repository.course.CoteRepository;
 import fr.ses10doigts.coursesCrawler.repository.course.PartantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +27,7 @@ public class CourseFilterService {
     private static final Pattern AGE_RANGE_PATTERN = Pattern.compile("\\s*(\\*|\\d+)\\s*([~-])\\s*(\\*|\\d+)\\s*");
 
     private final PartantRepository partantRepository;
+    private final CoteRepository coteRepository;
 
     public boolean matches(Course course, CustomProperties props) {
         if (!matchesWithoutAges(course, props)) {
@@ -138,16 +142,20 @@ public class CourseFilterService {
             return new AgeCheckResult(true, false, null, null, "Ages indisponibles (partants manquants)");
         }
 
+        Set<Integer> starterNumbers = findStarterNumbers(course.getCourseID());
+        boolean startersFromCotes = !starterNumbers.isEmpty();
+
         List<Integer> ages = partants.stream()
-                .filter(p -> p.getProbableGeny() != null || p.getProbablePMU() != null)
+                .filter(Objects::nonNull)
+                .filter(p -> isStarterForAgeCheck(p, starterNumbers, startersFromCotes))
                 .map(Partant::getAgeSexe)
                 .map(this::extractAge)
                 .filter(Objects::nonNull)
                 .toList();
 
-        if (ages.size() != partants.size()) {
-            log.warn("Unable to extract all horse ages for course {}, age filter rejects it", course.getUrl());
-            return new AgeCheckResult(true, false, null, null, "Ages incomplets");
+        if (ages.isEmpty()) {
+            log.warn("No starter age found for course {}, age filter rejects it", course.getUrl());
+            return new AgeCheckResult(true, false, null, null, "Ages indisponibles (partants manquants)");
         }
 
         int ageMin = ages.stream().min(Comparator.naturalOrder()).orElseThrow();
@@ -160,6 +168,27 @@ public class CourseFilterService {
         }
 
         return new AgeCheckResult(true, ok, ageMin, ageMax, ok ? "Ages autorises" : "Ages hors plage");
+    }
+
+    private Set<Integer> findStarterNumbers(Long courseId) {
+        if (courseId == null) {
+            return Set.of();
+        }
+
+        return Optional.ofNullable(coteRepository.findByCourseID(courseId)).orElse(Set.of()).stream()
+                .filter(Objects::nonNull)
+                .filter(cote -> !Boolean.FALSE.equals(cote.getValide()))
+                .map(Cote::getNumCheval)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    private boolean isStarterForAgeCheck(Partant partant, Set<Integer> starterNumbers, boolean startersFromCotes) {
+        if (startersFromCotes) {
+            return starterNumbers.contains(partant.getNumCheval());
+        }
+
+        return partant.getProbableGeny() != null || partant.getProbablePMU() != null;
     }
 
     private Integer extractAge(String ageSexe) {

@@ -5,116 +5,108 @@ const fs = require('fs');
 const LOCK_FILE = 'bet.lock';
 
 function acquireLock() {
-    if (fs.existsSync(LOCK_FILE)) {
-        console.error("❌ Script déjà en cours d'exécution.");
-        process.exit(1);
-    }
-
-    fs.writeFileSync(LOCK_FILE, process.pid.toString());
+	if (fs.existsSync(LOCK_FILE)) {
+		console.error("❌ Script déjà en cours d'exécution.");
+		process.exit(1);
+	}
+	fs.writeFileSync(LOCK_FILE, process.pid.toString());
 }
 
 function releaseLock() {
-    if (fs.existsSync(LOCK_FILE)) {
-        fs.unlinkSync(LOCK_FILE);
-    }
+	if (fs.existsSync(LOCK_FILE)) {
+		fs.unlinkSync(LOCK_FILE);
+	}
+}
+
+////////// Utils
+function delay(time) {
+	return new Promise(resolve => setTimeout(resolve, time));
+}
+
+async function safeScreenshot(page, path) {
+	try {
+		if (page && !page.isClosed()) {
+			await page.screenshot({ path });
+		}
+	} catch (e) {
+		console.warn("Screenshot failed:", e.message);
+	}
 }
 
 ////////// Accounts
 function loadAccounts() {
-    if (!fs.existsSync('/home/oklm/courses/auto_bet/accounts.json')) {
-        throw new Error("accounts.json manquant");
-    }
-
-    const raw = fs.readFileSync('/home/oklm/courses/auto_bet/accounts.json');
-    return JSON.parse(raw);
+	if (!fs.existsSync('/home/oklm/courses/auto_bet/accounts.json')) {
+		throw new Error("accounts.json manquant");
+	}
+	const raw = fs.readFileSync('/home/oklm/courses/auto_bet/accounts.json');
+	return JSON.parse(raw);
 }
 
 function getAccountByPseudo(pseudo) {
+	const accounts = loadAccounts();
+	const account = accounts.find(acc => acc.pseudo === pseudo);
 
-    const accounts = loadAccounts();
+	if (!account) throw new Error(`Compte introuvable: ${pseudo}`);
+	if (!account.enable) throw new Error(`Compte désactivé: ${pseudo}`);
 
-    const account = accounts.find(acc => acc.pseudo === pseudo);
-
-    if (!account) {
-        throw new Error(`Compte introuvable pour pseudo: ${pseudo}`);
-    }
-
-    if (!account.enable) {
-        throw new Error(`Compte désactivé: ${pseudo}`);
-    }
-
-    return account;
-}
-
-///////// Tools
-function delay(time) {
-   return new Promise(resolve => setTimeout(resolve, time));
+	return account;
 }
 
 //////// Hooks
-process.on('SIGINT', () => {
-    console.log("SIGINT reçu");
-    releaseLock();
-    process.exit();
-});
-
-process.on('SIGTERM', () => {
-    console.log("SIGTERM reçu");
-    releaseLock();
-    process.exit();
-});
-
+process.on('SIGINT', () => { releaseLock(); process.exit(); });
+process.on('SIGTERM', () => { releaseLock(); process.exit(); });
 process.on('uncaughtException', (err) => {
-    console.error("Erreur fatale :", err);
-    releaseLock();
-    process.exit(1);
+	console.error("Erreur fatale :", err);
+	releaseLock();
+	process.exit(1);
 });
 
-
-////////// Parsing external parameters
+//////// Params
 const [,, courseID, bet, cvlNb, dev, pseudo] = process.argv;
 
 const SAFE_MODE = true;
-const GLOBAL_MAX_BET = 50; // sécurité absolue
+const GLOBAL_MAX_BET = 50;
 
 (async () => {
 	acquireLock();
-	try{
+
+	let browser = null;
+	let page = null;
+	let account = null;
+
+	try {
 		const betAmount = parseInt(bet);
-		
+
 		if (isNaN(betAmount) || betAmount <= 0) {
 			throw new Error("Bet invalide");
 		}
 
 		if (!pseudo) {
-			throw new Error("Pseudo manquant en argument");
+			throw new Error("Pseudo manquant");
 		}
 
-		const account = getAccountByPseudo(pseudo);
+		account = getAccountByPseudo(pseudo);
 
 		console.log("\n===============================");
 		console.log("Compte :", account.user);
 		console.log("===============================");
 		
 		if (betAmount > GLOBAL_MAX_BET) {
-			throw new Error("Montant de mise ("+betAmount+") dépasse la limite globale de sécurité ("+GLOBAL_MAX_BET+")");
+			throw new Error("Bet > limite globale");
 		}
 
 		if (SAFE_MODE && betAmount > account.maxBet) {
-			throw new Error("Montant de mise ("+betAmount+") > max autorisé pour ce compte ("+account.maxBet+")→ SKIP");
+			throw new Error("Bet > limite compte");
 		}
 
-		const browser = await puppeteer.launch({
+		browser = await puppeteer.launch({
 			headless: dev === "true" ? false : true,
 			args: ['--no-sandbox', '--start-maximized'],
 		});
 
-		let page = await browser.newPage();
+		page = await browser.newPage();
 
-		await page.setViewport({
-			width: 1920,
-			height: 1080
-		});
+		await page.setViewport({ width: 1920, height: 1080 });
 
 		try {
 			console.log("=== Script démarré ===");
@@ -124,50 +116,29 @@ const GLOBAL_MAX_BET = 50; // sécurité absolue
 			console.log("- user:", account.user);
 			console.log("- dev:", dev);
 
-			// =========================
-			// LOGIN
-			// =========================
-
-			console.log("Ouverture page login...");
 			await page.goto('https://www.genybet.fr/', { waitUntil: 'networkidle2' });
 			await delay(500);
+			await safeScreenshot(page, "lastAction.png");
 
-			console.log("Fermeture popup cookies (si présente)");
+			// Cookies
 			try {
-				await page.waitForSelector('#didomi-notice-agree-button', {
-					timeout: 5000,
-					visible: true
-				});
+				await page.waitForSelector('#didomi-notice-agree-button', { timeout: 5000 });
 				await page.click('#didomi-notice-agree-button');
-				console.log("Popup cookies fermée");
-			} catch {
-				console.log("Popup cookies absente");
-			}
+			} catch {}
 
-			// Email
-			const inPhoneLbl = 'input[placeholder="Email"]';
-			await page.waitForSelector(inPhoneLbl);
-			await page.type(inPhoneLbl, account.user, { delay: 50 });
+			await safeScreenshot(page, "lastAction.png");
 
-			await page.$eval(inPhoneLbl, (el, value) => {
-				el.value = value;
-				el.dispatchEvent(new Event('input', { bubbles: true }));
-				el.dispatchEvent(new Event('change', { bubbles: true }));
-			}, account.user);
+			// Login
+			const email = 'input[placeholder="Email"]';
+			await page.waitForSelector(email);
+			await page.type(email, account.user);
 
-			// Password
-			const inPwdLbl = 'input[placeholder="Mot de passe"]';
-			await page.waitForSelector(inPwdLbl);
-			await page.type(inPwdLbl, account.pwd, { delay: 50 });
+			const pwd = 'input[placeholder="Mot de passe"]';
+			await page.waitForSelector(pwd);
+			await page.type(pwd, account.pwd);
 
-			await page.$eval(inPwdLbl, (el, value) => {
-				el.value = value;
-				el.dispatchEvent(new Event('input', { bubbles: true }));
-				el.dispatchEvent(new Event('change', { bubbles: true }));
-			}, account.pwd);
+			await safeScreenshot(page, "lastAction.png");
 
-			console.log("Click signin");
-			await page.waitForSelector('#signin', { visible: true });
 			await page.click('#signin');
 			await delay(5000);
 
@@ -178,21 +149,15 @@ const GLOBAL_MAX_BET = 50; // sécurité absolue
 					visible: true
 				});
 				await page.click('button.button.blue[onclick="closeNotifications();"]');
-				console.log("1st : Popup notifications fermée");
+				console.log("1st : Win Popup notifications fermée");
 			} catch {
-				console.log("1st : Popup notifications absente");
+				console.log("1st : Win Popup notifications absente");
 			}
 
-			// =========================
-			// PAGE COURSE
-			// =========================
-
-			console.log("Page course", courseID);
-			await page.goto(
-				'https://www.genybet.fr/courses/partants-pronostics/' + courseID,
-				{ waitUntil: 'networkidle2' }
-			);
+			// Course
+			await page.goto(`https://www.genybet.fr/courses/partants-pronostics/${courseID}`);
 			await delay(500);
+			await safeScreenshot(page, "lastAction.png");
 
 			// 2ème fermeture popup notifications
 			try {
@@ -201,109 +166,80 @@ const GLOBAL_MAX_BET = 50; // sécurité absolue
 					visible: true
 				});
 				await page.click('button.button.blue[onclick="closeNotifications();"]');
-				console.log("2nd : Popup notifications fermée");
+				console.log("2nd : Win Popup notifications fermée");
 			} catch {
-				console.log("2nd : Popup notifications absente");
+				console.log("2nd : Win Popup notifications absente");
 			}
 
-			// =========================
-			// SELECTION CHEVAL
-			// =========================
 
-			console.log("Select cheval", cvlNb);
-			await page.waitForSelector(`table.bet tr#partant-${cvlNb} td.checkbox-SIMPLE_GAGNANT input`);
+			// Select cheval
 			await page.click(`table.bet tr#partant-${cvlNb} td.checkbox-SIMPLE_GAGNANT input`);
-			await delay(500);
+			await safeScreenshot(page, "lastAction.png");
 
-			// =========================
-			// SAISIE MONTANT SECURISEE
-			// =========================
-
-			console.log("betAmount", betAmount);
-			var nbRetryMax = 3;
-			var nbTry = 0;
-			var isOk = false;
-
+			// Bet input sécurisé
 			const inputSelector = 'input.betAmount.ca';
+			console.log("waiting for inputSelector");
+			await page.waitForSelector(inputSelector);
 
-			do{
-				nbTry ++;
-				await page.waitForSelector(inputSelector);
+			let isOk = false;
+			let tries = 0;
 
-				// triple select + clear
+			while (!isOk && tries < 3) {
+				tries++;
+
 				await page.click(inputSelector, { clickCount: 3 });
 				await page.keyboard.press('Backspace');
-				
-/*				var test = betAmount;
-				if( nbTry != 3 )
-					test = betAmount+1;
-*/
-				await page.type(inputSelector, test.toString());
-				await delay(500);
+				console.log("input erased");
 
-				// 🔒 Vérification réelle
-				const realValue = await page.$eval(inputSelector, el => el.value);
+				await page.type(inputSelector, betAmount.toString());
+				await delay(300);
+				console.log("inputSelector filed : "+betAmount.toString());
 
-				if (parseFloat(realValue) !== betAmount) {
-					console.log( "Try N°"+nbTry+": Value in field ("+realValue+") is different than bet asked ("+betAmount+")" );
-					if( nbTry >= nbRetryMax )
-						throw new Error(`SECURITY STOP: montant incohérent (${realValue})`);
-					
-					await delay(1000);
-					
-				}else{
+				const real = await page.$eval(inputSelector, el => el.value);
+				console.log("inputSelector readed : "+real);
+
+				if (parseFloat(real) === betAmount) {
+					console.log("Correspondance filled/readed ok");
 					isOk = true;
-					console.log( "Try N°"+nbTry+": Bet writen is ok");
+				} else {
+					console.log("Correspondance filled/readed is not ok! Wait and retry ("+tries+"/3)");
+					await delay(1000);
 				}
-			}while( !isOk );
-			
-			// 🔒 LOG AVANT VALIDATION
-			fs.appendFileSync('/home/oklm/courses/logs/bets.log',
-				`${new Date().toISOString()} | ${account.user} | course=${courseID} | cheval=${cvlNb} | montant=${betAmount}\n`
-			);
 
-			// =========================
-			// VALIDATION
-			// =========================
-
-			console.log("Validate");
-			await page.waitForSelector('button.bet-button', { visible: true });
-			await page.click('button.bet-button');
-			await delay(500);
-
-			// Double clic sécurité (comme ton script)
-			try {
-				await page.waitForSelector('button.bet-button', { visible: true });
-				await page.click('button.bet-button');
-				await delay(500);
-			} catch {}
-
-			console.log("=== Succès ===");
-
-			if (dev === "true") {
-				console.log("Close browser to end script...");
-				releaseLock();
-				await new Promise(() => {});
+				await safeScreenshot(page, "lastAction.png");
 			}
 
+			if (!isOk) throw new Error("Montant incorrect");
+
+			// Validation
+			console.log("Waiting for bet button");
+			await page.waitForSelector('button.bet-button');
+			console.log("Click on bet button");
+			await page.click('button.bet-button');
+			await safeScreenshot(page, "lastAction.png");
+
+			console.log("=== SUCCESS ===");
+
 		} catch (err) {
+			console.error("Erreur métier :", err);
 
-			console.error("=== ERREUR ===", err);
-			await page.screenshot({ path: `error_${account.pseudo}.png` });
+			await safeScreenshot(page, `error_${account?.pseudo || 'unknown'}.png`);
+			await safeScreenshot(page, "error_last.png");
 
-		} finally {
-			await browser.close();
-			releaseLock();
 		}
-		
-	}catch( err ){
+
+	} catch (err) {
 		console.error("Erreur globale :", err);
-		
-	}finally {
 
-        releaseLock();
-        console.log("Lock libéré");
+		await safeScreenshot(page, `error_${account?.pseudo || 'unknown'}.png`);
+		await safeScreenshot(page, "error_last.png");
 
-    }
+	} finally {
+		if (browser) {
+			try { await browser.close(); } catch {}
+		}
+		releaseLock();
+		console.log("Lock libéré");
+	}
 
 })();
